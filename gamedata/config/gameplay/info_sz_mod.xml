@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding="windows-1251" ?>
+
+<game_information_portions>
+
+    <!-- Quests -->
+	
+	<info_portion id="find_plem_start">
+		<task>find_plem</task>
+	</info_portion>
+
+	<info_portion id="bar_dolg_propusk_start">
+		<task>bar_dolg_propusk</task>
+	</info_portion>
+	
+	<info_portion id="find_ten_cards">
+		<task>collection_cards</task>
+	</info_portion>
+	
+    <!-- Quests -->
+	
+<info_portion id="got_it"></info_portion>
+
+<info_portion id="no_cycle_infoportion"></info_portion>
+
+<info_portion id="got_it_2"></info_portion>
+
+<info_portion id="no_cycle_infoportion_2"></info_portion>
+
+<info_portion id="got_it_3"></info_portion>
+
+<info_portion id="no_cycle_infoportion_3"></info_portion>
+
+<info_portion id="got_it_4"></info_portion>
+
+<info_portion id="no_cycle_infoportion_4"></info_portion>
+
+<info_portion id="trader_talk"></info_portion>
+
+<info_portion id="stalker_now"></info_portion>
+
+<info_portion id="stalker_now2"></info_portion>
+
+<info_portion id="find_plem_found"></info_portion>
+
+<info_portion id="find_plem_na_meste"></info_portion>
+
+<info_portion id="find_plem_well_done"></info_portion>
+
+<info_portion id="find_plem_motherfucker_died"></info_portion>
+
+<info_portion id="find_plem_dogs"></info_portion>
+
+<info_portion id="find_plem_move_out"></info_portion>
+
+<info_portion id="find_plem_move_out2"></info_portion>
+
+<info_portion id="find_plem_dog_died"></info_portion>
+
+<info_portion id="alert"></info_portion>
+
+<info_portion id="mp_start_dialog_done"></info_portion>
+
+<info_portion id="bar_rupor_off"></info_portion>
+
+<info_portion id="esc_coward_run"></info_portion>
+
+<info_portion id="bar_arena_first_dialog"></info_portion>
+
+<info_portion id="bar_dolg_propusk_have"></info_portion>
+
+<info_portion id="bar_dolg_propusk_done"></info_portion>
+
+<info_portion id="give_treasure"></info_portion>
+
+<info_portion id="yan_master_dialog"></info_portion>
+
+<info_portion id="yan_psevdogoga_told_dialog"></info_portion>
+
+<info_portion id="yan_psevdogoga_dialog"></info_portion>
+
+<info_portion id="place_talk"></info_portion>
+
+<info_portion id="interesting_talk"></info_portion>
+
+<info_portion id="about_wolf"></info_portion>
+
+<info_portion id="find_ten_cards_complete"></info_portion>
+
+<info_portion id="found_ten_cards_complete"></info_portion>
+
+<info_portion id="freedom_enemy"></info_portion>
+
+<info_portion id="freedom_enemy_1"></info_portion>
+
+<info_portion id="dolg_enemy"></info_portion>
+
+<info_portion id="dolg_enemy_1"></info_portion>
+
+<info_portion id="bandit_way"></info_portion>
+
+<info_portion id="bandit_way_1"></info_portion>
+
+
+
+    <!-- Repeatable arena: sz_arena -->
+    <info_portion id="sz_arena_active"></info_portion>
+    <info_portion id="sz_arena_enemy_dead"></info_portion>
+    <info_portion id="sz_arena_fight_begin"></info_portion>
+    <info_portion id="sz_arena_reward_paid"></info_portion>
+    <info_portion id="sz_arena_loadout_issued"></info_portion>
+    <info_portion id="sz_arena_loadout_own"></info_portion>
+    <info_portion id="sz_arena_loadout_knife"></info_portion>
+    <info_portion id="sz_arena_difficulty_novice"></info_portion>
+    <info_portion id="sz_arena_difficulty_experienced"></info_portion>
+    <info_portion id="sz_arena_difficulty_master"></info_portion>
+    <info_portion id="sz_arena_count_1"></info_portion>
+    <info_portion id="sz_arena_count_2"></info_portion>
+    <info_portion id="sz_arena_count_3"></info_portion>
+    <info_portion id="sz_arena_count_5"></info_portion>
+    <info_portion id="sz_arena_respawner_1"></info_portion>
+    <info_portion id="sz_arena_respawner_2"></info_portion>
+    <info_portion id="sz_arena_respawner_3"></info_portion>
+    <info_portion id="sz_arena_respawner_4"></info_portion>
+    <info_portion id="sz_arena_respawner_5"></info_portion>
+    <info_portion id="sz_arena_respawner_c1_1"></info_portion>
+    <info_portion id="sz_arena_respawner_c2_1"></info_portion>
+    <info_portion id="sz_arena_respawner_c2_2"></info_portion>
+    <info_portion id="sz_arena_respawner_c3_1"></info_portion>
+    <info_portion id="sz_arena_respawner_c3_2"></info_portion>
+    <info_portion id="sz_arena_respawner_c3_3"></info_portion>
+    <info_portion id="sz_arena_respawner_c5_1"></info_portion>
+    <info_portion id="sz_arena_respawner_c5_2"></info_portion>
+    <info_portion id="sz_arena_respawner_c5_3"></info_portion>
+    <info_portion id="sz_arena_respawner_c5_4"></info_portion>
+    <info_portion id="sz_arena_respawner_c5_5"></info_portion>
+    <info_portion id="sz_arena_pick_issued"></info_portion>
+    <info_portion id="sz_arena_pick_own"></info_portion>
+    <info_portion id="sz_arena_pick_knife"></info_portion>
+
+
+    <!-- Совместимость со старым ID арены -->
+    <info_portion id="bar_arena_test_enemy_dead"></info_portion>
+</game_information_portions>

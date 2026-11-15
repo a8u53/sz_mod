@@ -1,0 +1,816 @@
+function init    (obj)
+	xr_motivator.AddToMotivator(obj)
+end
+
+function actor_init    (npc)
+	npc:bind_object(actor_binder(npc))
+end
+
+local game_difficulty_by_num = {
+	[0] = "gd_novice",
+	[1] = "gd_stalker",
+	[2] = "gd_veteran",
+	[3] = "gd_master"
+	}
+
+lasthealth  = 0
+lasttime	= 0
+post_process = 0
+local weapon_hide = false
+
+-- Placement-sound helpers. OGSR exposes place_item_to_box, but some inventory-box
+-- transfer paths also dispatch take_item_from_box for both directions.
+local last_item_transfer_sounds = {}
+local ITEM_TRANSFER_SOUND_DEBOUNCE = 500
+
+local function get_item_parent_id(item)
+    if not item then return nil end
+    local ok, parent = pcall(function() return item:parent() end)
+    if not ok or not parent then return nil end
+    local id_ok, parent_id = pcall(function() return parent:id() end)
+    if id_ok then return parent_id end
+    return nil
+end
+
+local function is_item_inside_box(box, item)
+    if not box or not item then return false end
+    local box_ok, box_id = pcall(function() return box:id() end)
+    if not box_ok or box_id == nil then return false end
+    return get_item_parent_id(item) == box_id
+end
+
+local function resolve_box_and_item(first, second)
+    -- Support either argument order; the parent relation identifies the moved item.
+    if is_item_inside_box(second, first) then
+        return second, first
+    end
+    if is_item_inside_box(first, second) then
+        return first, second
+    end
+    -- The take_item_from_box convention used by this script is (box, item).
+    return first, second
+end
+
+local function play_item_transfer_sound(item)
+    if not item or not sz_mod or not sz_mod.item_take then return end
+
+    local id_ok, item_id = pcall(function() return item:id() end)
+    local now = time_global()
+    if id_ok and item_id ~= nil then
+        local last_time = last_item_transfer_sounds[item_id]
+        if last_time and now - last_time < ITEM_TRANSFER_SOUND_DEBOUNCE then
+            return
+        end
+        last_item_transfer_sounds[item_id] = now
+    end
+
+    -- Reuse the existing category-aware sounds (bottle, document, cartridges,
+    -- outfit and the generic inventory sound) so no new sound assets are needed.
+    sz_mod.item_take(item)
+end
+
+local function is_inventory_box_object(obj)
+    if not obj then return false end
+    local ok = pcall(function() return obj:is_inv_box_empty() end)
+    return ok
+end
+
+local function get_single_transfer_item(first, second)
+    if second == nil then return first end
+
+    -- Prefer the item whose parent is the other callback argument.
+    if is_item_inside_box(first, second) then return second end
+    if is_item_inside_box(second, first) then return first end
+
+    -- If the parent relation is not yet updated, identify the box by its API.
+    if is_inventory_box_object(first) then return second end
+    if is_inventory_box_object(second) then return first end
+
+    -- on_inv_box_item_drop normally passes the moved item first.
+    return first
+end
+class "actor_binder" (object_binder)
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:__init (obj) super(obj)
+	self.bCheckStart = false
+	self.sz_death_screen_active = false
+	self.weather_manager = level_weathers.WeatherManager()
+	self.actor_detector  = xr_detector.actor_detector()
+	self.rain_active = false
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:net_spawn(data)
+	printf("actor net spawn")
+
+	-- Сбрасываем состояние смерти после появления актёра/загрузки.
+	-- UI-диалог очищается в actor_binder:net_destroy(), до пересоздания HUD.
+	self.sz_death_screen_active = false
+	-- Возвращаем звук после смерти (обычные значения громкости).
+	get_console():execute("snd_volume_eff 1.0")
+	get_console():execute("snd_volume_music 1.0")
+	get_console():execute("bind_console mm_net_player_name dik_t kT")
+	level.show_indicators()
+
+	self.bCheckStart = true
+	self.weapon_hide = false -- Сбрасываем локальное состояние скрытия оружия.
+	weapon_hide = false -- Сбрасываем глобальный флаг скрытия оружия.
+
+	if object_binder.net_spawn(self,data) == false then
+		return false
+	end
+	
+	sz_factions.reset_factions()
+	
+	sz_mod.reset_radiation_hud()
+	
+	if sz_healing and sz_healing.reset_healing then
+		sz_healing.reset_healing(true)
+	end
+
+	db.add_actor(self.object)
+	
+	if self.st.disable_input_time == nil then
+		level.enable_input()
+	end
+
+	self.weather_manager:reset()
+--	game_stats.initialize ()
+
+	if(actor_stats.add_to_ranking~=nil)then
+		actor_stats.add_to_ranking(self.object:id())
+	end
+
+	if sz_blood and sz_blood.reset_blood then
+		sz_blood.reset_blood()
+	end
+
+	-- Инициализируем настройки выпадения предметов после смерти.
+	death_manager.init_drop_settings()
+	news_main.filter()
+	self.rain_active = false
+	
+	if xrs_ai then 
+		xrs_ai.actor_net_spawn(self) 
+	end
+	return true
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:net_destroy()
+	-- Сначала снимаем полноэкранный диалог смерти с HUD, пока binder/HUD ещё существуют.
+	sz_mod.death_screen_cleanup()
+
+	if sz_healing and sz_healing.reset_healing then
+		sz_healing.reset_healing()
+	end
+
+    if(actor_stats.remove_from_ranking~=nil)then
+		actor_stats.remove_from_ranking(self.object:id())
+	end
+--	game_stats.shutdown ()
+	db.del_actor(self.object)
+
+    sr_light.clean_up ()
+
+	self.object:set_callback(callback.inventory_info, nil)
+	self.object:set_callback(callback.article_info, nil)
+	self.object:set_callback(callback.on_item_take, nil)
+	self.object:set_callback(callback.on_item_drop, nil)
+	self.object:set_callback(callback.trade_sell_buy_item, nil)
+	self.object:set_callback(callback.hit, nil)
+	--self.object:set_callback(callback.actor_sleep, nil)
+	self.object:set_callback(callback.task_state, nil)
+	self.object:set_callback(callback.level_border_enter, nil)
+	self.object:set_callback(callback.level_border_exit, nil)
+	self.object:set_callback(callback.take_item_from_box, nil)
+	if callback.place_item_to_box ~= nil then
+		self.object:set_callback(callback.place_item_to_box, nil)
+	end
+	if callback.on_inv_box_item_drop ~= nil then
+		self.object:set_callback(callback.on_inv_box_item_drop, nil)
+	end
+	self.object:set_callback(callback.use_object, nil)
+	self.object:set_callback(callback.entity_alive_before_hit, nil)
+	self.object:set_callback(callback.on_key_press, nil)
+	
+	if sr_psy_antenna.psy_antenna then
+		sr_psy_antenna.psy_antenna:destroy()
+		sr_psy_antenna.psy_antenna = false
+	end
+
+	xr_sound.stop_all_sound_object()
+
+	object_binder.net_destroy(self)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:reinit()
+	object_binder.reinit(self)
+	
+	local npc_id = self.object:id()
+
+	db.storage[npc_id] = { }
+
+	self.st = db.storage[npc_id]
+	self.st.pstor = nil
+
+	self.next_restrictors_update_time = -10000
+
+	self.object:set_callback(callback.inventory_info, self.info_callback, self)
+	self.object:set_callback(callback.article_info, self.article_callback, self)
+	self.object:set_callback(callback.on_item_take, self.on_item_take, self)
+	self.object:set_callback(callback.on_item_drop, self.on_item_drop, self)
+	self.object:set_callback(callback.trade_sell_buy_item, self.on_trade, self) -- for game stats
+	--self.object:set_callback(callback.actor_sleep, self.sleep_callback, self)
+	self.object:set_callback(callback.task_state, self.task_callback, self)
+	--self.object:set_callback(callback.map_location_added, self.map_location_added_callback, self)
+	self.object:set_callback(callback.level_border_enter, self.level_border_enter, self)
+	self.object:set_callback(callback.level_border_exit, self.level_border_exit, self)
+	self.object:set_callback(callback.take_item_from_box, self.take_item_from_box, self)
+	if callback.place_item_to_box ~= nil then
+		self.object:set_callback(callback.place_item_to_box, self.place_item_to_box, self)
+	end
+	if callback.on_inv_box_item_drop ~= nil then
+		self.object:set_callback(callback.on_inv_box_item_drop, self.on_inv_box_item_drop, self)
+	end
+	self.object:set_callback(callback.use_object, self.use_obj, self)
+	self.object:set_callback(callback.hit, sz_mod.actor_on_hit_callback, self)
+	self.object:set_callback(callback.entity_alive_before_hit, sz_mod.actor_before_hit_callback, self)
+	self.object:set_callback(callback.on_key_press, self.on_key, self)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:place_item_to_box(first, second)
+    local box, item = resolve_box_and_item(first, second)
+    play_item_transfer_sound(item)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:on_inv_box_item_drop(first, second)
+    -- OGSR sends this event for placing an item into an inventory/search box
+    -- (including the corpse-loot window). Depending on engine revision it can
+    -- provide only the item or both the box and the item.
+    local item = get_single_transfer_item(first, second)
+    play_item_transfer_sound(item)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:take_item_from_box(box, item)
+    -- In current OGSR inventory-box transfer code, take_item_from_box can also
+    -- be dispatched after moving an item FROM the actor TO a box. Detect that
+    -- direction by checking the item's actual parent before running loot logic.
+    if is_item_inside_box(box, item) then
+        play_item_transfer_sound(item)
+        return
+    end   
+	-- First give player-placed rukzachok containers to sz_mod.
+	-- This check must run before story_id: spawned containers may have no story id.
+	if sz_mod and sz_mod.take_rucksack_item_from_box then
+		if sz_mod.take_rucksack_item_from_box(box, item) then
+			return
+		end
+	end					
+	
+	local story_id = box:story_id()
+	if story_id == nil then
+		return
+	end
+	
+	treasure_manager.take_item_from_box(box, story_id)
+
+	local respawner = se_respawn.get_respawner_by_parent(story_id)
+	if respawner == nil then
+		return
+	end
+	
+	-- Удаляем взятый предмет из списка созданных респавнером.
+	respawner:remove_spawned(item:id())
+
+	local smart_terrain = db.strn_by_respawn[respawner:name()]
+	if smart_terrain == nil then
+		return
+	end
+	
+snd_box={
+	stalker = {
+		[[stalker\box_1]],
+		[[stalker\box_2]],
+		[[stalker\box_3]],
+		[[stalker\box_4]],
+		[[stalker\box_5]],
+		[[stalker\box_6]],
+		[[stalker\box_7]],
+		[[stalker\box_8]],
+		[[stalker\box_9]]
+	},
+	dolg = {
+		[[dolg\box_1]],
+		[[dolg\box_2]],
+		[[dolg\box_3]],
+		[[dolg\box_4]],
+		[[dolg\box_5]],
+		[[dolg\box_6]],
+		[[dolg\box_7]],
+		[[dolg\box_8]]
+	},
+	freedom = {
+		[[freedom\box_1]],
+		[[freedom\box_2]],
+		[[freedom\box_3]],
+		[[freedom\box_4]],
+		[[freedom\box_5]],
+		[[freedom\box_6]],
+		[[freedom\box_7]],
+		[[freedom\box_8]]
+	},
+	bandit = {
+		[[bandit\box_1]],
+		[[bandit\box_2]],
+		[[bandit\box_3]]
+		}
+}
+
+	local npc = smart_terrain.gulag:get_nearest_online_obj(db.actor:position())
+    if npc ~= nil then
+	    local snd_sect = snd_box[npc:character_community()] or snd_box.stalker
+		local snd = [[box_reactions\]]..snd_sect[math.random(table.getn(snd_sect))]
+		snd = xr_sound.get_safe_sound_object(snd)
+		snd:play_at_pos(db.actor,vector():set(0,0,1),0,sound_object.s2d)
+	    xr_gulag.setGulagEnemy(smart_terrain:name() , db.actor)			
+    end
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:level_border_enter(npc, info_id)
+	self.actor_detector:actor_enter()
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:level_border_exit(npc, info_id)
+	self.actor_detector:actor_exit()
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:info_callback(npc, info_id)
+    printf("*INFO*: npc='%s' id='%s'", npc:name(), info_id)
+    level_tasks.proceed(self.object)
+    level_tasks.process_info_portion(info_id)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:on_trade (item, sell_bye, money)
+    if sell_bye == true then
+       game_stats.money_trade_update (money)
+       -- The callback is invoked for the actor's sale item. Play the placement
+       -- sound here as a fallback for the trader window's transfer path.
+       play_item_transfer_sound(item)
+    else   								     
+       game_stats.money_trade_update (-money) 
+    end   
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:article_callback(npc, group, name)
+	--printf("article_callback [%s][%s]", group, name)
+	if device().precache_frame >1 then return end
+	
+	if group == "Diary" then
+		news_manager.send_encyclopedy("diary", group, name)
+	else
+		news_manager.send_encyclopedy("encyclopedy", group, name)
+	end
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:on_item_take (obj)
+    level_tasks.proceed(self.object)
+	if xrs_ai then xrs_ai.actor_item_take(obj) end
+    --game_stats.update_take_item (obj, self.object)
+	sz_mod.item_take(obj)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:on_item_drop (obj)
+    level_tasks.proceed(self.object)
+	--game_stats.update_drop_item (obj, self.object)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:use_obj(obj)
+    if not obj then return end
+    local section = obj:section()
+
+    -- 1. Запускаем наше лечение, если это лечебный предмет
+    if sz_healing and sz_healing.is_heal_item and sz_healing.is_heal_item(section) then
+        sz_healing.use_item(obj)
+    end
+
+    -- 2. Запускаем старую логику sz_mod (анимация, звук, спавн мусора)
+    --    Это сработает для ВСЕХ предметов, включая аптечки
+    sz_mod.start(obj)
+    sz_mod.pills(obj)
+
+    -- 3. Возвращаем false, чтобы движок сам удалил предмет и проиграл анимацию
+    return false
+end
+----------------------------------------------------------------------------------------------------------------------
+
+function actor_binder:task_callback(_task, _objective, _state)
+	task_manager.task_callback(_task:get_id(), _objective:get_idx(), _state)
+	if _objective:get_idx() == 0 then
+		if _state == task.fail then
+			news_manager.send_task(db.actor, "fail", _task, _objective)
+		elseif _state == task.completed then
+			task_manager.reward_by_task(_task)
+			news_manager.send_task(db.actor, "complete", _task, _objective)
+		else
+			news_manager.send_task(db.actor, "new", _task, _objective)
+		end
+	else
+		if _task:get_objective(0):get_state() == task.in_progress then
+			news_manager.send_task(db.actor, "update", _task, _objective)
+		end
+	end
+end
+
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:map_location_added_callback(spot_type_str, object_id)
+	if (false==app_ready()) or (device().precache_frame>1) then return end
+	--'news_manager.send_task(db.actor, "new")
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:update(delta)
+	object_binder.update(self, delta)
+
+	-- Мгновенно скрываем экран, HUD и звук при смерти актёра.
+	if not self.object:alive() then
+		if not self.sz_death_screen_active then
+			-- Не скрываем indicators: hide_indicators также убирает наш custom static.
+			sz_mod.death_screen_show()
+			-- Заглушаем эффекты и музыку на уровне звуковых настроек движка.
+			get_console():execute("snd_volume_eff 0.0")
+			get_console():execute("snd_volume_music 0.0")
+			self.sz_death_screen_active = true
+		end
+		-- Останавливаем уже запущенные звуковые объекты.
+		pcall(xr_sound.stop_all_sound_object)
+	end
+
+	-- Восстанавливаем отложенные эффекты лечения после загрузки сохранения.
+	if sz_healing and sz_healing.update then
+		sz_healing.update()
+	end
+
+	-- Таймер использования предмета и возврата оружия проверяется каждый кадр.
+	sz_mod.weapontimer()
+
+	-- Refresh the contents shown in map hints for placed rukzachok containers.
+	if sz_mod and sz_mod.update_rucksack_markers then
+		sz_mod.update_rucksack_markers()
+	end
+	
+	local time = time_global()
+	
+	if sz_mod and sz_mod.update_quicksave_archive then
+		sz_mod.update_quicksave_archive(time)
+	end
+	
+	game_stats.update(delta, self.object)
+
+	-- Окончание перемотки проверяем каждый кадр, чтобы не задерживать возврат управления.
+	if sz_wait_menu and sz_wait_menu.update_wait then
+		sz_wait_menu.update_wait()
+	end
+
+	-- Дата/время в меню ожидания достаточно обновлять раз в секунду.
+	if not self.last_clock_update or time - self.last_clock_update > 1000 then
+		self.last_clock_update = time
+		if sz_wait_menu and sz_wait_menu.update_wait_datetime then
+			sz_wait_menu.update_wait_datetime()
+		end
+	end
+
+	-- Основные менеджеры уровня и звука.
+	self.weather_manager:update()
+	self.actor_detector:update()
+	xr_sound.update_actor()
+
+	-- Возвращаем управление после завершения заданной блокировки.
+	if self.st.disable_input_time ~= nil and
+	   game.get_game_time():diffSec(self.st.disable_input_time) >= (self.st.disable_input_idle or 0)
+	then
+		level.enable_input()
+		self.st.disable_input_time = nil
+		self.st.disable_input_idle = nil
+	end
+
+	-- Проверка restrictors ограничена частотой 200 мс.
+	if self.next_restrictors_update_time < time then
+		bind_restrictor.actor_update(delta)
+		self.next_restrictors_update_time = time + 200
+	end
+
+	-- Постпроцессинг обновляется каждый кадр, пока эффект существует.
+	-- remove_postprocess() устанавливает nil, поэтому проверяем и nil, и 0.
+	if post_process and post_process ~= 0 then
+		if post_process:update() == true then
+			post_process = 0
+		end
+	end
+
+	if sr_psy_antenna.psy_antenna then
+		sr_psy_antenna.psy_antenna:update(delta)
+	end
+
+	-- Радиометр и расписание выброса проверяются до второстепенных HUD-обновлений.
+	if sz_mod and sz_mod.update_radiation then
+		sz_mod.update_radiation()
+	end
+
+	if sz_mod and sz_mod.blowout_check then
+		sz_mod.blowout_check()
+	end
+
+	if sz_helmet_system and sz_helmet_system.update then
+		sz_helmet_system.update(self.object)
+	end
+
+	-- HUD и фоновые игровые обновления. У ряда функций уже есть свои интервалы.
+	sz_mod.show_time()
+	sz_mod.rank_up()
+	sz_mod.armor_static()
+
+	sz_dynmusic.update()
+	sz_factions.update_factions()
+
+	if dik_hot_keys and dik_hot_keys.update then
+		dik_hot_keys.update()
+	end
+
+	-- Скрытие оружия на время разговора.
+	if weapon_hide == true or self.object:is_talking() then
+		if self.weapon_hide == false then
+			self.object:hide_weapon()
+			self.weapon_hide = true
+		end
+	else
+		if self.weapon_hide == true then
+			self.object:restore_weapon()
+			self.weapon_hide = false
+		end
+	end
+
+	-- Всплывающее предупреждение при высоком уровне радиации.
+	local hud = get_hud()
+	if hud then
+		if self.object.radiation >= 0.7 then
+			local custom_static = hud:GetCustomStatic("cs_radiation_danger")
+			if custom_static == nil then
+				hud:AddCustomStatic("cs_radiation_danger", true)
+				custom_static = hud:GetCustomStatic("cs_radiation_danger")
+				if custom_static then
+					custom_static:wnd():SetTextST("st_radiation_danger")
+				end
+			end
+		elseif hud:GetCustomStatic("cs_radiation_danger") ~= nil then
+			hud:RemoveCustomStatic("cs_radiation_danger")
+		end
+	end
+
+	-- Дождь: включаем/выключаем эффект только при смене состояния.
+	local rain_now = level.rain_factor() > 0.07
+	if rain_now and not self.rain_active then
+		level.add_pp_effector("rain.ppe", 2010, true, "")
+		if hud then
+			hud:AddCustomStatic("hud_rain", true)
+		end
+		self.rain_active = true
+	elseif not rain_now and self.rain_active then
+		level.remove_pp_effector(2010)
+		if hud and hud:GetCustomStatic("hud_rain") then
+			hud:RemoveCustomStatic("hud_rain")
+		end
+		self.rain_active = false
+	elseif rain_now and self.rain_active and hud and not hud:GetCustomStatic("hud_rain") then
+		-- Если HUD появился позже эффекта дождя, создаём индикатор.
+		hud:AddCustomStatic("hud_rain", true)
+	end
+
+	if self.bCheckStart then
+		printf("SET DEFAULT INFOS")
+
+		if not has_alife_info("storyline_actor_start") and level.name() == "l01_escape" then
+			self.object:give_info_portion("storyline_actor_start")
+			_G.g_start_avi = true
+			printf("*AVI* RUN START AVI")
+		end
+
+		if not has_alife_info("from_ship_to_bal_start") then
+			self.object:give_info_portion("from_ship_to_bal_start")
+		end
+
+		if not has_alife_info("global_dialogs") then
+			self.object:give_info_portion("global_dialogs")
+		end
+
+		level_tasks.add_lchanger_location()
+		self.bCheckStart = false
+	end
+
+	if xrs_ai then
+		xrs_ai.actor_update(delta)
+	end
+
+	if sz_blood and sz_blood.update_blood_splatters then
+		sz_blood.update_blood_splatters()
+	end
+
+	if dinamic_hud then
+		dinamic_hud.update()
+	end
+
+	if sz_hunger_effect and sz_hunger_effect.update_hunger_effect then
+		sz_hunger_effect.update_hunger_effect()
+	end
+
+	news_main_data.show_news_main()
+	
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:save(packet)
+	
+	local save_treasure_manager = true
+	
+	printf("actor_binder:save(): self.object:name()='%s'", self.object:name())
+	object_binder.save(self, packet)
+
+	-- Сохраняем уровень сложности.
+	if save_treasure_manager == true then
+		packet:w_u8(level.get_game_difficulty() + 128)
+	else
+		packet:w_u8(level.get_game_difficulty())
+	end
+
+	-- Сохраняем состояние временного отключения управления.
+	if self.st.disable_input_time == nil then
+		packet:w_bool(false)
+	else
+		packet:w_bool(true)
+		utils.w_CTime(packet, self.st.disable_input_time)
+	end
+
+	xr_logic.pstor_save_all(self.object, packet)
+	self.weather_manager:save(packet)
+
+	sr_psy_antenna.save( packet )
+	
+	if save_treasure_manager == true then
+		treasure_manager.save(packet)      
+	end                                  
+
+	task_manager.save(packet)
+	self.actor_detector:save(packet)
+
+	-- Расширение пакета: длительность блокировки управления и активное лечение.
+	-- Старые сохранения распознаются по отсутствию маркера в конце пакета.
+	packet:w_u8(0xA6)
+	local disable_idle_ms = math.max(0, math.floor((self.st.disable_input_idle or 0) * 1000))
+	packet:w_u32(disable_idle_ms)
+	if sz_healing and sz_healing.save_healing_state then
+		sz_healing.save_healing_state(packet)
+	else
+		packet:w_u8(0)
+	end
+
+	if sz_mod and sz_mod.on_quicksave_actor_save then
+		sz_mod.on_quicksave_actor_save()
+	end
+	
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:load(reader)
+	printf("actor_binder:load(): self.object:name()='%s'", self.object:name())
+	if sz_healing and sz_healing.reset_healing then
+		sz_healing.reset_healing()
+	end
+	object_binder.load(self, reader)
+	printf("actor_binder:object_binder.load(): self.object:name()='%s'", self.object:name())
+
+	-- Загружаем уровень сложности.
+	local game_difficulty = reader:r_u8()
+	
+	local load_treasure_manager = false      
+	if game_difficulty >= 128 then           
+		game_difficulty = game_difficulty - 128
+		load_treasure_manager = true           
+	end                                      
+
+	
+	local difficulty_section = game_difficulty_by_num[game_difficulty]
+	if difficulty_section then
+		get_console():execute("g_game_difficulty "..difficulty_section)
+	else
+		printf("[BIND] unsupported saved game difficulty: %s", tostring(game_difficulty))
+	end
+
+	if reader:r_eof() then
+		abort("SAVE FILE IS CORRUPT")
+	end
+
+	local stored_input_time = reader:r_u8() ~= 0
+	if stored_input_time then
+		self.st.disable_input_time = utils.r_CTime(reader)
+	else
+		self.st.disable_input_time = nil
+	end
+
+	xr_logic.pstor_load_all(self.object, reader)
+	self.weather_manager:load(reader)
+
+	sr_psy_antenna.load(reader)
+	
+	if load_treasure_manager == true then
+		treasure_manager.load(reader)      
+	end                                  
+
+	
+	task_manager.load(reader)
+	self.actor_detector:load(reader)
+
+	-- Читаем добавочный блок только если он есть. Старые сохранения
+	-- заканчиваются на actor_detector и не требуют дополнительных чтений.
+	self.st.disable_input_idle = nil
+	if not reader:r_eof() then
+		local marker = reader:r_u8()
+		if marker == 0xA6 then
+			local disable_idle_ms = reader:r_u32()
+			if self.st.disable_input_time ~= nil then
+				self.st.disable_input_idle = disable_idle_ms / 1000
+			end
+
+			if sz_healing and sz_healing.load_healing_state then
+				sz_healing.load_healing_state(reader)
+			else
+				local count = reader:r_u8()
+				for i = 1, count do
+					reader:r_stringZ()
+					reader:r_u32()
+				end
+			end
+		else
+			printf("[BIND] unknown actor save extension marker: %s", tostring(marker))
+		end
+	end
+
+	-- В старых сохранениях длительность блокировки не записывалась.
+	if self.st.disable_input_time ~= nil and self.st.disable_input_idle == nil then
+		self.st.disable_input_idle = 0
+	end
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:on_key(key)
+    if not db.actor or not db.actor:alive() then return end
+
+    if key == DIK_keys.DIK_F6 then
+        if sz_mod and sz_mod.request_quicksave_archive then
+            sz_mod.request_quicksave_archive()
+        end
+		
+    elseif key == DIK_keys.DIK_F7 then
+        -- Archive the just-created F6 save before the engine loads the
+        -- fixed user_quicksave slot and the pending update can be interrupted.
+        if sz_mod and sz_mod.flush_quicksave_archive then
+            sz_mod.flush_quicksave_archive()
+        end
+		
+    elseif key == DIK_keys.DIK_T then
+        if sz_wait_menu then
+            if sz_wait_menu.is_wait_menu_open() then
+                sz_wait_menu.close_wait_menu()
+            else
+                sz_wait_menu.open_wait_menu()
+            end
+        end
+    end
+end
+
+-- Предзагрузка звуковых файлов.
+--if string.find(command_line(), "-noprefetch") == nil then
+--	sound_prefetch.prefetch_sounds()
+--end
+
+-- Weapon functions
+function hide_weapon()
+	weapon_hide = true
+end
+
+function restore_weapon()
+	weapon_hide = false
+end
+
+-- Тест перебора секций (оставлен отключённым).
+--[[
+local function test_section_iteration(file_name, section_name)
+	printf			("file    : %s",file_name)
+	printf			("section : %s",section_name)
+	
+	local			file = ini_file(file_name)
+	local			n = file:line_count(section_name)
+	printf			("lines   : %d",n)
+	
+	local			id, value = "", "", result
+	for i=0,n-1 do
+		result, id, value	= file:r_line(section_name,i,"","")
+		printf		("line %d : %s = %s",i,id,value)
+	end
+end
+
+test_section_iteration("system.ltx","space_restrictor")
+--]]

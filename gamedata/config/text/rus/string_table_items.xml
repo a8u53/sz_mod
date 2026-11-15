@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+<string_table>
+	<string id="item test1">
+		<text>Это тестовая строка для вещмешка</text>
+	</string>
+	<string id="item test2">
+		<text>Это еще одна тестовая строка для вещмешка</text>
+	</string>
+	<string id="item_case_esc_desc">
+		<text>Кейс с документами. Сделан из огнеупорного материала.</text>
+	</string>
+	<string id="item_decoder_desc">
+		<text>Нечто вроде мощной электронной отмычки. Похоже, что она создавалась с целью взломать какой-то специфический электронный замок. Как ни странно конструкция не подразумевает универсальности - оно создавалось для конкретного замка и не способно взламывать какие-либо другие коды.</text>
+	</string>
+	<string id="item_decoder_name">
+		<text>Декодер</text>
+	</string>
+	<string id="item_detector_yantar_desc">
+		<text>Устройство для замеров пси-излучения.</text>
+	</string>
+	<string id="item_detector_yantar_name">
+		<text>Сенсор ПП-4а</text>
+	</string>
+	<string id="item_doc_x16_desc">
+		<text>Полиэтиленовый файл с документами. Без ученой степени по биологии сложно что-то в них понять.</text>
+	</string>
+	<string id="item_doc_x16_name">
+		<text>Документы из лаборатории Х16</text>
+	</string>
+	<string id="item_doc_x18_desc">
+		<text>Толстая стопка научных бумаг. Сплошные термины, формулы и диаграммы.</text>
+	</string>
+	<string id="item_doc_x18p1_name">
+		<text>Документы из лаборатории Х18 часть1</text>
+	</string>
+	<string id="item_doc_x18p2_name">
+		<text>Документы из лаборатории Х18 часть2</text>
+	</string>
+	<string id="item_doc_x18p3_name">
+		<text>Документы из лаборатории Х18 часть3</text>
+	</string>
+	<string id="item_doc_x18p4_name">
+		<text>Документы из лаборатории Х18 часть4</text>
+	</string>
+	<string id="item_doc_x18p5_name">
+		<text>Документы из лаборатории Х18 часть5</text>
+	</string>
+	<string id="item_docs_hiden_pri_desc">
+		<text>Потёртая рукопись в кожаной обложке. Написана самим Стрелком. Судя по заглавиям, в ней раскрываются некоторые загадки Зоны.</text>
+	</string>
+	<string id="item_docs_hiden_pri_name">
+		<text>Документы из Припяти</text>
+	</string>
+	<string id="item_dynamite_esc_desc">
+		<text>Тяжёлый деревянный ящик, с надписями "Взрывоопасно" на нескольких языках.</text>
+	</string>
+	<string id="item_dynamite_esc_name">
+		<text>Ящик с динамитом</text>
+	</string>
+	<string id="item_flash_crazy_mil_desc">
+		<text>Флеш-диск - удобное устройство для переноса информации.</text>
+	</string>
+	<string id="item_flash_crazy_mil_name">
+		<text>Флешка сумасшедшего</text>
+	</string>
+	<string id="item_flash_eco_rost_desc">
+		<text>Флеш-диск - удобное устройство для переноса информации.</text>
+	</string>
+	<string id="item_flash_eco_rost_name">
+		<text>Флешка профессора Круглова</text>
+	</string>
+	<string id="item_flash_esc_desc">
+		<text>Флеш-диск - удобное устройство для переноса информации.</text>
+	</string>
+	<string id="item_flash_esc_name">
+		<text>Флешка пленного</text>
+	</string>
+	<string id="item_flash_gslinger_agro_desc">
+		<text>Флеш-диск - удобное устройство для переноса информации.</text>
+	</string>
+	<string id="item_flash_gslinger_agro_name">
+		<text>Флешка Стрелка</text>
+	</string>
+	<string id="item_key_x18_desc">
+		<text>Электронный ключ от подземной лаборатории Х-18.</text>
+	</string>
+	<string id="item_key_x18_name">
+		<text>Ключ Борова</text>
+	</string>
+	<string id="item_krot_flash">
+		<text>Флешка Крота</text>
+	</string>
+	<string id="item_PDA_lucky_desc">
+		<text>Карманный персональный компьютер. Незаменимое устройство в Зоне.</text>
+	</string>
+	<string id="item_PDA_lucky_name">
+		<text>КПК Счастливчика</text>
+	</string>
+	<string id="item_PDA_tiran_desc">
+		<text>Карманный персональный компьютер. Незаменимое устройство в Зоне.</text>
+	</string>
+	<string id="item_PDA_tiran_name">
+		<text>КПК Тирана</text>
+	</string>
+	<string id="item_quest_case_02_desc">
+		<text>Кейс с документами. Сделан из огнеупорного материала.</text>
+	</string>
+	<string id="item_quest_case_02_name">
+		<text>Документы военных из НИИ Агропром</text>
+	</string>
+	<string id="item_case_esc_name">
+		<text>Документы с блокпоста</text>
+	</string>
+	<string id="yan_bad_psy_helmet_desc">
+		<text>Ненастроенный прототип, разработанный учеными для защиты от ПСИ-излучения</text>
+	</string>
+	<string id="yan_bad_psy_helmet_name">
+		<text>Ненастроенный пси-шлем</text>
+	</string>
+	<string id="yan_good_psy_helmet_desc">
+		<text>Настроенный прототип, разработанный учеными для защиты от ПСИ-излучения</text>
+	</string>
+	<string id="yan_good_psy_helmet_name">
+		<text>Настроенный пси-шлем</text>
+	</string>
+    <string id="flash_for_saxar_name">
+		<text>Флешка для Сахарова</text>
+	</string>
+	<string id="flash_for_saxar_desc">
+		<text>Накопительное устройство для профессора Сахарова. На ней находятся отчеты о наблюдениях за аномалиями и замеры излучения.</text>
+	</string>
+	<string id="item_agr_yan_name">
+		<text>Карта перехода</text>
+	</string>
+	<string id="item_doc_agr_yan_desc">
+		<text>Карта безопасного прохода с НИИ "Агропром" на завод "Янтарь".</text>
+	</string>
+	<string id="soldier_outfit">
+		<text>Армейский бронежилет ПСЗ-7</text>
+	</string>
+	<string id="soldier_outfit_desc">
+		<text>Армейский бронежилет серии ПСЗ-7 (персональная система защиты) обеспечивает уровень защиты, достаточный для проведения боевых операций против легковооружённого противника. Защита от аномальной активности отсутствует.\n \n [Характеристики]\n%c[white]• Термозащита: %c[green]5%%c[white] \n• Удар: %c[green]15%%c[white] \n• Электрозащита: %c[green]5%%c[white] \n• Разрыв: %c[green]15%%c[white] \n• Химзащита: %c[green]5%%c[white] \n• Взрыв: %c[green]20%%c[white] \n• Броня: %c[green]20%%c[white] \n• Переносимый вес: %c[green]+4 кг%c[white] \n• Подвижность: %c[UI_orange]Средняя</text>
+	</string>
+	<string id="money_maker_2_desc">
+		<text>Полиэтиленовый файл с документами. На первый взгляд информация ценная, наверняка может кого-нибудь заинтересовать.</text>
+	</string>
+	<string id="money_maker_2">
+		<text>Файл с документами</text>
+	</string>
+	<string id="money_maker_1_desc">
+		<text>Толстая стопка научных бумаг. Формулы, схемы и чертежи в которых, человеку без квалификации, не разобраться. Вероятнее всего кого-нибудь заинтересует.</text>
+	</string>
+	<string id="money_maker_1">
+		<text>Папка с документами</text>
+	</string>
+	<string id="money_maker_3_desc">
+		<text>Флеш-диск. Обычно напичкан всякой всячиной. Музыка, видеоклипы, видео с котами и порно, впрочем, иногда попадается и действительно полезная документация. В любом случае кому-нибудь пригодится.</text>
+	</string>
+	<string id="money_maker_3">
+		<text>Флеш-диск</text>
+	</string>
+	<string id="tools1_name">
+		<text>Инструменты для грубой работы</text>
+	</string>
+	<string id="tools1_desc">
+		<text>Набор инструментов «Юный техник». Вряд ли подойдёт для работы, в которой нужна тонкость, но в условиях тотальной нехватки инструментов в Зоне может пригодиться экономному технику.</text>
+	</string>
+	<string id="tools2_name">
+		<text>Инструменты для тонкой работы</text>
+	</string>
+	<string id="tools2_desc">
+		<text>Неплохой набор инструментов. Судя по всему, тщательно подобран опытным мастером «под себя, родного». Несмотря на годы, весь инструментарий хорошо сохранился.</text>
+	</string>
+	<string id="tools3_name">
+		<text>Инструменты для калибровки</text>
+	</string>
+	<string id="tools3_desc">
+		<text>Профессиональный набор инструментов для тонкой доводки оборудования. Надпись на ящике гласит, что набор произведён в ГДР. Того, что включено в комплект, достаточно для проведения почти любых работ по настройке и калибровке.</text>
+	</string>
+</string_table>

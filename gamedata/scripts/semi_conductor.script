@@ -1,0 +1,70 @@
+function dark_valley(npc, actor)
+npc:stop_talk()
+actor:stop_talk()
+dialogs.relocate_money(actor, 500, "out")
+db.actor:set_actor_position(vector():set(346,26,-37),588161,140)
+level.add_pp_effector ("peace_unfade.ppe", 2006, false)
+conductor_talk()	
+end
+
+function garbij(npc, actor)
+npc:stop_talk()
+actor:stop_talk()
+db.actor:set_actor_position(vector():set(-214, 8, -146),39248,61)
+dialogs.relocate_money(actor, 750, "out")
+level.add_pp_effector ("peace_unfade.ppe", 2006, false)
+conductor_talk()
+end
+
+function bar(npc, actor)
+npc:stop_talk()
+actor:stop_talk()
+db.actor:set_actor_position(vector():set(-31.55, 18.07, -174.22),245826,108)
+dialogs.relocate_money(actor, 1000, "out")
+level.add_pp_effector ("peace_unfade.ppe", 2006, false)
+conductor_talk()
+end
+
+function esc_tunnel(npc, actor)
+npc:stop_talk()
+actor:stop_talk()
+db.actor:set_actor_position(vector():set(-88,-0.66,107),177009,84)
+dialogs.relocate_money(actor, 150, "out")
+level.add_pp_effector ("peace_unfade.ppe", 2006, false)
+conductor_talk()
+end
+
+function check_money()
+	return db.actor:money()>=150
+end
+
+function check_money_2()
+	return db.actor:money()>=750
+end
+
+function check_money_3()
+	return db.actor:money()>=500
+end
+
+function check_money_4()
+	return db.actor:money()>=1000
+end
+
+function conductor_talk()
+   	local pizdesh = {"Ну вот мы и пришли.",
+					 "Мы на месте. До встречи.",
+					 "Добрались таки, удачи.",
+					 "Пришли, если понадоблюсь опять, ты знаешь где меня найти."
+					 }
+
+	conductor_msg = pizdesh[math.random(table.getn(pizdesh))]
+    local news_text = "%c[205,145,145,160]\"Проводник\"\\n%c[default]" ..conductor_msg
+		news_sound()
+	db.actor:give_game_news(news_text, "ui\\ui_iconsTotal", Frect():set(498,282,83,47), 1000, 4000)
+end
+
+function news_sound()
+local snd_obj
+snd_obj = xr_sound.get_safe_sound_object([[device\pda\pda_tip]]) -- путь до звукового файла
+snd_obj:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
+end

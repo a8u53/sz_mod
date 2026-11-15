@@ -1,0 +1,615 @@
+-- Централизованный модуль повторяемой арены.
+-- Реализация вынесена сюда из bar_dialogs.script и xr_effects.script.
+
+-- new arena
+
+
+local function sz_arena_count_set(actor, npc, count)
+    -- Сбрасываем только выбранное количество противников.
+    -- Сложность уже установлена отдельным выбором и должна сохраняться.
+    for _, info in ipairs({"sz_arena_count_1", "sz_arena_count_2", "sz_arena_count_3", "sz_arena_count_5"}) do
+        actor:disable_info_portion(info)
+    end
+    actor:give_info_portion("sz_arena_count_" .. tostring(count))
+end
+local function sz_arena_difficulty_set(actor, npc, difficulty)
+    for _, info in ipairs({"sz_arena_difficulty_novice", "sz_arena_difficulty_experienced", "sz_arena_difficulty_master"}) do actor:disable_info_portion(info) end
+    actor:give_info_portion("sz_arena_difficulty_" .. difficulty)
+end
+local function sz_arena_difficulty_novice(actor, npc) sz_arena_difficulty_set(actor, npc, "novice") end
+local function sz_arena_difficulty_experienced(actor, npc) sz_arena_difficulty_set(actor, npc, "experienced") end
+local function sz_arena_difficulty_master(actor, npc) sz_arena_difficulty_set(actor, npc, "master") end
+local function sz_arena_count_1(actor,npc) sz_arena_count_set(actor,npc,1) end
+local function sz_arena_count_2(actor,npc) sz_arena_count_set(actor,npc,2) end
+local function sz_arena_count_3(actor,npc) sz_arena_count_set(actor,npc,3) end
+local function sz_arena_count_5(actor,npc) sz_arena_count_set(actor,npc,5) end
+-- Forward declarations: start() calls reset_counter(), and loadout wrappers call start().
+local sz_arena_start, sz_arena_reset_counter
+local sz_arena_start_crowd_loop
+local sz_arena_crowd_generation = 0
+-- Standalone arena: configurable opponent count, all spawned at the same arena point.
+local function sz_arena_start_issued(actor, npc) sz_arena_start(actor, npc, "issued") end
+local function sz_arena_start_own(actor, npc) sz_arena_start(actor, npc, "own") end
+local function sz_arena_start_knife(actor, npc) sz_arena_start(actor, npc, "knife") end
+local function sz_arena_clear_pick(actor, npc)
+    for _, info in ipairs({"sz_arena_pick_issued", "sz_arena_pick_own", "sz_arena_pick_knife"}) do actor:disable_info_portion(info) end
+end
+sz_arena_start = function(actor, npc, loadout)
+    if has_alife_info("sz_arena_active") then return end
+    sz_arena_reset_counter(actor, npc)
+    local sim = alife()
+    if sim == nil then return end
+    local count = 1
+    if has_alife_info("sz_arena_count_2") then count = 2
+    elseif has_alife_info("sz_arena_count_3") then count = 3
+    elseif has_alife_info("sz_arena_count_5") then count = 5 end
+    local difficulty = "experienced"
+    if has_alife_info("sz_arena_difficulty_novice") then difficulty = "novice"
+    elseif has_alife_info("sz_arena_difficulty_master") then difficulty = "master" end
+    local enemy_pos = vector():set(152.525, -21.017, 130.692)
+    local enemy_lv, enemy_gv = 44534, 1595
+    local section_ids = {}
+    if count == 1 then section_ids = {"sz_arena_respawner_" .. difficulty .. "_c1_1"}
+    elseif count == 2 then section_ids = {"sz_arena_respawner_" .. difficulty .. "_c2_1", "sz_arena_respawner_" .. difficulty .. "_c2_2"}
+    elseif count == 3 then section_ids = {"sz_arena_respawner_" .. difficulty .. "_c3_1", "sz_arena_respawner_" .. difficulty .. "_c3_2", "sz_arena_respawner_" .. difficulty .. "_c3_3"}
+    else section_ids = {"sz_arena_respawner_" .. difficulty .. "_c5_1", "sz_arena_respawner_" .. difficulty .. "_c5_2", "sz_arena_respawner_" .. difficulty .. "_c5_3", "sz_arena_respawner_" .. difficulty .. "_c5_4", "sz_arena_respawner_" .. difficulty .. "_c5_5"} end
+    local spawned = 0
+    for route_index, section_id in ipairs(section_ids) do
+        local enemy = sim:create(section_id, enemy_pos, enemy_lv, enemy_gv)
+        if enemy ~= nil then spawned = spawned + 1 else printf("[sz_arena] failed to spawn route %d", route_index) end
+    end
+    if spawned == 0 then return end
+    for _, info in ipairs({"sz_arena_active", "sz_arena_enemy_dead", "sz_arena_reward_paid", "sz_arena_fight_begin", "sz_arena_loadout_issued", "sz_arena_loadout_own", "sz_arena_loadout_knife", "sz_arena_count_1", "sz_arena_count_2", "sz_arena_count_3", "sz_arena_count_5"}) do actor:disable_info_portion(info) end
+    actor:give_info_portion("sz_arena_count_" .. tostring(count))
+    if loadout == "own" then actor:give_info_portion("sz_arena_loadout_own") elseif loadout == "knife" then actor:give_info_portion("sz_arena_loadout_knife") else actor:give_info_portion("sz_arena_loadout_issued") end
+    sz_arena_clear_pick(actor, npc)
+    actor:give_info_portion("sz_arena_active")
+    if sz_arena_start_crowd_loop ~= nil then
+        sz_arena_start_crowd_loop()
+    end
+end
+
+local function sz_arena_has_reward()
+	return has_alife_info("sz_arena_enemy_dead") and not has_alife_info("sz_arena_reward_paid")
+end
+
+
+
+-- Shared transfer callback must be declared before sz_arena_* inventory functions.
+-- Lua locals are lexical: a callback declared later in this file is not visible above.
+local function transfer_object_item(item)
+    out_object:transfer_item(item, in_object)
+end
+
+local sz_arena_enemy_id = nil
+local sz_arena_killed_count = 0
+
+sz_arena_reset_counter = function(actor, npc)
+    sz_arena_killed_count = 0
+end
+
+local function sz_arena_finish(actor, npc)
+	if db.actor == nil then
+		return
+	end
+
+	if npc ~= nil then sz_arena_enemy_id = npc:id() end
+    sz_arena_killed_count = sz_arena_killed_count + 1
+    local expected = 1
+    if has_alife_info("sz_arena_count_2") then expected = 2 elseif has_alife_info("sz_arena_count_3") then expected = 3 elseif has_alife_info("sz_arena_count_5") then expected = 5 end
+    if sz_arena_killed_count < expected then return end
+    sz_arena_killed_count = 0
+    db.actor:disable_info_portion("sz_arena_active")
+    db.actor:disable_info_portion("sz_arena_reward_paid")
+    db.actor:give_info_portion("sz_arena_enemy_dead")
+end
+
+-- One-shot ready announcement played as the opening camera fly-by begins.
+local function sz_arena_play_2d(path)
+    local snd = xr_sound.get_safe_sound_object(path)
+    if snd ~= nil and db.actor ~= nil then
+        snd:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0)
+    else
+    end
+end
+
+-- Spatial audience playback: use the working s3d API and arena speaker positions.
+local sz_arena_crowd_points = {
+    vector():set(140.411, -13.391, 94.669),
+    vector():set(140.546, -13.379, 108.127),
+    vector():set(140.608, -13.358, 113.945),
+    vector():set(140.421, -13.392, 119.053)
+}
+
+-- Sequential arena ambience: crowd_1 -> crowd_2 -> crowd_3 -> repeat.
+-- Each clip is played once from an audience point; the sequence repeats during the fight.
+local sz_arena_ambient_generation = 0
+local sz_arena_ambient_pending_condition = nil
+local sz_arena_ambient_pending_action = nil
+local sz_arena_ambient_index = 1
+
+local function sz_arena_remove_pending_ambient_call()
+    if sz_arena_ambient_pending_condition ~= nil and sz_arena_ambient_pending_action ~= nil
+        and level ~= nil and level.remove_call ~= nil then
+        level.remove_call(sz_arena_ambient_pending_condition, sz_arena_ambient_pending_action)
+    end
+    sz_arena_ambient_pending_condition = nil
+    sz_arena_ambient_pending_action = nil
+end
+
+local function sz_arena_stop_ambient()
+    sz_arena_ambient_generation = sz_arena_ambient_generation + 1
+    sz_arena_remove_pending_ambient_call()
+end
+
+local function sz_arena_start_ambient()
+    sz_arena_stop_ambient()
+    if db.actor == nil or level == nil or level.add_call == nil then return end
+
+    sz_arena_ambient_generation = sz_arena_ambient_generation + 1
+    local generation = sz_arena_ambient_generation
+    sz_arena_ambient_index = 1
+
+    local function play_next()
+        if generation ~= sz_arena_ambient_generation or not has_alife_info("sz_arena_active") then
+            return
+        end
+
+        local clip_index = sz_arena_ambient_index
+        local path = [[ambient\arena\crowd_]] .. tostring(clip_index)
+        local point_index = math.random(1, #sz_arena_crowd_points)
+        local pos = sz_arena_crowd_points[point_index]
+        local snd = xr_sound.get_safe_sound_object(path)
+        if snd ~= nil and db.actor ~= nil then
+            snd:play_no_feedback(db.actor, sound_object.s3d, 0, pos, 1.0)
+        end
+
+        sz_arena_ambient_index = sz_arena_ambient_index + 1
+        if sz_arena_ambient_index > 3 then
+            sz_arena_ambient_index = 1
+        end
+
+        -- Schedule the next clip after the current one finishes (13s, 11s, 8s).
+        -- A small 250 ms buffer avoids overlap from playback timing jitter.
+        local clip_durations_ms = {13000, 11000, 8000}
+        local delay_ms = clip_durations_ms[clip_index] + 250
+        local started = time_global()
+        local condition
+        local action
+        condition = function()
+            return generation ~= sz_arena_ambient_generation
+                or not has_alife_info("sz_arena_active")
+                or time_global() - started >= delay_ms
+        end
+        action = function()
+            if level ~= nil and level.remove_call ~= nil then
+                level.remove_call(condition, action)
+            end
+            if sz_arena_ambient_pending_condition == condition then
+                sz_arena_ambient_pending_condition = nil
+                sz_arena_ambient_pending_action = nil
+            end
+            if generation ~= sz_arena_ambient_generation or not has_alife_info("sz_arena_active") then
+                return
+            end
+            play_next()
+        end
+        sz_arena_ambient_pending_condition = condition
+        sz_arena_ambient_pending_action = action
+        level.add_call(condition, action)
+    end
+
+    play_next()
+end
+
+local function sz_arena_play_3d(path, pos)
+    local snd = xr_sound.get_safe_sound_object(path)
+    if snd ~= nil and db.actor ~= nil and pos ~= nil then
+        snd:play_no_feedback(db.actor, sound_object.s3d, 0, pos, 1.5)
+    else
+    end
+end
+
+local function sz_arena_ready_sound(actor, npc)
+	sz_arena_play_2d([[characters_voice\scenario\bar\arena_sound\bar_fight_1_ready]])
+end
+
+-- Standalone equivalent of the first story-arena loadout. It does not move
+-- the actor's existing inventory into the story arena storage box.
+-- Save the player's complete inventory in the original arena storage box (SID 573).
+-- This mirrors the inventory transfer used by the story arena.
+-- In own-loadout mode, leave equipped weapons (slots 0/1/2) and outfit (slot 6)
+-- on the actor; move all other non-ammunition, non-medical items to arena storage.
+local function sz_arena_is_equipped_own_item(player, item)
+	if player == nil or item == nil then return false end
+	for _, slot_id in ipairs({0, 1, 2, 6}) do
+		local equipped = player:item_in_slot(slot_id)
+		if equipped ~= nil and equipped:id() == item:id() then
+			return true
+		end
+	end
+	return false
+end
+
+-- Medical items are not confiscated when the player enters with own gear.
+local sz_arena_medical_sections = {
+    medkit = true,
+    medkit_army = true,
+    medkit_scientic = true,
+    bandage = true,
+    antirad = true,
+    antirad_pills = true,
+    painkiller_1 = true,
+    painkiller_2 = true,
+    painkiller_3 = true,
+    painkiller_4 = true,
+    energy_drink = true,
+    voda = true,
+    vodka = true,
+}
+
+local function sz_arena_transfer_own_item(item)
+    if item ~= nil then
+        -- Preserve all ammunition the player brought, not only loaded magazines.
+        local section = item:section()
+        if sz_arena_medical_sections[section] then
+            return
+        end
+        if section ~= nil and string.sub(section, 1, 5) == "ammo_" then
+            return
+        end
+    end
+	if out_object ~= nil and sz_arena_is_equipped_own_item(out_object, item) then
+		return
+	end
+	out_object:transfer_item(item, in_object)
+end
+
+local function sz_arena_store_inventory(actor, npc)
+	local player = actor
+	local storage = level_object_by_sid(573)
+	if player == nil or storage == nil then
+		printf("[sz_arena] cannot store inventory: actor or arena box SID 573 missing")
+		return
+	end
+	out_object = player
+	in_object = storage
+	if has_alife_info("sz_arena_loadout_own") then
+		player:inventory_for_each(sz_arena_transfer_own_item)
+	else
+		player:inventory_for_each(transfer_object_item)
+	end
+end
+
+-- Move temporary arena gear out to the story arena gear box (SID 574),
+-- then return the player's original inventory from SID 573.
+local function sz_arena_restore_inventory(actor, npc)
+	local player = actor
+	local original_storage = level_object_by_sid(573)
+	if player == nil or original_storage == nil then
+		printf("[sz_arena] cannot restore inventory: actor or arena box SID 573 missing")
+		return
+	end
+
+	-- Own-loadout mode only stored the items removed from ruck/belt; return those.
+	if has_alife_info("sz_arena_loadout_own") then
+		out_object = original_storage
+		in_object = player
+		original_storage:inventory_for_each(transfer_object_item)
+		return
+	end
+
+	local arena_storage = level_object_by_sid(574)
+	if arena_storage == nil then
+		printf("[sz_arena] cannot restore issued loadout: arena box SID 574 missing")
+		return
+	end
+
+	out_object = player
+	in_object = arena_storage
+	player:inventory_for_each(transfer_object_item)
+
+	out_object = original_storage
+	in_object = player
+	original_storage:inventory_for_each(transfer_object_item)
+end
+
+local function sz_arena_weapon_give(actor, npc)
+	local player = db.actor
+	local simulator = alife()
+	if player == nil or simulator == nil then
+		return
+	end
+	if has_alife_info("sz_arena_loadout_own") then
+		return
+	end
+
+	if has_alife_info("sz_arena_loadout_knife") then
+		local knife = simulator:create("wpn_knife", player:position(), player:level_vertex_id(), player:game_vertex_id(), player:id())
+		if knife ~= nil then knife.item_condition = math.random(50, 80) / 100 end
+		return
+	end
+
+	-- Three random kits per difficulty. Weapons and outfits are spawned at 50-80% condition.
+	local kits = {
+		novice = {
+			{outfit = "novice_outfit", weapon = "wpn_pm", ammo = {"ammo_9x18_fmj", "ammo_9x18_fmj", "ammo_9x18_fmj"}},
+			{outfit = "novice_white_outfit", weapon = "wpn_fort", ammo = {"ammo_9x18_fmj", "ammo_9x18_fmj", "ammo_9x18_fmj"}},
+			{outfit = "bandit_red_outfit", weapon = "wpn_bm16", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
+			{outfit = "bandit_green_outfit", weapon = "wpn_toz34", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
+		},
+		experienced = {
+			{outfit = "cs_outfit", weapon = "wpn_l85", ammo = {"ammo_5.56x45_ss190", "ammo_5.56x45_ss190", "ammo_5.56x45_ss190", "ammo_5.56x45_ss190"}},
+			{outfit = "stalker_medium_outfit", weapon = "wpn_ak74", ammo = {"ammo_5.45x39_fmj", "ammo_5.45x39_fmj", "ammo_5.45x39_fmj"}},
+			{outfit = "stalker_outfit", weapon = "wpn_spas12", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
+		},
+		master = {
+			{outfit = "stalker_medium_outfit", weapon = "wpn_abakan", ammo = {"ammo_5.45x39_fmj", "ammo_5.45x39_fmj", "ammo_5.45x39_fmj", "ammo_5.45x39_fmj"}},
+			{outfit = "cs_outfit", weapon = "wpn_lr300", ammo = {"ammo_5.56x45_ss190", "ammo_5.56x45_ss190", "ammo_5.56x45_ss190", "ammo_5.56x45_ss190"}},
+			{outfit = "stalker_outfit", weapon = "wpn_groza", ammo = {"ammo_9x39_pab9", "ammo_9x39_pab9", "ammo_9x39_pab9", "ammo_9x39_pab9"}},
+		},
+	}
+
+	local difficulty = "experienced"
+	if has_alife_info("sz_arena_difficulty_novice") then
+		difficulty = "novice"
+	elseif has_alife_info("sz_arena_difficulty_master") then
+		difficulty = "master"
+	end
+
+	local difficulty_kits = kits[difficulty]
+	local kit = difficulty_kits[math.random(1, #difficulty_kits)]
+	local items = {
+		{section = kit.outfit, conditioned = true},
+		{section = kit.weapon, conditioned = true},
+		{section = "wpn_knife", conditioned = true},
+        -- Standard medical supplies in every issued kit.
+        {section = "medkit", conditioned = false},
+        {section = "bandage", conditioned = false},
+        {section = "bandage", conditioned = false},
+	}
+	for _, ammo_section in ipairs(kit.ammo) do
+		table.insert(items, {section = ammo_section, conditioned = false})
+	end
+
+	local pos = player:position()
+	local lv_id = player:level_vertex_id()
+	local gv_id = player:game_vertex_id()
+	for _, item_data in ipairs(items) do
+		local created = simulator:create(item_data.section, pos, lv_id, gv_id, player:id())
+		if created ~= nil and item_data.conditioned then
+			created.item_condition = math.random(50, 80) / 100
+		end
+	end
+end
+
+local function sz_arena_weapon_slot(actor, npc)
+	if db.actor ~= nil then
+		db.actor:activate_slot(1)
+	end
+end
+
+-- Restore weapon/input/HUD after the arena camera effector has fully ended.
+-- This undoes the hide_weapon state applied by the cutscene; activate_slot is not used.
+local function sz_arena_force_weapon_restore(actor, npc)
+	if db.actor == nil then
+		return
+	end
+	level.show_indicators()
+	level.enable_input()
+	db.actor:restore_weapon()
+end
+
+-- Victory announcement: use the two original finish clips requested for this test.
+local sz_arena_last_finish = 0
+local function sz_arena_victory_sound(actor, npc)
+    if has_alife_info("sz_arena_count_2") then
+        sz_arena_play_2d([[characters_voice\scenario\bar\arena_sound\bar_fight_3_finish]])
+    elseif has_alife_info("sz_arena_count_5") then
+        sz_arena_play_2d([[characters_voice\scenario\bar\arena_sound\bar_fight_4_finish]])
+    else
+        local pick = math.random(1, 2)
+        if pick == sz_arena_last_finish then pick = 3 - pick end
+        sz_arena_last_finish = pick
+        if pick == 1 then sz_arena_play_2d([[characters_voice\scenario\bar\arena_sound\bar_fight_1_finish]])
+        else sz_arena_play_2d([[characters_voice\scenario\bar\arena_sound\bar_fight_2_finish]]) end
+    end
+end
+
+-- Original arena megaphone announcement: the fight starts after the intro camera.
+local function sz_arena_fight_start_sound(actor, npc)
+	sz_arena_play_2d([[characters_voice\scenario\bar\arena_megafon\mega_arena_start]])
+end
+
+-- Dynamic reward for repeat arena battles:
+-- base 400 rubles for the first opponent + 100 for each additional opponent,
+-- multiplied by difficulty and loadout.
+local function sz_arena_give_reward(actor, npc)
+	if db.actor == nil or npc == nil or not has_alife_info("sz_arena_enemy_dead") or has_alife_info("sz_arena_reward_paid") then
+		return
+	end
+
+	local count = 1
+	if has_alife_info("sz_arena_count_2") then
+		count = 2
+	elseif has_alife_info("sz_arena_count_3") then
+		count = 3
+	elseif has_alife_info("sz_arena_count_5") then
+		count = 5
+	end
+
+	local base_reward = 400 + 100 * (count - 1)
+
+	local difficulty_multiplier = 1.0
+	if has_alife_info("sz_arena_difficulty_novice") then
+		difficulty_multiplier = 0.5
+	elseif has_alife_info("sz_arena_difficulty_master") then
+		difficulty_multiplier = 1.5
+	end
+	-- Experienced difficulty is the baseline: x1.0.
+
+	local loadout_multiplier = 1.0
+	if has_alife_info("sz_arena_loadout_own") then
+		loadout_multiplier = 0.5
+	elseif has_alife_info("sz_arena_loadout_knife") then
+		loadout_multiplier = 2.0
+	end
+	-- Issued loadout is the baseline: x1.0.
+
+	local reward = math.floor(base_reward * difficulty_multiplier * loadout_multiplier)
+	dialogs.relocate_money(npc, reward, "in")
+	db.actor:give_info_portion("sz_arena_reward_paid")
+	-- Restore Arni's normal root choices after the automatic reward exchange.
+	db.actor:disable_info_portion("sz_arena_enemy_dead")
+end
+
+-- Periodic audience shouts during the standalone arena fight.
+-- Use the original Arena voice clips new_arena_public_1..9.
+local sz_arena_last_crowd = 0
+local function sz_arena_crowd_sound(actor, npc)
+    if db.actor == nil or not has_alife_info("sz_arena_active") then
+        return
+    end
+    local point_index = math.random(1, #sz_arena_crowd_points)
+    local pos = sz_arena_crowd_points[point_index]
+    local clip_index = math.random(1, 9)
+    local path = [[characters_voice\scenario\bar\arena_public\new_arena_public_]] .. tostring(clip_index)
+    sz_arena_play_3d(path, pos)
+end
+
+-- Automatically repeat crowd shouts while the standalone fight is active.
+-- Explicitly unregister each fired/pending call; otherwise level.add_call callbacks
+-- may remain registered and prevent reliable periodic playback.
+local sz_arena_crowd_pending_condition = nil
+local sz_arena_crowd_pending_action = nil
+
+local function sz_arena_remove_pending_crowd_call()
+    if sz_arena_crowd_pending_condition ~= nil and sz_arena_crowd_pending_action ~= nil
+        and level ~= nil and level.remove_call ~= nil then
+        level.remove_call(sz_arena_crowd_pending_condition, sz_arena_crowd_pending_action)
+    end
+    sz_arena_crowd_pending_condition = nil
+    sz_arena_crowd_pending_action = nil
+end
+
+sz_arena_start_crowd_loop = function()
+    sz_arena_start_ambient()
+    sz_arena_crowd_generation = sz_arena_crowd_generation + 1
+    local generation = sz_arena_crowd_generation
+    sz_arena_remove_pending_crowd_call()
+
+    local function schedule_next()
+        if generation ~= sz_arena_crowd_generation or not has_alife_info("sz_arena_active") then
+            return
+        end
+        local delay_ms = math.random(3000, 8000)
+        local started = time_global()
+        local condition
+        local action
+        condition = function()
+            local ready = generation ~= sz_arena_crowd_generation
+                or not has_alife_info("sz_arena_active")
+                or time_global() - started >= delay_ms
+            if ready then
+            end
+            return ready
+        end
+        action = function()
+            if level ~= nil and level.remove_call ~= nil then
+                level.remove_call(condition, action)
+            end
+            if sz_arena_crowd_pending_condition == condition then
+                sz_arena_crowd_pending_condition = nil
+                sz_arena_crowd_pending_action = nil
+            end
+            if generation ~= sz_arena_crowd_generation or not has_alife_info("sz_arena_active") then
+                return
+            end
+            sz_arena_crowd_sound(db.actor, nil)
+            schedule_next()
+        end
+        sz_arena_crowd_pending_condition = condition
+        sz_arena_crowd_pending_action = action
+        if level == nil or level.add_call == nil then
+            return
+        end
+        level.add_call(condition, action)
+    end
+
+    schedule_next()
+end
+
+-- Return via original arena teleport point and blink PPE, without story inventory transfer.
+local function sz_arena_return(actor, npc)
+	if db.actor == nil then
+		return
+	end
+	level.add_pp_effector("blink.ppe", 234, false)
+	local walk = patrol("t_walk_2")
+	local look = patrol("t_look_2")
+	if walk == nil or look == nil then
+		printf("[sz_arena] missing return patrol t_walk_2/t_look_2")
+		return
+	end
+	local pos = walk:point(0)
+	db.actor:set_actor_position(pos)
+	local dir = look:point(0):sub(pos)
+	db.actor:set_actor_direction(-dir:getH())
+end
+
+local function sz_arena_cleanup(actor, npc)
+    sz_arena_crowd_generation = sz_arena_crowd_generation + 1
+    sz_arena_remove_pending_crowd_call()
+    sz_arena_stop_ambient()
+	-- Remove the arena's spawned items/corpses through the same zone cleanup used by story rewards.
+	xr_zones.purge_arena_items("bar_arena")
+
+	-- Fallback for the spawned test stalker in case the zone did not register it.
+	if sz_arena_enemy_id ~= nil then
+		local simulator = alife()
+		local enemy = simulator and simulator:object(sz_arena_enemy_id)
+		if enemy ~= nil then
+			simulator:release(enemy, true)
+		end
+		sz_arena_enemy_id = nil
+	end
+
+	if db.actor then
+		-- Keep enemy_dead until Arni pays the reward dialogue; next fight resets it.
+		db.actor:disable_info_portion("sz_arena_fight_begin")
+		db.actor:disable_info_portion("sz_arena_active")
+	end
+end
+
+
+-- Публичные функции скриптового namespace sz_arena.
+-- X-Ray/OGSR загружает .script по имени файла; require("sz_arena") здесь не используется.
+function count_set(actor, npc, count) return sz_arena_count_set(actor, npc, count) end
+function difficulty_set(actor, npc, difficulty) return sz_arena_difficulty_set(actor, npc, difficulty) end
+function difficulty_novice(actor, npc) return sz_arena_difficulty_novice(actor, npc) end
+function difficulty_experienced(actor, npc) return sz_arena_difficulty_experienced(actor, npc) end
+function difficulty_master(actor, npc) return sz_arena_difficulty_master(actor, npc) end
+function count_1(actor, npc) return sz_arena_count_1(actor, npc) end
+function count_2(actor, npc) return sz_arena_count_2(actor, npc) end
+function count_3(actor, npc) return sz_arena_count_3(actor, npc) end
+function count_5(actor, npc) return sz_arena_count_5(actor, npc) end
+function start_issued(actor, npc) return sz_arena_start_issued(actor, npc) end
+function start_own(actor, npc) return sz_arena_start_own(actor, npc) end
+function start_knife(actor, npc) return sz_arena_start_knife(actor, npc) end
+function clear_pick(actor, npc) return sz_arena_clear_pick(actor, npc) end
+function start(actor, npc, loadout) return sz_arena_start(actor, npc, loadout) end
+function has_reward() return sz_arena_has_reward() end
+function reset_counter(actor, npc) return sz_arena_reset_counter(actor, npc) end
+function finish(actor, npc) return sz_arena_finish(actor, npc) end
+function ready_sound(actor, npc) return sz_arena_ready_sound(actor, npc) end
+function store_inventory(actor, npc) return sz_arena_store_inventory(actor, npc) end
+function restore_inventory(actor, npc) return sz_arena_restore_inventory(actor, npc) end
+function weapon_give(actor, npc) return sz_arena_weapon_give(actor, npc) end
+function weapon_slot(actor, npc) return sz_arena_weapon_slot(actor, npc) end
+function force_weapon_restore(actor, npc) return sz_arena_force_weapon_restore(actor, npc) end
+function victory_sound(actor, npc) return sz_arena_victory_sound(actor, npc) end
+function fight_start_sound(actor, npc) return sz_arena_fight_start_sound(actor, npc) end
+function give_reward(actor, npc) return sz_arena_give_reward(actor, npc) end
+function crowd_sound(actor, npc) return sz_arena_crowd_sound(actor, npc) end
+function return_actor(actor, npc) return sz_arena_return(actor, npc) end
+function cleanup(actor, npc) return sz_arena_cleanup(actor, npc) end

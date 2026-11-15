@@ -1,0 +1,198 @@
+-- ============================================================
+-- sz_blood.script
+-- Брызги крови (полный залп, кулдаун до исчезновения)
+-- ============================================================
+
+local BLOOD_DISTANCE = 3.0
+-- Кулдаун больше не нужен, так как мы ждем исчезновения всех капель,
+-- но оставим маленький (50 мс), чтобы за один кадр не спавнилось дважды
+local BLOOD_COOLDOWN = 50 
+local BLOOD_LIFETIME = 3000      -- Время жизни капли (мс)
+local last_blood_time = 0
+
+local POOL_SIZE = 30
+local DROPS_PER_HIT = 30         -- Показываем ВСЕ 30 капель за раз!
+
+local blood_pool = {}
+local active_drops = {}
+local statics_initialized = false
+
+-- Функция проверки, есть ли еще активные капли
+local function is_any_drop_active()
+    for i = 1, POOL_SIZE do
+        if active_drops[i] then
+            return true
+        end
+    end
+    return false
+end
+
+local function set_static_alpha(wnd, alpha)
+    if not wnd then return end
+    if alpha < 0 then alpha = 0 end
+    if alpha > 255 then alpha = 255 end
+    local color = alpha * 16777216 + 0xFFFFFF
+    wnd:SetColor(color)
+end
+
+local function init_statics()
+    if statics_initialized then return end
+    local hud = get_hud()
+    if not hud then return end
+    
+    for i = 1, POOL_SIZE do
+        local name = "hud_blood_drop_" .. i
+        local static = hud:GetCustomStatic(name)
+        if not static then
+            hud:AddCustomStatic(name, true)
+            static = hud:GetCustomStatic(name)
+        end
+        if static then
+            local wnd = static:wnd()
+            if wnd then
+                wnd:Show(false)
+            end
+        end
+        blood_pool[i] = name
+    end
+    statics_initialized = true
+end
+
+local function spawn_blood_splatter()
+    init_statics()
+    
+    local hud = get_hud()
+    if not hud then return end
+
+    local screen_w = device().width
+    local screen_h = device().height
+
+    -- Создаем список всех индексов и перемешиваем
+    local available_indices = {}
+    for i = 1, POOL_SIZE do
+        table.insert(available_indices, i)
+    end
+
+    for i = #available_indices, 2, -1 do
+        local j = math.random(i)
+        available_indices[i], available_indices[j] = available_indices[j], available_indices[i]
+    end
+
+    local drops_to_show = math.min(DROPS_PER_HIT, #available_indices)
+    
+    for i = 1, drops_to_show do
+        local index = available_indices[i]
+        local static_name = blood_pool[index]
+        
+        local static = hud:GetCustomStatic(static_name)
+        if static then
+            local wnd = static:wnd()
+            if wnd then
+                local x = math.random(0, screen_w - 32)
+                local y = math.random(0, screen_h - 32)
+                
+                local speed_y = math.random(60, 95)
+                
+                wnd:SetWndPos(x, y)
+                wnd:Show(true)
+                set_static_alpha(wnd, 255)
+                
+                active_drops[index] = {
+                    expire_time = time_global() + BLOOD_LIFETIME,
+                    start_time = time_global(),
+                    start_x = x,
+                    start_y = y,
+                    speed_y = speed_y,
+                    wnd = wnd,
+                    index = index
+                }
+            end
+        end
+    end
+end
+
+function update_blood_splatters()
+    if not statics_initialized then return end
+    local now = time_global()
+    
+    for i = 1, POOL_SIZE do
+        local drop = active_drops[i]
+        if drop then
+            local wnd = drop.wnd
+            if not wnd then
+                active_drops[i] = nil
+            else
+                local elapsed = now - drop.start_time
+                local progress = elapsed / BLOOD_LIFETIME
+                
+                if progress >= 1.0 then
+                    wnd:Show(false)
+                    active_drops[i] = nil
+                else
+                    local new_y = drop.start_y + (elapsed * drop.speed_y / 1000)
+                    wnd:SetWndPos(drop.start_x, new_y)
+                    
+                    local alpha = math.floor(255 * (1.0 - progress))
+                    set_static_alpha(wnd, alpha)
+                end
+            end
+        end
+    end
+end
+
+function check_blood(obj, who, amount)
+    if not db.actor then return end
+    if not obj then return end
+    
+    -- 1. Проверяем, что урон вообще есть
+    if not amount or amount <= 0 then return end
+    
+    -- 2. Проверяем, что урон нанесен актором (или его пулей)
+    -- В OGSR пуля от актора может передаваться как сам актор, либо как объект, у которого owner - актор
+    local is_player_damage = false
+    
+    if who then
+        -- Если who - это актор
+        if who:id() == db.actor:id() then
+            is_player_damage = true
+        else
+            -- Если who - это пуля или другой объект, проверяем его владельца
+            local ok, owner = pcall(function() return who:owner() end)
+            if ok and owner and owner:id() == db.actor:id() then
+                is_player_damage = true
+            end
+        end
+    end
+    
+    -- Если урон не от игрока, не показываем кровь
+    if not is_player_damage then return end
+    
+    -- ГЛАВНАЯ ПРОВЕРКА: если хоть одна капля еще висит, ничего не делаем
+    if is_any_drop_active() then return end
+    
+    local now = time_global()
+    if now - last_blood_time < BLOOD_COOLDOWN then return end
+    
+    local actor = db.actor
+    local dist = actor:position():distance_to(obj:position())
+    
+    if dist <= BLOOD_DISTANCE then
+        spawn_blood_splatter()
+        last_blood_time = now
+    end
+end
+
+function reset_blood()
+    local hud = get_hud()
+    if hud and statics_initialized then
+        for _, name in ipairs(blood_pool) do
+            local static = hud:GetCustomStatic(name)
+            if static then
+                local wnd = static:wnd()
+                if wnd then wnd:Show(false) end
+            end
+        end
+    end
+    active_drops = {}
+    last_blood_time = 0
+end

@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<window x="0" y="0" w="640" h="480" r="227" g="121" b="222" texture="1">
+
+	<background  x="790" y="743" width="99" height="30" stretch="1">
+		<texture></texture>
+	</background>
+	
+	<state_normal x="20" y="22" width="150" height="75" stretch="1">
+		<texture></texture>
+	</state_normal>
+
+	<state_crouch x="20" y="22" width="150" height="75" stretch="1">
+		<texture></texture>
+	</state_crouch>
+
+	<state_creep x="20" y="22" width="150" height="75" stretch="1">
+		<texture></texture>
+	</state_creep>
+
+	<state_climb x="20" y="22" width="150" height="75" stretch="1">
+		<texture></texture>
+	</state_climb>
+
+	<state_run x="20" y="22" width="150" height="75" stretch="1">
+		<texture></texture>
+	</state_run>
+
+	<state_sprint x="20" y="22" width="150" height="75" stretch="1">
+		<texture></texture>
+	</state_sprint>
+
+	<power_progress  x="18" y="17" width="98" height="30" horz="1" min="0" max="100" pos="50">
+		<progress>
+			<texture r="255" g="255" b="255">ui_hud_shk_stamina</texture>
+		</progress>
+			<background>
+				<texture a="55" r="255" g="255" b="255">ui_hud_shk_stamina</texture>
+			</background>
+	</power_progress>
+	
+	<luminosity_progress x="79" y="34" width="8" height="71" horz="0" min="0" max="200" pos="100">
+		<progress>
+			<texture></texture>
+		</progress>
+	</luminosity_progress>
+	
+	<noise_progress x="8" y="34" width="8" height="71" horz="0" min="0" max="400" pos="100">
+		<progress>
+			<texture></texture>
+		</progress>
+	</noise_progress>
+</window>

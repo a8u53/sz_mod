@@ -1,0 +1,186 @@
+; Гладкоствольный карабин Сайга
+; Рип из игры METRO LL, Rastaman_vip74
+; Конфиг и прочая лабуда GeeP_85
+;---------------------------------------------------
+[wpn_saiga12c]:identity_immunities
+GroupControlSection			= spawn_group
+discovery_dependency 		= 
+$spawn                  = "weapons\saiga12c"					; option for Level Editor
+$npc			 			= on
+$prefetch 		 			= 8
+scheduled               	= off
+cform                   	= skeleton
+class                   	= WP_LR300
+min_radius 					= 5
+max_radius 					= 50
+description			= "Семейство оружия под общим названием "Сайга" было начато разрабатываться в начале 1990-х годов на Ижевском Машиностроительном Заводе (ИЖМАШ), знаменитом производством автоматов Калашникова. За основу семейства был взят как раз механизм автомата Калашникова, ограниченный только самозарядным режимом стрельбы. Гладкоствольные ружья "Сайга" - в настоящий момент самые массовые отечественные полуавтоматы, по праву завоевавшие доверие не только у жителей России, но и за ее пределами. В варианте "Сайга 12К тактика исп. 3-1" ружье имеет деревяное цевье и пистолетную рукоятку, складной влево трубчатый приклад по "типу СВДС". Штатные прицельные приспособления включают мушку и целик по типу АК. Возможна также установка креплений для коллиматорных или ночных прицелов и лазерных целеуказателей. Питание патронами осуществляется из специальных отъемных коробчатых магазинов различной емкости."
+ef_main_weapon_type			= 1
+ef_weapon_type				= 7
+
+;-----------------------------------------------------------------------------------
+holder_range_modifier		= 1.0			; во сколько раз увеличивается eye_range 
+holder_fov_modifier			= 1.2 			; во сколько раз увеличивается eye_fov
+;-----------------------------------------------------------------------------------
+
+cost						= 11000
+weapon_class				= assault_rifle
+
+ammo_limit					= 80
+ammo_current				= 80
+ammo_elapsed				= 8
+ammo_mag_size				= 8
+
+ammo_class					= ammo_12x70_buck, ammo_12x76_zhekan, ammo_12x76_dart
+
+fire_modes					= 1
+
+hand_dependence				= 2
+single_handed				= 0                     	
+
+slot 						= 1
+animation_slot				= 2
+
+inv_name	 				= "Сайга"
+inv_name_short				= "Сайга"	
+inv_weight					= 3.6
+
+inv_grid_width     			= 4
+inv_grid_height    			= 2
+inv_grid_x         			= 31
+inv_grid_y         			= 34
+
+kill_msg_x					= 72
+kill_msg_y					= 82
+kill_msg_width				= 56
+kill_msg_height				= 23
+
+;спавнить автоматически боеприпасы при подъеме оружия
+;auto_spawn_ammo			= false
+
+;-----------------------------------------------------------------------------------
+; base dispersion
+fire_dispersion_base				= 0.25				; угол (в градусах) базовой дисперсии оружия (оружия зажатого в тисках)
+control_inertion_factor				= 1.25f
+
+;отдача
+cam_relax_speed 					= 5					; скорость возврата в исходное положение
+cam_relax_speed_ai         			= 120.75
+cam_dispersion 						= 1.5					; увеличения угла (в градусах) с каждым выстрелом
+cam_dispersion_inc					= 0.75 				; увеличениe cam_dispersion с каждым выстрелом
+cam_dispertion_frac					= 1.0				; ствол будет подыматься на cam_dispersion*cam_dispertion_frac +- cam_dispersion*(1-cam_dispertion_frac)
+cam_max_angle						= 16.0				; максимальный угол отдачи
+cam_max_angle_horz					= 30.0				; (degree) maximum shot horizontal degree 
+cam_step_angle_horz					= 1.25				; (degree) size of step camera moved in horizontal position while shooting
+
+fire_dispersion_condition_factor	= 5					; увеличение дисперсии в процентах при максимальном износе 
+misfire_probability 				= 0.004				; вероятность осечки при максимальном износе 
+misfire_condition_k					= 0.05
+condition_shot_dec 					= 0.0003			; увеличение износа при каждом выстреле
+;-----------------------------------------------------------------------------------
+
+direction               	= 0, 0, 1
+
+fire_point             		= 0,0.228,0.743
+flame_particles		   = weapons\generic_weapon05
+smoke_particles		   = hit_fx\hit_explosive_bullet_01
+
+shell_particles	 			= weapons\generic_shells_buck
+
+shell_point		 			= 0.02,0.228,0.150
+shell_dir		 			= 0.0, 1.0, 0.0
+
+PDM_disp_base 				= 4.5
+PDM_disp_vel_factor 		= 1.6
+PDM_disp_accel_factor 		= 1.7
+PDM_crouch	 				= 0.9
+PDM_crouch_no_acc 			= 0.8
+
+; ttc
+hit_power           		= 1.0
+hit_impulse 				= 120
+hit_type 					= fire_wound
+
+fire_distance 				= 150
+bullet_speed				= 426
+rpm 						= 240
+	
+use_aim_bullet				= true							; Поддерживается ли первая суппер пуля
+time_to_aim					= 1.0	
+
+hud                      	= wpn_saiga12c_hud
+normal                  	= 0, 1, 0
+position         	    	= -0.026,-0.172,0
+orientation             	= 0, 0, 0
+
+;--STRAP PARAMETERS-----------------------------------------------------------------
+strap_position         		= -0.16,-0.36,0.15				; position (offset) and orientation of the weapon when it is strapped
+strap_orientation      		= -10,-5,10						; (3rd person view in degrees)
+strap_bone0					= bip01_spine2
+strap_bone1					= bip01_spine1
+
+startup_ammo            	= 1000
+visual                   	= weapons\saiga12\wpn_saiga12.ogf
+
+light_color		 			= 0.6,0.5,0.3
+light_range		 			= 5
+light_var_color		 		= 0.05
+light_var_range		 		= 0.1
+light_time 		 			= 0.2		
+
+ph_mass						= 4
+
+;addons
+scope_status				= 2
+silencer_status				= 0
+grenade_launcher_status		= 0
+
+zoom_enabled				= true
+scope_zoom_factor	 		= 60
+
+scope_name 					= wpn_addon_scope
+scope_x                     = 37
+scope_y                     = 3
+
+;silencer_name  				= wpn_addon_silencer
+;silencer_x 					= 222
+;silencer_y 					= 21
+
+;sounds (name of the sound, volume (0.0 - 1.0), delay (sec))
+snd_draw					= weapons\spas12\draw
+snd_holster					= weapons\spas12\holster
+snd_shoot					= weapons\t_spas12_shot
+snd_empty				    = weapons\spas12\empty
+snd_reload					= weapons\ak74\reload, 0.7, 0.4
+snd_shoot_duplet			= weapons\spas12\tm_spas12_shot
+snd_close_weapon			= weapons\spas12\reload_end
+
+;-----------------------------------------------------------------------------
+;-- HUD DESCRIPTION
+;-----------------------------------------------------------------------------
+[wpn_saiga12c_hud]
+shell_point		 			= 0,0,-1.5
+shell_dir				 	= 0.0, 0.0, 0.0
+
+fire_point 					= -0.002,-0.0048,-0.73
+fire_bone                	= joint9
+position 					= 0.1,-0.06,0.07
+orientation 				= 0.0,0.0,0.0
+;orientation              	= 2, 2, 0
+;position             	   	= 0.118,-0.025,-0.01
+visual                  	= weapons\saiga12\wpn_saiga12_hud.ogf
+
+anim_idle					= idle
+anim_idle_aim				= idle_aim
+anim_reload					= reload
+anim_draw					= draw
+anim_holster				= holster
+anim_shoot					= shoot
+anim_idle_sprint			= idle_sprint
+
+zoom_hide_crosshair			= true
+zoom_rotate_time			= 0.30
+
+zoom_offset 				= -0.09761,0.0719,-0.1503
+zoom_rotate_x 				= 0.0014
+zoom_rotate_y 				= -0.0005
+

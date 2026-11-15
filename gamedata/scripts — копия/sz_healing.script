@@ -1,0 +1,234 @@
+﻿-- ============================================================
+-- sz_healing.script
+-- Gradual healing / radiation / power restoration
+-- ============================================================
+
+-- ============================================================
+-- Default rates (per 1 second tick)
+-- ============================================================
+local RATE_HEALTH_DEFAULT    = 0.05   -- 5% per second
+local RATE_RADIATION_DEFAULT = 0.10   -- 10% per second
+local RATE_POWER_DEFAULT     = 0.20   -- 20% per second
+
+local BLINK_TIME  = 3000   -- blink starts 3 seconds before end
+local BLINK_SPEED = 200    -- blink interval (ms)
+
+-- ============================================================
+-- Item definitions
+-- static:    HUD icon shown while effect is active
+-- static_rad: extra icon (antirad) shown while effect is active
+-- time:      total duration in milliseconds
+-- health/radiation/power: which stats are affected
+-- rate_health/radiation/power: amount restored per second (0..1)
+-- ============================================================
+local ITEMS = {
+    -- Medkits
+    ["medkit"] = {
+        time = 5000,
+        static = "hud_heal_medkit",
+        static_rad = nil,
+        health = true, radiation = false, power = false,
+        rate_health = 0.06,   -- 30% over 5 seconds
+    },
+    ["medkit_army"] = {
+        time = 10000,
+        static = "hud_heal_medkit",
+        static_rad = nil,
+        health = true, radiation = false, power = false,
+        rate_health = 0.03,   -- 30% over 10 seconds
+    },
+    ["medkit_scientic"] = {
+        time = 20000,
+        static = "hud_heal_medkit",
+        static_rad = "hud_heal_antirad",
+        health = true, radiation = true, power = false,
+        rate_health = 0.015,  -- 30% over 20 seconds
+        rate_radiation = 0.05, -- 100% radiation over 20 seconds
+    },
+
+    -- Antirad
+    ["antirad"] = {
+        time = 10000,
+        static = "hud_heal_antirad",
+        static_rad = nil,
+        health = false, radiation = true, power = false,
+        rate_radiation = 0.10, -- 100% radiation over 10 seconds
+    },
+    ["antirad_pills"] = {
+        time = 5000,
+        static = "hud_heal_antirad",
+        static_rad = nil,
+        health = false, radiation = true, power = false,
+        rate_radiation = 0.20, -- 100% radiation over 5 seconds
+    },
+
+    -- Painkillers
+    ["painkiller_1"] = { time = 2000, static = "hud_heal_medkit", static_rad = nil, health = true, radiation = false, power = false, rate_health = 0.05 },
+    ["painkiller_2"] = { time = 2000, static = "hud_heal_medkit", static_rad = nil, health = true, radiation = false, power = false, rate_health = 0.05 },
+    ["painkiller_3"] = { time = 2000, static = "hud_heal_medkit", static_rad = nil, health = true, radiation = false, power = false, rate_health = 0.05 },
+    ["painkiller_4"] = { time = 2000, static = "hud_heal_medkit", static_rad = nil, health = true, radiation = false, power = false, rate_health = 0.05 },
+
+    -- Energy drinks
+    ["energy_drink"] = {
+        time = 45000,
+        static = "hud_heal_energy",
+        static_rad = nil,
+        health = false, radiation = false, power = true,
+        rate_power = 1.0 / 45.0, -- 100% over 45 seconds
+    },
+    ["voda"] = {
+        time = 3000,
+        static = "hud_heal_energy",
+        static_rad = nil,
+        health = false, radiation = false, power = true,
+        rate_power = 0.20,
+    },
+    ["vodka"] = {
+        time = 10000,
+        static = "hud_heal_energy",
+        static_rad = nil,
+        health = false, radiation = true, power = false,
+        rate_radiation = 0.10,
+    },
+}
+
+-- ============================================================
+-- Runtime state
+-- ============================================================
+local active_effects = {}
+local last_time = 0
+
+function is_heal_item(section)
+    return ITEMS[section] ~= nil
+end
+
+local function get_static_wnd(hud, static_name)
+    if not hud or not static_name then return nil end
+    local static = hud:GetCustomStatic(static_name)
+    if not static then
+        hud:AddCustomStatic(static_name, true)
+        static = hud:GetCustomStatic(static_name)
+    end
+    if not static then return nil end
+    return static.wnd and static:wnd() or nil
+end
+
+local function remove_static(hud, static_name)
+    if hud and static_name and hud:GetCustomStatic(static_name) then
+        hud:RemoveCustomStatic(static_name)
+    end
+end
+
+function reset_healing()
+    local hud = get_hud()
+    for _, effect in pairs(active_effects) do
+        remove_static(hud, effect.static_name)
+        if effect.static_rad then
+            remove_static(hud, effect.static_rad)
+        end
+    end
+    active_effects = {}
+    last_time = 0
+end
+
+function use_item(obj)
+    if not obj then return end
+    local section = obj:section()
+    local item_data = ITEMS[section]
+
+    if not item_data then return end
+
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    local effect_key = item_data.static
+
+    active_effects[effect_key] = {
+        time_left = item_data.time,
+        static_name = item_data.static,
+        static_rad = item_data.static_rad,
+        health = item_data.health,
+        radiation = item_data.radiation,
+        power = item_data.power,
+        rate_health = item_data.rate_health or RATE_HEALTH_DEFAULT,
+        rate_radiation = item_data.rate_radiation or RATE_RADIATION_DEFAULT,
+        rate_power = item_data.rate_power or RATE_POWER_DEFAULT,
+        next_tick_time = time_global() + 1000,
+        blink_timer = 0,
+        is_visible = true
+    }
+
+    if last_time == 0 then
+        last_time = time_global()
+    end
+end
+
+function update_healing()
+    if next(active_effects) == nil then
+        last_time = 0
+        return
+    end
+
+    local actor = db.actor
+    if not actor or not actor:alive() then
+        reset_healing()
+        return
+    end
+
+    local now = time_global()
+    if last_time == 0 then last_time = now end
+
+    local delta = now - last_time
+    last_time = now
+    if delta > 1000 then delta = 1000 end
+
+    local hud = get_hud()
+    local to_remove = {}
+
+    for key, effect in pairs(active_effects) do
+        effect.time_left = effect.time_left - delta
+
+        local wnd = get_static_wnd(hud, effect.static_name)
+        local wnd_rad = get_static_wnd(hud, effect.static_rad)
+
+        local show = true
+        if effect.time_left <= BLINK_TIME then
+            effect.blink_timer = effect.blink_timer + delta
+            if effect.blink_timer >= BLINK_SPEED then
+                effect.blink_timer = 0
+                effect.is_visible = not effect.is_visible
+            end
+            show = effect.is_visible
+        end
+
+        if wnd then wnd:Show(show) end
+        if wnd_rad then wnd_rad:Show(show) end
+
+        if now >= effect.next_tick_time then
+            effect.next_tick_time = now + 1000
+
+            if effect.health then
+                actor.health = math.min(actor.health + effect.rate_health, 1.0)
+            end
+            if effect.radiation then
+                actor.radiation = math.max(actor.radiation - effect.rate_radiation, 0.0)
+            end
+            if effect.power then
+                actor.power = math.min(actor.power + effect.rate_power, 1.0)
+            end
+        end
+
+        if effect.time_left <= 0 then
+            table.insert(to_remove, key)
+        end
+    end
+
+    for _, key in ipairs(to_remove) do
+        local effect = active_effects[key]
+        remove_static(hud, effect.static_name)
+        if effect.static_rad then
+            remove_static(hud, effect.static_rad)
+        end
+        active_effects[key] = nil
+    end
+end

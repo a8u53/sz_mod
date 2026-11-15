@@ -1,0 +1,91 @@
+<ui_texture>
+
+<file_name>ui\textures_descr\ui_inGame2_inventory</file_name>
+
+
+            <texture id="cop_inventory" x="339" y="0" width="686" height="768" />
+            <texture id="cop" x="0" y="804" width="212" height="181" />
+
+	<texture id="ui_inGame2_hint_wnd_bar"           x="0" y="761" width="128" height="9" />
+	<texture id="ui_inGame2_hint_wnd_bar_alfa_line" x="0" y="771" width="128" height="9" />
+	<texture id="ui_inGame2_inventory_status_bar" x="341" y="776" width="58" height="5" />
+
+
+	    <texture id="ui_inGame2_inventory_health" x="341" y="789" width="214" height="16" />
+
+	    <texture id="ui_inGame2_center_trade_devider" x="683" y="768" width="341" height="163" />
+
+	    <texture id="ui_inGame2_big_inventory_button_car_e" x="341" y="926" width="310" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_car_h" x="341" y="950" width="310" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_car_t" x="341" y="974" width="310" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_car_d" x="341" y="926" width="310" height="24" />
+
+	    <texture id="ui_inGame2_big_inventory_button_car_16_e"x="341"y="926"width="256" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_car_16_h"x="341"y="950"width="256" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_car_16_t"x="341"y="974"width="256"height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_car_16_d"x="341"y="926"width="256" height="24" />
+
+	    <texture id="ui_inGame2_big_inventory_button_e" x="341" y="926" width="320" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_h" x="341" y="950" width="320" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_t" x="341" y="974" width="320" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_d" x="341" y="926" width="320" height="24" />
+
+	    <texture id="ui_inGame2_big_inventory_button_16_e" x="341" y="926" width="268" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_16_h" x="341" y="950" width="268" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_16_t" x="341" y="974" width="268" height="24" />
+	    <texture id="ui_inGame2_big_inventory_button_16_d" x="341" y="926" width="268" height="24" />
+
+	    <texture id="ui_inGame2_inventory_button_e" x="341" y="850" width="133" height="24" />
+	    <texture id="ui_inGame2_inventory_button_h" x="341" y="874" width="133" height="24" />
+	    <texture id="ui_inGame2_inventory_button_t" x="341" y="898" width="133" height="24" />
+	    <texture id="ui_inGame2_inventory_button_d" x="341" y="850" width="133" height="24" />
+
+	    <texture id="ui_inGame2_inventory_button_16_e" x="341" y="850" width="110" height="24" />
+	    <texture id="ui_inGame2_inventory_button_16_h" x="341" y="874" width="110" height="24" />
+	    <texture id="ui_inGame2_inventory_button_16_t" x="341" y="898" width="110" height="24" />
+	    <texture id="ui_inGame2_inventory_button_16_d" x="341" y="850" width="110" height="24" />
+
+	    <texture id="ui_inGame2_trade" x="681" y="766" width="343" height="164" />
+
+==========================================================================================
+	    <texture id="cop_radiation_green" x="0" y="50" width="46" height="46" />
+	    <texture id="cop_radiation_yellow" x="50" y="50" width="46" height="46" />
+	    <texture id="cop_radiation_orange" x="100" y="50" width="46" height="46" />
+	    <texture id="cop_radiation_red" x="150" y="50" width="46" height="46" />
+
+	    <texture id="cop_health_green" x="0" y="150" width="46" height="46" />
+	    <texture id="cop_health_yellow" x="50" y="150" width="46" height="46" />
+	    <texture id="cop_health_orange" x="100" y="150" width="46" height="46" />
+	    <texture id="cop_health_red" x="150" y="150" width="46" height="46" />
+
+	    <texture id="cop_blood_green" x="0" y="100" width="46" height="46" />
+	    <texture id="cop_blood_yellow" x="50" y="100" width="46" height="46" />
+	    <texture id="cop_blood_orange" x="100" y="100" width="46" height="46" />
+	    <texture id="cop_blood_red" x="150" y="100" width="46" height="46" />
+
+	    <texture id="cop_power_green" x="0" y="200" width="46" height="46" />
+	    <texture id="cop_power_yellow" x="50" y="200" width="46" height="46" />
+	    <texture id="cop_power_orange" x="100" y="200" width="46" height="46" />
+	    <texture id="cop_power_red" x="150" y="200" width="46" height="46" />
+
+	    <texture id="cop_psy_health_green" x="0" y="250" width="46" height="46" />
+	    <texture id="cop_psy_health_yellow" x="50" y="250" width="46" height="46" />
+	    <texture id="cop_psy_health_orange" x="100" y="250" width="46" height="46" />
+	    <texture id="cop_psy_health_red" x="150" y="250" width="46" height="46" />
+===============================================================================================
+
+	    <texture id="hud_radiation_green" x="0" y="350" width="34" height="36" />
+	    <texture id="hud_radiation_yellow" x="50" y="350" width="34" height="36" />
+	    <texture id="hud_radiation_orange" x="100" y="350" width="34" height="36" />
+	    <texture id="hud_radiation_red" x="150" y="350" width="34" height="36" />
+
+	    <texture id="hud_bleeding_green" x="0" y="250" width="34" height="36" />
+	    <texture id="hud_bleeding_yellow" x="50" y="250" width="34" height="36" />
+	    <texture id="hud_bleeding_orange" x="100" y="250" width="34" height="36" />
+	    <texture id="hud_bleeding_red" x="150" y="250" width="34" height="36" />
+  
+
+</ui_texture>
+
+
+

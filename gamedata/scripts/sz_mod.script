@@ -1,0 +1,1314 @@
+-- ============================================================
+-- sz_mod.script
+-- ============================================================
+
+-- ============================================================
+-- СЕКЦИЯ 1: КОНСТАНТЫ И ТАБЛИЦЫ
+-- ============================================================
+
+-- --- Броня ---
+local armor_last_static = nil
+
+-- --- Радиация ---
+local rad_update_time = 0
+local DETECTOR_SECTION = "detector_simple"
+local BACK_X = 50
+local BACK_Y = 50
+local BACK_W = 20
+local BACK_H = 200
+
+-- --- Лут денег ---
+local looted_money = {}
+local no_money_chance = 0.25
+
+-- --- Время на экране ---
+local last_time_update = 0
+local time_update_interval = 1000
+
+-- --- Еда / расходники ---
+local cards = {"card_1", "card_2", "card_3", "card_4", "card_5", "card_6", "card_7", "card_8", "card_9", "card_10"}
+local eatbles = {"bread_sub", "conserva_sub", "kolbasa_sub"}
+local SPAWN_OFFSET = 0.3
+
+objectinuse = 0
+objectused = 0
+
+local item_use_table = {
+    ["medkit"]          = {sound = [[actor\inv_medkit]],   holster = 2000, spawn = "medkit_e"},
+    ["medkit_army"]     = {sound = [[actor\inv_medkit]],   holster = 2000, spawn = "medkit_e"},
+    ["medkit_scientic"] = {sound = [[actor\inv_medkit]],   holster = 2000, spawn = "medkit_e"},
+    ["antirad"]         = {sound = [[actor\inv_pills]],    holster = 1000, spawn = "tabletki_e"},
+    ["antirad_pills"]   = {sound = [[actor\inv_pills]],    holster = 1000, spawn = "tabletki_e"},
+    ["painkiller_1"]    = {sound = [[actor\inv_pills]],    holster = 1000, spawn = "tabletki_e"},
+    ["bandage"]         = {sound = [[actor\inv_bandage]],  holster = 2000},
+    ["painkiller_4"]    = {sound = [[actor\inv_pills]],    holster = 1000},
+    ["painkiller_3"]    = {sound = [[actor\inv_pills]],    holster = 1000},
+    ["painkiller_2"]    = {sound = [[actor\inv_pills]],    holster = 1000},
+    ["vodka"]           = {sound = [[actor\drink_1]],      holster = 2000, spawn = "vodka_a", psy = 0.1},
+    ["af_rog"]          = {sound = [[anomaly\anomaly_gravy_blast]], holster = 2000, spawn_eatble = true, spawn_self = "af_rog"},
+    ["energy_drink"]    = {sound = [[actor\inv_softdrink]], holster = 2000, spawn = "energy_drink_e"},
+    ["voda"]            = {sound = [[actor\inv_softdrink]], holster = 2000, spawn = "energy_drink_e"},
+    ["rukzachok"]       = {sound = [[actor\inv_ruck]],     holster = 1000, rucksack = true},
+    ["rich_sigs_full"]  = {sound = [[actor\inv_ruck]],     holster = 1000, spawn_card = true, spawn_self = "rich_sigs"},
+    ["rich_sigs"]       = {sound = [[actor\inv_smoke]],    holster = 2000, spawn = "siga_e", psy = 0.05},
+    ["sigs"]            = {sound = [[actor\inv_smoke]],    holster = 2000, spawn = "siga_e", psy = 0.05},
+    ["conserva"]        = {sound = [[actor\inv_food]],     holster = 2000, spawn = "conserva_e"},
+    ["bread"]           = {sound = [[actor\inv_food]],     holster = 2000},
+    ["kolbasa"]         = {sound = [[actor\inv_food]],     holster = 2000},
+    ["galata"]          = {sound = [[actor\inv_food]],     holster = 2000},
+}
+
+-- --- Звуки ---
+local SND_POS = vector():set(0, 0, 0)
+local snd_cache = {}
+
+-- --- Цепочка таблеток ---
+local painkiller_chain = {
+    ["painkiller_4"] = "painkiller_3",
+    ["painkiller_3"] = "painkiller_2",
+    ["painkiller_2"] = "painkiller_1",
+}
+
+
+local BLOWOUT_MIN_DAYS = 3
+local BLOWOUT_MAX_DAYS = 10
+local BLOWOUT_END_MS = 4 * 60 * 1000  -- 4 минуты
+local BLOWOUT_WARNING_MINUTES = 2 -- предупреждение PDA за 2 игровые минуты до выброса
+local blowout_active = false
+
+-- --- Параметры шкалы радиации ---
+local FILL_PAD_X = 5
+local FILL_PAD_W = 10
+local RAD_MAX    = 1.0
+
+local STATIC_BACK  = "hud_rad_back"
+local STATIC_LEVEL = "hud_rad_level"
+
+-- --- Кэш сообщества ---
+local community = {
+    ["stalker"] = "Вольный сталкер", ["monolith"] = "\"Монолит\"", ["military"] = "Военный",
+    ["bandit"] = "Ренегат", ["killer"] = "Наемник", ["ecolog"] = "Ученый",
+    ["dolg"] = "\"Долг\"", ["freedom"] = "\"Свобода\"", ["zombied"] = "Зомбированный",
+    ["trader"] = "Торговец", ["arena_enemy"] = "Боец арены"
+}
+
+-- ============================================================
+-- СЕКЦИЯ 2: НОВЫЕ ФУНКЦИИ
+-- ============================================================
+
+-- --- Статик брони ---
+function armor_static()
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+    local hud = get_hud()
+    if not hud then return end
+
+    local suit = actor:item_in_slot(6)
+    local new_static = nil
+
+    if suit then
+        local cond = suit:condition() * 100
+        if cond <= 60 and cond > 31 then
+            new_static = "hud_show_armor"
+        elseif cond <= 30 and cond > 11 then
+            new_static = "hud_show_armor2"
+        elseif cond <= 10 then
+            new_static = "hud_show_armor3"
+        end
+    end
+
+    if new_static == armor_last_static then return end
+    armor_last_static = new_static
+
+    local statics = {"hud_show_armor", "hud_show_armor2", "hud_show_armor3"}
+    for _, s in ipairs(statics) do
+        if hud:GetCustomStatic(s) then hud:RemoveCustomStatic(s) end
+    end
+
+    if new_static then hud:AddCustomStatic(new_static, true) end
+end
+
+-- ============================================================
+-- Шкала радиации (статик виден всегда при наличии детектора)
+-- ============================================================
+
+local function has_detector(actor)
+    if not actor then return false end
+
+    -- Детектор должен находиться именно на поясе, а не в рюкзаке/слоте.
+    local detector = actor:object(DETECTOR_SECTION)
+    if not detector then return false end
+
+    return actor:is_on_belt(detector)
+end
+
+local function hide_radiation_statics(hud)
+    if not hud then return end
+    if hud:GetCustomStatic(STATIC_BACK) then
+        hud:RemoveCustomStatic(STATIC_BACK)
+    end
+    if hud:GetCustomStatic(STATIC_LEVEL) then
+        hud:RemoveCustomStatic(STATIC_LEVEL)
+    end
+end
+
+-- Возвращает wnd() статика или nil, если статик/окно невалидны.
+-- При необходимости создаёт статик заново.
+local function get_static_wnd(hud, static_name)
+    if not hud then return nil end
+    local static = hud:GetCustomStatic(static_name)
+    if not static then
+        hud:AddCustomStatic(static_name, true)
+        static = hud:GetCustomStatic(static_name)
+    end
+    if not static then return nil end
+    return static.wnd and static:wnd() or nil
+end
+
+-- Вызывается из bind_stalker:net_spawn()
+function reset_radiation_hud()
+    local hud = get_hud()
+    if hud then
+        hide_radiation_statics(hud)
+    end
+    rad_update_time = 0
+end
+
+function update_radiation()
+    local actor = db.actor
+
+    -- Мёртв / нет актора — прячем (HUD всё равно разрушается)
+    if not actor or not actor:alive() then
+        local hud = get_hud()
+        if hud then hide_radiation_statics(hud) end
+        return
+    end
+
+    -- Троттлинг 100 мс
+    local current_time = time_global()
+    if current_time - rad_update_time < 100 then return end
+    rad_update_time = current_time
+
+    local hud = get_hud()
+    if not hud then return end
+
+    -- Нет детектора — прячем
+    if not has_detector(actor) then
+        hide_radiation_statics(hud)
+        return
+    end
+
+    -- Есть детектор — статики всегда на экране
+    local back_wnd  = get_static_wnd(hud, STATIC_BACK)
+    local level_wnd = get_static_wnd(hud, STATIC_LEVEL)
+
+    if back_wnd then
+        back_wnd:SetWndPos(BACK_X, BACK_Y)
+        back_wnd:SetWidth(BACK_W)
+        back_wnd:SetHeight(BACK_H)
+    end
+
+    if level_wnd then
+        local radiation = actor.radiation or 0
+        local rad_percent = 0
+        if radiation > 0 then
+            rad_percent = math.min(radiation / RAD_MAX, 1.0)
+        end
+
+        local fill_h = math.floor(rad_percent * BACK_H)
+        local fill_y = BACK_Y + BACK_H - fill_h
+
+        level_wnd:SetWndPos(BACK_X + FILL_PAD_X, fill_y)
+        level_wnd:SetWidth(BACK_W - FILL_PAD_W)
+        level_wnd:SetHeight(fill_h)
+    end
+end
+
+-- --- Лут денег ---
+function lootmoney(npc)
+    if not npc then return end
+    if npc:alive() then return end
+    if IsMonster(npc) then return end
+    local npc_id = npc:id()
+    if looted_money[npc_id] then return end
+
+    local section = npc:section()
+    if string.find(section, "arena") then return end
+    local ok, community_name = pcall(function() return npc:character_community() end)
+    if ok and community_name == "arena_enemy" then return end
+
+    local money = npc:money()
+    if not money or money <= 0 then return end
+
+    if math.random() < no_money_chance then looted_money[npc_id] = true; return end
+
+    local deadmoney = money
+    local npc_rank = ranks.get_obj_rank_name(npc)
+    if npc_rank == "novice" and deadmoney > 300 then deadmoney = math.random(25, 85)
+    elseif npc_rank == "beginner" and deadmoney > 400 then deadmoney = math.random(35, 100)
+    elseif npc_rank == "experienced" and deadmoney > 500 then deadmoney = math.random(55, 150)
+    elseif npc_rank == "veteran" and deadmoney > 600 then deadmoney = math.random(70, 235)
+    elseif npc_rank == "master" and deadmoney > 700 then deadmoney = math.random(110, 325) end
+
+    local news_text = "%c[255,160,160,160]" .. game.translate_string("st_tip") ..
+        "\\n%c[255,255,255,255]Обнаружены деньги: %c[124,247,136,1]" ..
+        tostring(deadmoney) .. "%c[default] руб."
+    db.actor:give_game_news(news_text, "ui\\ui_iconsTotal", Frect():set(0, 0, 83, 47), 1, 3000)
+
+    db.actor:give_money(deadmoney)
+    npc:give_money(-money)
+    game_stats.money_quest_update(deadmoney)
+    looted_money[npc_id] = true
+end
+
+-- --- Время на экране ---
+function show_time()
+    local now = time_global()
+    if now - last_time_update < time_update_interval then return end
+    last_time_update = now
+
+    local hud = get_hud()
+    if not hud then return end
+
+    local cs = hud:GetCustomStatic("hud_show_time")
+    if not cs then
+        hud:AddCustomStatic("hud_show_time", true)
+        cs = hud:GetCustomStatic("hud_show_time")
+    end
+    if not cs then return end
+
+    local wnd = cs.wnd and cs:wnd()
+    if not wnd then return end
+
+    wnd:SetText(string.format("%02d:%02d", level.get_time_hours(), level.get_time_minutes()))
+end
+
+-- --- Выброс ---
+
+function start(obj)
+    if not obj or not db.actor then return end
+    local section = obj:section()
+    local entry = item_use_table[section]
+    if not entry then return end
+
+    sound_obj_left = xr_sound.get_safe_sound_object(entry.sound)
+    sound_obj_right = xr_sound.get_safe_sound_object(entry.sound)
+    level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "")
+
+    slotinuse = db.actor:active_slot()
+    slot_div = 1
+    holster_time = time_global() + entry.holster
+    if objectinuse == 1 then holster_time = holster_time + entry.holster end
+    soundhub()
+
+    local actor = db.actor
+    local pos = actor:position()
+    local lvid = actor:level_vertex_id()
+    local gvid = actor:game_vertex_id()
+    local aid = actor:id()
+
+    if entry.rucksack then
+        place_rucksack()
+    elseif entry.spawn then
+        spawn_item(entry.spawn, SPAWN_OFFSET)
+    end
+    if entry.spawn_card then alife():create(cards[math.random(#cards)], pos, lvid, gvid, aid) end
+    if entry.spawn_eatble then alife():create(eatbles[math.random(#eatbles)], pos, lvid, gvid, aid) end
+    if entry.spawn_self then alife():create(entry.spawn_self, pos, lvid, gvid, aid) end
+    if entry.psy then db.actor.psy_health = entry.psy end
+end
+
+function soundhub()
+    if db.actor:alive() then
+        sound_obj_left:play_at_pos(db.actor, vector():set(-1, 0, 0), 0, sound_object.s2d)
+        sound_obj_right:play_at_pos(db.actor, vector():set(1, 0, 0), 0, sound_object.s2d)
+        sound_obj_left = sound_object([[$no_sound]])
+        sound_obj_right = sound_object([[$no_sound]])
+        if objectinuse == 0 then
+            db.actor:hide_weapon()
+            objectinuse = 1
+            if slotinuse == 1 then slot_div = ((holster_time - time_global()) / 1.5) else slot_div = 0 end
+        end
+        objectused = objectused + 1
+        weapontimer()
+    end
+end
+
+function weapontimer()
+    if (holster_time ~= nil) and (time_global() > (holster_time - slot_div)) and level.present() then
+        objectused = objectused - 1
+        if objectused == 0 then
+            db.actor:restore_weapon()
+            objectinuse = 0
+            holster_time = nil
+        end
+    end
+end
+
+-- --- Звуки подбора ---
+local function get_sound(path)
+    if not snd_cache[path] then snd_cache[path] = xr_sound.get_safe_sound_object(path) end
+    return snd_cache[path]
+end
+
+local function play_sound(path)
+    local snd = get_sound(path)
+    if snd then snd:play_at_pos(db.actor, SND_POS, 0.1, sound_object.s2d) end
+end
+
+function item_take(obj)
+    if not obj then return end
+    local section = obj:section()
+    local clsid_val = obj:clsid()
+    if section == "vodka" then play_sound([[item\bottle]])
+    elseif section == "money_maker_1" or section == "money_maker_2" or section == "agr_yan_document" then play_sound([[item\document]])
+    elseif clsid_val == clsid.wpn_ammo then play_sound([[item\cartridges]])
+    elseif clsid_val == clsid.equ_stalker_s or clsid_val == clsid.equ_exo then play_sound([[item\outfit]])
+    elseif section then play_sound([[interface\inv_ruck]]) end
+end
+
+-- --- Таблетки ---
+function pills(obj)
+    if not obj then return end
+    local section = obj:section()
+    local next_section = painkiller_chain[section]
+    if not next_section then return end
+    local actor = db.actor
+    alife():create(next_section, actor:position(), actor:level_vertex_id(), actor:game_vertex_id(), actor:id())
+end
+
+-- ============================================================
+-- Визуальный выброс: случайно между 3 и 10 днями,
+-- в случайное время суток (час и минута)
+-- Длительность: 4 минуты реального времени
+-- ============================================================
+
+-- --- Доступ к сохраняемому хранилищу актора ---
+local function get_blowout_pstor()
+    if not db or not db.actor then return nil end
+    local id = db.actor:id()
+    if not db.storage[id] then db.storage[id] = {} end
+    if not db.storage[id].pstor then db.storage[id].pstor = {} end
+    return db.storage[id].pstor
+end
+
+-- --- Абсолютный день ---
+-- level.get_time_days() возвращает день календарной даты (1..31),
+-- поэтому для арифметики расписания используем game.time() / сутки.
+local function get_abs_day()
+    return math.floor(game.time() / 86400000)
+end
+
+-- Перенос расписания со старого счётчика abs_day на абсолютный game.time().
+-- Сохраняем оставшееся количество дней до уже запланированного выброса.
+local function migrate_blowout_day_index()
+    local pstor = get_blowout_pstor()
+    if not pstor or pstor["blowout_day_index_v2"] == true then return end
+
+    local current_abs_day = get_abs_day()
+    local old_abs_day = tonumber(pstor["abs_day"])
+    local old_target_day = tonumber(pstor["next_blowout_abs"])
+    if old_abs_day and old_target_day then
+        pstor["next_blowout_abs"] = current_abs_day + (old_target_day - old_abs_day)
+    end
+
+    pstor["blowout_day_index_v2"] = true
+end
+
+-- --- Хранение даты выброса и отметки об отправленном предупреждении ---
+-- actor pstor сохраняется через xr_logic.pstor_save_all/load_all в bind_stalker.
+local function save_next_blowout(abs_day, hour, minute)
+    local pstor = get_blowout_pstor()
+    if not pstor then return false end
+
+    pstor["next_blowout_abs"] = abs_day
+    pstor["next_blowout_hour"] = hour
+    pstor["next_blowout_minute"] = minute
+    pstor["blowout_warning_sent"] = false
+    return true
+end
+
+local function load_next_blowout()
+    local pstor = get_blowout_pstor()
+    if not pstor then return nil end
+
+    local abs_day = tonumber(pstor["next_blowout_abs"])
+    if not abs_day then return nil end
+
+    local hour = tonumber(pstor["next_blowout_hour"]) or 0
+    local minute = tonumber(pstor["next_blowout_minute"]) or 0
+    if hour < 0 or hour > 23 or minute < 0 or minute > 59 then
+        return nil
+    end
+
+    return { abs = abs_day, hour = hour, minute = minute }
+end
+
+-- --- Планирование следующего выброса (день + случайное время) ---
+local function schedule_next_blowout(from_abs)
+    local delay = math.random(BLOWOUT_MIN_DAYS, BLOWOUT_MAX_DAYS)
+    local next_abs = from_abs + delay
+    local hour = math.random(0, 23)
+    local minute = math.random(0, 59)
+    save_next_blowout(next_abs, hour, minute)
+    return next_abs, hour, minute
+end
+
+-- --- Запуск визуального выброса ---
+local function start_visual_blowout()
+    if blowout_active or not db or not db.actor then return false end
+
+    -- Сначала переносим дату следующего события: повторный вызов в update
+    -- не сможет запустить тот же выброс второй раз.
+    blowout_active = true
+    schedule_next_blowout(get_abs_day())
+
+    -- Запоминаем текущую погоду, чтобы не всегда насильно возвращаться к default.
+    local weather_to_restore = "default"
+    if level.get_weather then
+        local weather_ok, weather_name = pcall(function() return level.get_weather() end)
+        if weather_ok and type(weather_name) == "string" and weather_name ~= "" then
+            weather_to_restore = weather_name
+        end
+    end
+
+    level.set_weather_fx("surge_day")
+
+    local snd = xr_sound.get_safe_sound_object([[ambient\earthquake]])
+    if snd then
+        snd:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0)
+    end
+
+    level.add_cam_effector("camera_effects\\earthquake.anm", 2002, true, "")
+    level.add_pp_effector("vibros.ppe", 2001, true)
+
+    db.actor:give_game_news(
+        "%c[255,255,80,80]ВНИМАНИЕ! ВЫБРОС!",
+        "ui\\ui_iconsTotal",
+        Frect():set(0, 0, 83, 47),
+        0, 5000
+    )
+
+    -- Длительность визуального эффекта: 4 минуты реального времени.
+    local start_time = time_global()
+    local function delay()
+        return (time_global() - start_time) >= BLOWOUT_END_MS
+    end
+    local function end_blowout()
+        level.remove_cam_effector(2002)
+        level.remove_pp_effector(2001)
+        level.set_weather(weather_to_restore, true)
+        blowout_active = false
+        level.remove_call(delay, end_blowout)
+    end
+    level.add_call(delay, end_blowout)
+    return true
+end
+
+local function send_blowout_warning(late)
+    local pstor = get_blowout_pstor()
+    if not pstor or pstor["blowout_warning_sent"] == true then return false end
+
+    -- Ставим отметку до вызова, чтобы возможная ошибка подсистемы новостей
+    -- не вызывала попытку отправки каждый кадр.
+    pstor["blowout_warning_sent"] = true
+
+    if news_main and type(news_main.vubros_msg) == "function" then
+        local ok, err = pcall(function() news_main.vubros_msg() end)
+        if ok then
+            printf("[BLOWOUT] PDA pre-warning sent | late=%s", tostring(late == true))
+            return true
+        end
+        printf("[BLOWOUT] PDA pre-warning failed: %s", tostring(err))
+    else
+        printf("[BLOWOUT] PDA pre-warning skipped: news_main.vubros_msg is unavailable")
+    end
+    return false
+end
+
+-- --- Проверка: наступил ли день выброса и пришло ли время ---
+function blowout_check()
+    if not db or not db.actor or not db.actor:alive() then return end
+
+    migrate_blowout_day_index()
+    local abs_day = get_abs_day()
+    local target = load_next_blowout()
+
+    if target == nil then
+        -- Новая игра или отсутствующая запись: назначаем первое событие.
+        schedule_next_blowout(abs_day)
+        return
+    end
+
+    -- Если сохранённая цель сильно ушла в прошлое, назначаем новую.
+    if target.abs < abs_day - 5 then
+        schedule_next_blowout(abs_day)
+        return
+    end
+
+    local now_mins = level.get_time_hours() * 60 + level.get_time_minutes()
+    local target_mins = target.hour * 60 + target.minute
+    local minutes_remaining = (target.abs - abs_day) * 1440 + target_mins - now_mins
+
+    -- Одно PDA-предупреждение за событие, за 2 игровые минуты до начала.
+    if minutes_remaining <= BLOWOUT_WARNING_MINUTES
+        and minutes_remaining > 0
+    then
+        send_blowout_warning(false)
+        return
+    end
+
+    -- Если игровой таймер перескочил через окно предупреждения,
+    -- отправляем его один раз непосредственно перед запуском.
+    if minutes_remaining <= 0 then
+        send_blowout_warning(true)
+        start_visual_blowout()
+    end
+end
+
+function add_reward_display(phr)
+    if not phr then return end
+    local phrase_script = phr:GetPhraseScript()
+    if not phrase_script then return end
+    -- ВАЖНО: обращаемся к функции через глобальную таблицу скрипта sz_mod,
+    -- а не через несуществующую show_reward.
+    phrase_script:AddAction("sz_mod.preview_reward")
+end
+
+function preview_reward(actor, npc, p1, p2)
+    -- task_manager может быть ещё не загружен — страховка
+    if not task_manager or not task_manager.CRandomTask then return end
+
+    if random_task == nil then
+        random_task = task_manager.CRandomTask()
+    end
+    if not random_task or not random_task.task_info then return end
+
+    -- В OGSR всегда используем строковый ключ
+    local task_id = tostring(p2 - 1)
+    local init_phrase_id = random_task.task_id_by_init_phrase_id
+        and random_task.task_id_by_init_phrase_id[task_id]
+    if not init_phrase_id then return end
+
+    local task_details = random_task.task_info[init_phrase_id]
+    if not task_details then return end
+
+    -- Показываем предметы
+    local reward_text = format_reward_text(task_details.reward_item)
+    if reward_text ~= "" then
+        local tex, rect = get_texture_info("ui_iconsTotal_found_thing")
+        db.actor:give_talk_message("Награда: " .. reward_text, tex, rect, "iconed_trade_info")
+    end
+
+    -- Показываем деньги
+    local reward_money = task_details.reward_money
+    if reward_money and reward_money > 0 then
+        local tex, rect = get_texture_info("ui_iconsTotal_found_money")
+        local text = reward_money .. " RU"
+        if task_details.need_return and reward_text == "" then
+            text = text .. " (" .. game.translate_string("return_for_reward") .. ")"
+        end
+        db.actor:give_talk_message(text, tex, rect, "iconed_trade_info")
+    end
+end
+
+function format_reward_text(reward_list)
+    if not reward_list then return "" end
+    local counts = {}
+    for _, v in pairs(reward_list) do
+        counts[v] = (counts[v] or 0) + 1
+    end
+    local parts = {}
+    for sec, cnt in pairs(counts) do
+        local name = game.translate_string(news_manager.get_inv_name(sec))
+        if cnt > 1 then
+            table.insert(parts, cnt .. "x " .. name)
+        else
+            table.insert(parts, name)
+        end
+    end
+    return table.concat(parts, ", ")
+end
+
+-- ============================================================
+-- Оповещение о повышении ранга
+-- ============================================================
+
+-- Порядок рангов от низшего к высшему
+local RANK_ORDER = { "novice", "beginner", "experienced", "veteran", "master" }
+
+-- Русские названия для новости
+local RANK_NAMES = {
+    ["novice"]      = "Новичок",
+    ["beginner"]    = "Бывалый",
+    ["experienced"] = "Опытный",
+    ["veteran"]     = "Ветеран",
+    ["master"]      = "Мастер",
+}
+
+-- Индекс ранга в RANK_ORDER (0 = novice, 4 = master)
+local function rank_index(rank_name)
+    for i, name in ipairs(RANK_ORDER) do
+        if name == rank_name then return i end
+    end
+    return 0
+end
+
+-- Последний известный ранг (кэш)
+local last_rank_name = nil
+
+-- Вызывать из actor_binder:update() (или из on_rank_update, если он есть)
+function rank_up()
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    local current = ranks.get_obj_rank_name(actor)
+    if not current then return end
+
+    -- Первый вызов — запоминаем и выходим (не показываем новость)
+    if last_rank_name == nil then
+        last_rank_name = current
+        return
+    end
+
+    -- Ранг не изменился
+    if current == last_rank_name then return end
+
+    -- Проверяем, что это именно ПОВЫШЕНИЕ (а не понижение)
+    local old_idx = rank_index(last_rank_name)
+    local new_idx = rank_index(current)
+    last_rank_name = current
+
+    if new_idx <= old_idx then return end  -- понижение — не оповещаем
+
+    -- Показываем новость
+    local rank_text = RANK_NAMES[current] or current
+    local news_text = "%c[124,247,136,1]Сообщение: \\n%c[default]Ранг повышен: " .. rank_text
+    db.actor:give_game_news(
+        news_text,
+        "ui\\ui_iconsTotal",
+        Frect():set(0, 517, 83, 47),
+        1000,
+        5000
+    )
+    rank_up_sound()
+end
+
+-- --- Звуки ---
+
+function rank_up_sound()
+    local snd_obj = xr_sound.get_safe_sound_object([[device\pda\pda_tip]])
+    if snd_obj then
+        snd_obj:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
+    end
+end
+
+-- --- Смерть сталкеров ---
+function kill_npc(victim, who)
+    if victim and IsStalker(victim) then
+        action(victim, particle("hit_fx\\group_items\\blood_pool","bip01_r_thigh"))
+    end
+end
+
+-- --- Спавн итема ---
+function spawn_item(spawn_item, dist)
+    local a = vector(); a.y = 1
+    local pos = db.actor:position():add(a)
+    local dir = db.actor:direction()
+    pos = pos:add(dir:mul(dist))
+    alife():create(spawn_item, pos, 1, db.actor:game_vertex_id())
+end
+
+-- --- Регенерация от брони ---
+class "fix_armor"
+
+function fix_armor:__init()
+    self.update_time = time_global()
+    self.delta_time = 1000
+end
+
+function fix_armor:update()
+    if self.update_time < time_global() then
+        self:update_outfit_section()
+        self.update_time = time_global() + self.delta_time
+    end
+end
+
+function fix_armor:update_outfit_section()
+    local item = db.actor:item_in_slot(6)
+    if not item then return end
+    local section = item:section()
+    if section == "outfit_novice_m1" then
+        db.actor.health = math.min(db.actor.health + 0.0006, 1.0)
+        db.actor.power  = math.min(db.actor.power  + 0.003,  1.0)
+    elseif section == "outfit_stalker_m1" then
+        db.actor.health = math.min(db.actor.health + 0.0006, 1.0)
+    elseif section == "outfit_killer_m2" then
+        db.actor.power  = math.min(db.actor.power  + 0.001,  1.0)
+    end
+end
+
+-- ============================================================
+-- CERAMIC PLATES: wear and break on bullet hits
+-- ============================================================
+local CERAMIC_PLATE_SECTION = "af_ceramic"
+local CERAMIC_DAMAGE_PER_HIT = 0.20 -- 0.20 = plate lasts about 5 bullet hits
+local CERAMIC_BREAK_SOUND = [[material\bottle\collide\bottle_break_1]] -- replace with the real sound path later
+local ceramic_break_snd = nil
+
+local function ceramic_get_belt_plates(actor)
+    local plates = {}
+    if not actor then return plates end
+
+    local count = actor:belt_count()
+    for i = 0, count - 1 do
+        local item = actor:item_on_belt(i)
+		if item then
+    printf("CERAMIC belt item: " .. tostring(item:section()))
+    printf("CERAMIC condition: " .. tostring(item.item_condition))
+end
+        if item and item:section() == CERAMIC_PLATE_SECTION then
+            local condition = item:condition()
+            if condition > 0 then
+                plates[#plates + 1] = item
+            end
+        end
+    end
+
+    return plates
+end
+
+local function ceramic_play_break_sound(actor)
+    if not CERAMIC_BREAK_SOUND or CERAMIC_BREAK_SOUND == "" then return end
+
+    if not ceramic_break_snd then
+        ceramic_break_snd = xr_sound.get_safe_sound_object(CERAMIC_BREAK_SOUND)
+    end
+
+    if ceramic_break_snd and actor then
+        local pos = vector():set(0, 0, 0)
+        ceramic_break_snd:play_at_pos(actor, pos, 0.1, sound_object.s2d)
+    end
+end
+
+local function ceramic_destroy_plate(actor, plate)
+    if not actor or not plate then return end
+
+    local id = plate:id()
+    local server_object = alife() and alife():object(id)
+    if server_object then
+        actor:mark_item_dropped(plate)
+        alife():release(server_object, true)
+    end
+
+    ceramic_play_break_sound(actor)
+
+    if update_inventory_window then
+        update_inventory_window()
+    end
+end
+
+local function ceramic_damage_one_plate(actor)
+    local plates = ceramic_get_belt_plates(actor)
+    if #plates == 0 then return end
+
+    -- Select only one intact plate for this hit.
+    local plate = plates[math.random(1, #plates)]
+	local condition = plate:condition()
+	local new_condition = condition - CERAMIC_DAMAGE_PER_HIT
+	
+    if new_condition <= 0 then
+        plate:set_condition(0)
+        ceramic_destroy_plate(actor, plate)
+    else
+        plate:set_condition(new_condition)
+        if update_inventory_window then
+            update_inventory_window()
+        end
+    end
+end
+
+-- OGSR calls this hook before applying an actor hit. It exposes hit.type,
+-- allowing the ceramic plates to wear only from fire_wound hits.
+-- Обработка попадания до применения урона
+function actor_before_hit_callback(binder, hit_data)
+    printf("CERAMIC CALLBACK CALLED")
+    if not binder or not binder.object then
+        return
+    end
+
+    local actor = binder.object
+	printf("CERAMIC hit_type: " .. tostring(hit_data.hit_type))
+printf("CERAMIC hit type: " .. tostring(hit_data.type))
+printf("CERAMIC fire_wound: " .. tostring(hit.fire_wound))
+printf("CERAMIC power: " .. tostring(hit_data.power))
+printf("CERAMIC belt count: " .. tostring(actor:belt_count()))
+    -- Только попадания по игроку
+    if not db.actor or actor:id() ~= db.actor:id() then
+        return
+    end
+
+    -- Только пулевые попадания
+	if not hit_data or hit_data.hit_type ~= hit.fire_wound then 
+		return 
+	end
+
+    -- Не учитывать попадания с нулевой силой
+    if (hit_data.power or 0) <= 0 then
+        return
+    end
+printf("CERAMIC passed hit checks")
+    ceramic_damage_one_plate(actor)
+end
+
+-- Обычный callback попадания оставляем
+function actor_on_hit_callback(binder, obj, amount, local_direction, who, bone_index)
+    return
+end
+
+-- ============================================================
+-- RUKZACHOK: player-placed stash containers
+-- This block is intentionally kept at the very end of sz_mod.script.
+-- ============================================================
+
+local RUCKSACK_BOX_SECTION = "rukzachok_box"
+local RUCKSACK_LEGACY_BOX_SECTION = "box"
+local RUCKSACK_MAP_SPOT = "treasure"
+local RUCKSACK_IDS_KEY = "sz_mod_rukzachok_box_ids"
+local rucksack_hint_update_time = 0
+
+local function get_rucksack_pstor()
+    if not db or not db.actor then return nil end
+    local actor_id = db.actor:id()
+    if not db.storage[actor_id] then db.storage[actor_id] = {} end
+    if not db.storage[actor_id].pstor then db.storage[actor_id].pstor = {} end
+    return db.storage[actor_id].pstor
+end
+
+local function get_rucksack_ids()
+    local pstor = get_rucksack_pstor()
+    local ids = {}
+    if not pstor then return ids end
+
+    local raw = tostring(pstor[RUCKSACK_IDS_KEY] or "")
+    for value in string.gmatch(raw, "[^,]+") do
+        local id = tonumber(value)
+        if id then table.insert(ids, id) end
+    end
+    return ids
+end
+
+local function save_rucksack_ids(ids)
+    local pstor = get_rucksack_pstor()
+    if not pstor then return end
+
+    local values = {}
+    for i = 1, #ids do
+        values[i] = tostring(ids[i])
+    end
+    pstor[RUCKSACK_IDS_KEY] = table.concat(values, ",")
+end
+
+local function register_rucksack_id(id)
+    if not id then return end
+    local ids = get_rucksack_ids()
+    for i = 1, #ids do
+        if ids[i] == id then return end
+    end
+    table.insert(ids, id)
+    save_rucksack_ids(ids)
+end
+
+local function unregister_rucksack_id(id)
+    local ids = get_rucksack_ids()
+    local kept = {}
+    for i = 1, #ids do
+        if ids[i] ~= id then
+            table.insert(kept, ids[i])
+        end
+    end
+    save_rucksack_ids(kept)
+end
+
+local function is_rucksack_id(id)
+    local ids = get_rucksack_ids()
+    for i = 1, #ids do
+        if ids[i] == id then return true end
+    end
+    return false
+end
+
+-- Use the same inventory-name resolver already used elsewhere in this script.
+local function get_inventory_item_name(section)
+    if not section then return "?" end
+
+    local ok, name = pcall(function()
+        local name_id = news_manager.get_inv_name(section)
+        if not name_id or name_id == "" then return nil end
+        return game.translate_string(name_id)
+    end)
+
+    if ok and name and name ~= "" then
+        return name
+    end
+    return tostring(section)
+end
+
+local function build_rucksack_hint(box)
+    local counts = {}
+    if box and box.iterate_inventory then
+        box:iterate_inventory(function(_, item)
+            if item then
+                local section = item:section()
+                -- The backpack itself is not part of the stash contents.
+                if section and section ~= "rukzachok"
+                    and section ~= RUCKSACK_BOX_SECTION
+                    and section ~= RUCKSACK_LEGACY_BOX_SECTION then
+                    counts[section] = (counts[section] or 0) + 1
+                end
+            end
+        end)
+    end
+
+    local sections = {}
+    for section in pairs(counts) do
+        table.insert(sections, section)
+    end
+    table.sort(sections)
+
+    if #sections == 0 then
+        return "\xcf\xf3\xf1\xf2\xee"
+    end
+
+    local parts = {}
+    for i = 1, #sections do
+        local section = sections[i]
+        local name = get_inventory_item_name(section)
+        -- One-line map hint: item name first, quantity in parentheses after it.
+        table.insert(parts, name .. " (" .. tostring(counts[section]) .. ")")
+    end
+
+    return table.concat(parts, ", ")
+end
+
+local function update_rucksack_map_hint(box)
+    if not box then return end
+    local id = box:id()
+    local hint = build_rucksack_hint(box)
+
+    if level.map_has_object_spot(id, RUCKSACK_MAP_SPOT) ~= 0 then
+        level.map_change_spot_hint(id, RUCKSACK_MAP_SPOT, hint)
+    else
+        level.map_add_object_spot_ser(id, RUCKSACK_MAP_SPOT, hint)
+    end
+end
+
+-- Called by start() when the rukzachok item is used.
+function place_rucksack()
+    local actor = db.actor
+    if not actor then return false end
+
+    -- Use the actor's actual world position. With AI locations disabled,
+    -- adding the old +1m lift would leave the backpack hanging in the air.
+    -- Keep only the small forward offset used by the original item.
+    local pos = actor:position()
+    pos = pos:add(actor:direction():mul(SPAWN_OFFSET))
+
+    -- rukzachok_box is declared in spawn_sections.ltx and inherits the backpack visual from [box].
+    -- The actor's current vertex is passed only as the required ALife
+    -- metadata; it must not move the container away from the world position.
+    local se_box = nil
+    local ok, result = pcall(function()
+        return alife():create(
+            RUCKSACK_BOX_SECTION,
+            pos,
+            actor:level_vertex_id(),
+            actor:game_vertex_id()
+        )
+    end)
+
+    if ok then
+        se_box = result
+    else
+        printf("[sz_mod] Failed to create rucksack box: " .. tostring(result))
+        return false
+    end
+
+    if not se_box or not se_box.id then
+        printf("[sz_mod] Failed to create rucksack box: empty ALife result")
+        return false
+    end
+
+    -- The LTX flag is the important part: it is applied during net spawn.
+    -- Keep this runtime setter as an additional safeguard.
+    local ai_flag_ok, ai_flag_error = pcall(function()
+        se_box:used_ai_locations(false)
+    end)
+    if not ai_flag_ok then
+        printf("[sz_mod] Could not disable AI locations for rucksack: " .. tostring(ai_flag_error))
+    end
+
+    -- Re-apply the exact world position after creation; do not project it to
+    -- the nearest AI node (which may be on the ground below a roof).
+    pcall(function()
+        se_box:set_position(pos)
+    end)
+
+    register_rucksack_id(se_box.id)
+    level.map_add_object_spot_ser(se_box.id, RUCKSACK_MAP_SPOT, build_rucksack_hint(nil))
+
+    local box = level.object_by_id(se_box.id)
+    if box then
+        update_rucksack_map_hint(box)
+    end
+
+    return true
+end
+
+-- Called from bind_stalker.take_item_from_box before the story_id check.
+-- Returns true only for a box created by rukzachok.
+function take_rucksack_item_from_box(box, item)
+    if not box then return false end
+    local section = box:section()
+    if section ~= RUCKSACK_BOX_SECTION and section ~= RUCKSACK_LEGACY_BOX_SECTION then
+        return false
+    end
+
+    local id = box:id()
+    if not is_rucksack_id(id) then return false end
+
+    if box:is_inv_box_empty() then
+        level.start_stop_menu(level.main_input_receiver(), true)
+        level.map_remove_object_spot(id, RUCKSACK_MAP_SPOT)
+        unregister_rucksack_id(id)
+
+        local se_box = alife():object(id)
+        if se_box then
+            alife():release(se_box, true)
+        end
+
+        local actor = db.actor
+        if actor then
+            alife():create(
+                "rukzachok",
+                actor:position(),
+                actor:level_vertex_id(),
+                actor:game_vertex_id(),
+                actor:id()
+            )
+        end
+    else
+        update_rucksack_map_hint(box)
+    end
+
+    return true
+end
+
+-- Refresh map hints while the stash containers are online.
+function update_rucksack_markers()
+    local now = time_global()
+    if now < rucksack_hint_update_time then return end
+    rucksack_hint_update_time = now + 1000
+
+    local ids = get_rucksack_ids()
+    local kept = {}
+    for i = 1, #ids do
+        local id = ids[i]
+        local se_box = alife():object(id)
+        if se_box then
+            table.insert(kept, id)
+            if se_box.online then
+                local box = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+                if box then
+                    update_rucksack_map_hint(box)
+                end
+            end
+        else
+            level.map_remove_object_spot(id, RUCKSACK_MAP_SPOT)
+        end
+    end
+    save_rucksack_ids(kept)
+end
+
+-- ============================================================
+-- QUICK SAVE ARCHIVE
+-- Keep a dated copy of every F6 quick-save without replacing
+-- earlier copies. The engine's regular user_quicksave remains
+-- untouched, so the standard F7 quick-load keeps working.
+-- ============================================================
+
+local quicksave_archive_profile = nil
+local quicksave_key_request_expire = nil
+local quicksave_archive_due = nil
+local quicksave_archive_delay = 1200
+
+local function get_quicksave_archive_profile()
+    if quicksave_archive_profile then
+        return quicksave_archive_profile
+    end
+
+    local ok, profile = pcall(user_name)
+    if not ok or not profile or profile == "" then
+        profile = "user"
+    end
+
+    quicksave_archive_profile = profile
+    return quicksave_archive_profile
+end
+
+function request_quicksave_archive()
+    -- If the previous F6 copy is still waiting for its delayed archive,
+    -- archive it now before the engine overwrites user_quicksave.sav again.
+    if quicksave_archive_due and flush_quicksave_archive then
+        flush_quicksave_archive()
+    end
+
+    -- The key handler arms the request; the actual actor save callback
+    -- confirms that F6 really started a save. Manual saves are ignored.
+    quicksave_key_request_expire = time_global() + 3000
+end
+
+function on_quicksave_actor_save()
+    local now = time_global()
+    if not quicksave_key_request_expire then
+        return
+    end
+
+    if now > quicksave_key_request_expire then
+        quicksave_key_request_expire = nil
+        return
+    end
+
+    quicksave_key_request_expire = nil
+    quicksave_archive_due = now + quicksave_archive_delay
+end
+
+local function copy_quicksave_archive()
+    local fs = getFS()
+    local profile = get_quicksave_archive_profile()
+    local source_sav_name = profile .. "_quicksave.sav"
+    local source_dds_name = profile .. "_quicksave.dds"
+
+    if not fs:exist("$game_saves$", source_sav_name) then
+        printf("[sz_mod] Quick-save archive skipped: source save not found: " .. source_sav_name)
+        return false
+    end
+
+    local day = level.get_time_days() or 0
+    local hour = level.get_time_hours() or 0
+    local minute = level.get_time_minutes() or 0
+    local name_prefix = string.format("%s_quicksave_%02d%02d%02d", profile, day, hour, minute)
+
+    -- A numeric suffix prevents collisions within one in-game minute
+    -- and also works after loading an older save or restarting the game.
+    local index = 1
+    local archive_name = nil
+    while index <= 9999 do
+        local candidate = name_prefix .. string.format("_%03d", index)
+        local save_exists = fs:exist("$game_saves$", candidate .. ".sav")
+        local image_exists = fs:exist("$game_saves$", candidate .. ".dds")
+        if not save_exists and not image_exists then
+            archive_name = candidate
+            break
+        end
+        index = index + 1
+    end
+
+    if not archive_name then
+        printf("[sz_mod] Quick-save archive failed: no free slot suffix")
+        return false
+    end
+
+    local source_sav = fs:update_path("$game_saves$", source_sav_name)
+    local target_sav = fs:update_path("$game_saves$", archive_name .. ".sav")
+    local save_ok, save_result = pcall(function()
+        return fs:file_copy(source_sav, target_sav)
+    end)
+
+    if not save_ok or save_result == false then
+        printf("[sz_mod] Quick-save archive failed while copying .sav: " .. tostring(save_result))
+        return false
+    end
+
+    if fs:exist("$game_saves$", source_dds_name) then
+        local source_dds = fs:update_path("$game_saves$", source_dds_name)
+        local target_dds = fs:update_path("$game_saves$", archive_name .. ".dds")
+        local image_ok, image_result = pcall(function()
+            return fs:file_copy(source_dds, target_dds)
+        end)
+        if not image_ok or image_result == false then
+            printf("[sz_mod] Quick-save thumbnail copy failed: " .. tostring(image_result))
+        end
+    end
+
+    printf("[sz_mod] Quick-save archived: " .. archive_name .. ".sav")
+    return true
+end
+
+function flush_quicksave_archive()
+    -- Called before F7 quick-load and before a subsequent F6 can overwrite
+    -- the source slot. This closes the race where loading/restarting the
+    -- level happens before the delayed update callback can copy the file.
+    if not quicksave_archive_due then
+        return false
+    end
+
+    quicksave_archive_due = nil
+    local ok, result = pcall(copy_quicksave_archive)
+    if not ok then
+        printf("[sz_mod] Quick-save archive flush error: " .. tostring(result))
+        return false
+    end
+
+    return result == true
+end
+
+function update_quicksave_archive(now)
+    now = now or time_global()
+
+    if quicksave_key_request_expire and now > quicksave_key_request_expire then
+        quicksave_key_request_expire = nil
+    end
+
+    if not quicksave_archive_due or now < quicksave_archive_due then
+        return
+    end
+
+    flush_quicksave_archive()
+end
+
+-- ============================================================
+-- Чёрный экран смерти актёра (UI)
+-- Вынесено из bind_stalker.script для централизации логики мода.
+-- ============================================================
+
+local sz_death_overlay_window = nil
+
+class "sz_death_overlay" (CUIScriptWnd)
+
+function sz_death_overlay:__init() super()
+    self:Init(0, 0, 1024, 768)
+
+    local xml = CScriptXmlInit()
+    xml:ParseFile("ui_custom_msgs.xml")
+    xml:InitStatic("sz_death_black", self)
+end
+
+function death_screen_show()
+    if not sz_death_overlay_window then
+        sz_death_overlay_window = sz_death_overlay()
+    end
+
+    local hud = get_hud()
+    if hud then
+        hud:AddDialogToRender(sz_death_overlay_window)
+    end
+end
+
+function death_screen_cleanup()
+    local hud = get_hud()
+    if hud and sz_death_overlay_window then
+        hud:RemoveDialogToRender(sz_death_overlay_window)
+    end
+    sz_death_overlay_window = nil
+end

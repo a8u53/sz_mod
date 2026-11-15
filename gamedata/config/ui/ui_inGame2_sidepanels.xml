@@ -1,0 +1,12 @@
+<ui_texture>
+
+<file_name>ui\ui_inGame2_sidepanels</file_name>
+
+
+	    <texture id="ui_inGame2_widescreen_sidepanels_left" x="0" y="0" width="128" height="768" />
+	    <texture id="ui_inGame2_widescreen_sidepanels_right" x="128" y="0" width="128" height="768" />
+
+</ui_texture>
+
+
+

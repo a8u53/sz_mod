@@ -1,0 +1,22 @@
+[smart_terrains]
+none = true
+
+[logic]
+active = camper
+combat_ignore = combat_ignore
+
+[combat_ignore]
+
+[camper]
+path_walk = esc_provodnik_walk
+path_look = esc_provodnik_look
+radius = 5
+def_state_moving = run
+no_move = true
+on_info = {+escape_lager_spawn_killers} walker@esc_lager_def
+
+[walker@esc_lager_def]
+combat_ignore_cond = {-esc_open_lager_fire}
+path_walk = esc_provodnik_walk
+path_look = esc_provodnik_look
+on_info = {+escape_lager_killers_die} camper

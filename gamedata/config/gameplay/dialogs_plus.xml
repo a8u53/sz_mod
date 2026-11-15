@@ -1,0 +1,925 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+<game_dialogs>
+
+<dialog id="af_quest">
+	<phrase_list>		
+        <phrase id="0">
+            <text></text>
+			<next>1</next>
+			<next>2</next>
+			<next>3</next>
+			<next>4</next>
+         </phrase>
+			
+		<phrase id="3">
+			<text></text>
+			<has_info>otkaz_ot_raboti</has_info>
+			<next>31</next>
+		</phrase>
+		
+		<phrase id="4">
+			<text></text>
+			<has_info>tutorial_artefact_start</has_info>
+			<dont_has_info>tutorial_artefact_done</dont_has_info>
+			<next>41</next>
+		</phrase>
+		
+		<phrase id="41">
+			<text>trader_hello_6</text>
+			<next>411</next>
+			<next>412</next>
+		</phrase>
+		
+		<phrase id="411">
+			<text>Вот твой артефакт. Забавная вещица. %c[UI_orange][Передать предмет]</text>
+			<has_info>tutorial_artefact_gain</has_info>
+			<next>4111</next>
+		</phrase>
+		
+		<phrase id="4111">
+			<text>trader_hello_7</text>
+			<give_info>tutorial_artefact_done</give_info>
+			<action>dan_dialog.reward_af</action>
+		</phrase>
+		
+		<phrase id="412">
+			<text>В процессе.</text>
+			<dont_has_info>tutorial_artefact_gain</dont_has_info>
+			<action>dialogs.break_dialog</action>
+		</phrase>
+		
+		<phrase id="31">
+			<text>trader_hello_8</text>
+			<next>11111</next>
+			<next>11112</next>
+		</phrase>
+		
+		<phrase id="1">
+			<text></text>
+			<has_info>from_ship_to_bal_start</has_info>
+			<dont_has_info>otkaz_ot_raboti</dont_has_info>
+			<dont_has_info>tutorial_artefact_start</dont_has_info>
+			<next>11</next>
+		</phrase>
+ 
+		<phrase id="11">
+			<text>trader_hello_0</text>
+			<next>111</next>
+		</phrase>
+		
+		<phrase id="111">
+			<text>trader_hello_1</text>
+			<next>1111</next>
+		</phrase>
+		
+ 		<phrase id="1111">
+			<text>trader_hello_2</text>
+			<give_info>from_ship_to_bal_complete</give_info>
+			<next>11111</next>
+			<next>11112</next>
+		</phrase>
+		
+		<phrase id="11111">
+			<text>trader_hello_3</text>
+			<next>111121</next>
+		</phrase>
+		
+		<phrase id="111121">
+			<text>trader_hello_4</text>
+			<give_info>tutorial_artefact_start</give_info>
+			<action>dan_dialog.af_create</action>
+			<next>111122</next>
+		</phrase>
+		
+		<phrase id="111122">
+			<text>trader_hello_5</text>
+			<action>dialogs.break_dialog</action>
+		</phrase>
+		
+		<phrase id="11112">
+			<text>trader_hello_9</text>
+			<give_info>otkaz_ot_raboti</give_info>
+			<action>dialogs.break_dialog</action>
+		</phrase>
+		
+		<phrase id="2">
+			<text></text>
+			<has_info>tutorial_artefact_done</has_info>
+			<next>22</next>
+		</phrase>
+		
+		<phrase id="22">
+			<text>Привет! Как здоровье? Надеюсь не прихворал.</text>
+		</phrase>		
+	</phrase_list>
+</dialog>
+
+<dialog id="esc_i_come_to_pidorovich">
+	<has_info>talked_with_leader</has_info>
+	<dont_has_info>esc_trader_can_leave</dont_has_info>
+<phrase_list>
+		<phrase id="0">
+			<text>Я от Волка, к Сидоровичу пришел.</text>
+			<next>1</next>
+		</phrase>
+	
+		<phrase id="1">
+			<text>Да, Волк меня предупредил. Заходи, только ствол, свой, спрячь и лишний раз не доставай, по хорошему прошу.</text>
+			<give_info>esc_trader_can_leave</give_info>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="collection_cards">
+	<phrase_list>
+		<phrase id="0">
+            <text></text>
+			<next>1</next>
+			<next>2</next>
+			<next>3</next>
+        </phrase>
+		 
+		<phrase id="3">
+			<has_info>find_ten_cards_complete</has_info>	
+			<text></text>
+			<next>33</next>
+		</phrase>
+	
+		<phrase id="33">
+			<text>Здравствуйте, коллега.</text>
+		</phrase>
+	
+		<phrase id="1">
+			<text></text>
+			<dont_has_info>find_ten_cards</dont_has_info>
+			<next>11</next>
+		</phrase>
+	
+		<phrase id="2">
+			<text></text>
+			<has_info>find_ten_cards</has_info>	
+			<dont_has_info>find_ten_cards_complete</dont_has_info>
+			<next>22</next>
+		</phrase>
+	
+		<phrase id="22">
+			<text>Ну что? Как дела со сбором карточек?</text>
+			<next>222</next>
+			<next>223</next>
+		</phrase>
+	
+		<phrase id="222">
+			<precondition>dan_dialog.cards_check</precondition>
+			<text>На, держи свои карточки, пол "Зоны" истребил ради них. %c[UI_orange][Передать предмет]</text>
+			<next>2222</next>
+		</phrase>
+	
+		<phrase id="223">
+			<text>В процессе.</text>
+		</phrase>
+	
+		<phrase id="2222">
+			<text>cards_dialog_8</text>
+			<action>dan_dialog.cards_transfer</action>
+			<give_info>find_ten_cards_complete</give_info>
+		</phrase>
+	
+		<phrase id="11">
+			<text>Здравствуйте. Вы случайно не коллекционер?</text>
+			<next>111</next>
+		</phrase>
+	
+		<phrase id="111">
+			<text>cards_dialog_9</text>
+			<next>1111</next>
+		</phrase>
+	
+		<phrase id="1111">
+			<text>cards_dialog_10</text>
+			<next>11111</next>
+			<next>11121</next>
+		</phrase>
+	
+		<phrase id="11111">
+			<text>Ладно, посмотрим. %c[UI_orange][Задание]</text>
+			<give_info>find_ten_cards</give_info>
+		</phrase>
+	
+		<phrase id="11121">
+			<text>Вот сразу, как шнурки поглажу, займусь твоей проблемой.</text>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="esc_ohrannik_guf">
+	<phrase_list>
+		<phrase id="0">
+            <text></text>
+			<next>1</next>
+			<next>2</next>
+        </phrase>
+		 
+		<phrase id="1">
+			<has_info>talked_with_leader</has_info>
+			<text></text>
+			<next>11</next>
+		</phrase>
+	
+		<phrase id="11">
+			<text>Чего тебе?</text>
+		</phrase>
+	
+		<phrase id="2">
+			<dont_has_info>talked_with_leader</dont_has_info>
+			<text></text>
+			<next>22</next>
+		</phrase>
+	
+		<phrase id="22">
+			<dont_has_info>talked_with_leader</dont_has_info>
+			<text>Иди к старшему, залупа.</text>
+		</phrase>	
+	</phrase_list>
+</dialog>
+
+<dialog id="esc_blockpost_dialog">
+	<phrase_list>
+		<phrase id="0">
+			<text>Здравия желаю. Ваши документы и пропуск, пожалуйста.</text>
+			<next>1</next>
+		</phrase>
+		 
+		<phrase id="1">
+			<text>Вот, пожалуйста. Все должно быть в порядке.</text>
+			<next>2</next>
+		</phrase>
+	
+		<phrase id="2">
+			<text>Угу... угу... да, действительно, все хорошо. Теперь мне нужно досмотреть содержимое вашей сумки.</text>
+			<next>3</next>
+		</phrase>
+	
+		<phrase id="3">
+			<text>Это что? Обыск, а постановление у Вас есть?</text>
+			<next>4</next>
+		</phrase>
+	
+		<phrase id="4">
+			<text>Давай не умничай, это стандартная процедура</text>
+		</phrase>	
+	</phrase_list>
+</dialog>
+
+<dialog id="repair">
+    <phrase_list>
+        <phrase id="0">
+            <text>repair_dialogs</text>
+            <action>its_repair.main</action>
+        </phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="modding">
+    <phrase_list>
+        <phrase id="0">
+            <text>%c[UI_orange][Модификация]</text>
+            <action>sz_eq_upgrades.modificate</action>
+        </phrase>
+	</phrase_list>
+</dialog>
+	
+<dialog id="trader_hello">
+    <phrase_list>
+        <phrase id="0">
+			<text>Ну че ты топчешься? Покупай что-нибудь или вали.</text>
+            <give_info>trader_talk</give_info>
+        </phrase>
+	</phrase_list>
+</dialog>
+	
+<dialog id="escape_lager_leader_hello">
+    <phrase_list>
+        <phrase id="21">
+            <text>escape_lager_leader_hello_21</text>
+        </phrase>
+		
+        <phrase id="3111">
+            <text>escape_lager_leader_hello_3111</text>
+            <action>escape_dialog.give_reward_killers</action>
+        </phrase>
+		
+        <phrase id="311">
+            <text>escape_lager_leader_hello_311</text>
+            <give_info>escape_lager_complete</give_info>
+            <next>3111</next>
+        </phrase>
+		
+        <phrase id="2">
+            <text />
+			<has_info>talked_with_leader</has_info>
+            <dont_has_info>escape_lager_killers_die</dont_has_info>
+            <has_info>escape_lager_help</has_info>
+            <next>21</next>
+        </phrase>
+		
+        <phrase id="4">
+                <text />
+				<has_info>talked_with_leader</has_info>
+                <has_info>escape_lager_complete</has_info>
+                <next>41</next>
+            </phrase>
+            <phrase id="411">
+                <text>escape_lager_leader_hello_411</text>
+				<action>dialogs.break_dialog</action>
+            </phrase>
+            <phrase id="412">
+                <text>escape_lager_leader_hello_412</text>
+                <next>4121</next>
+            </phrase>
+            <phrase id="4121">
+                <text>escape_lager_leader_hello_4121</text>
+            </phrase>
+            <phrase id="41">
+                <text>escape_lager_leader_hello_41</text>
+                <next>411</next>
+            </phrase>
+            <phrase id="1111112">
+                <text>escape_lager_leader_hello_1111112</text>
+                <next>11111121</next>
+            </phrase>
+            <phrase id="111111">
+                <text>escape_lager_leader_hello_111111</text>
+                <next>1111111</next>
+                <next>1111112</next>
+            </phrase>
+            <phrase id="11111111">
+                <text>escape_lager_leader_hello_11111111</text>
+                <next>111111111</next>
+            </phrase>
+            <phrase id="11111121">
+                <text>escape_lager_leader_hello_11111121</text>
+                <give_info>escape_lager_spawn_killers</give_info>
+            </phrase>
+            <phrase id="11">
+                <text>escape_lager_leader_hello_11</text>
+                <next>111</next>
+            </phrase>
+            <phrase id="1">
+                <text />
+				<has_info>talked_with_leader</has_info>
+				<has_info>esc_victim_alive</has_info>
+                <dont_has_info>escape_lager_help</dont_has_info>
+                <next>11</next>
+            </phrase>
+            <phrase id="31">
+                <text>escape_lager_leader_hello_31</text>
+                <next>311</next>
+            </phrase>
+            <phrase id="111">
+                <text>escape_lager_leader_hello_111</text>
+                <next>1111</next>
+            </phrase>
+            <phrase id="3">
+                <text />
+				<has_info>talked_with_leader</has_info>
+                <dont_has_info>escape_lager_complete</dont_has_info>
+                <has_info>escape_lager_killers_die</has_info>
+                <next>31</next>
+            </phrase>
+            <phrase id="0">
+                <text />
+                <next>1</next>
+                <next>2</next>
+                <next>3</next>
+                <next>4</next>
+				<next>5</next>
+				<next>6</next>
+            </phrase>
+            <phrase id="111111111">
+                <text>escape_lager_leader_hello_111111111</text>
+                <action>dialogs.break_dialog</action>
+                <give_info>escape_lager_help</give_info>
+                <give_info>escape_lager_spawn_killers</give_info>
+            </phrase>
+            <phrase id="1111111">
+                <text>escape_lager_leader_hello_1111111</text>
+                <next>11111111</next>
+            </phrase>
+            <phrase id="11111">
+                <text>escape_lager_leader_hello_11111</text>
+                <next>111111</next>
+            </phrase>
+            <phrase id="1111">
+                <text>escape_lager_leader_hello_1111</text>
+                <next>11111</next>
+            </phrase>
+			<phrase id="6">
+			<text></text>
+			<dont_has_info>talked_with_leader</dont_has_info>
+			<next>61</next>
+			</phrase>
+			<phrase id="61">
+			<text>esc_first_meet_1</text>
+			<next>611</next>
+			</phrase>
+			<phrase id="611">
+			<text>esc_first_meet_2</text>
+			<next>6111</next>
+			</phrase>
+			<phrase id="6111">
+			<text>esc_first_meet_3</text>
+			<next>61111</next>
+			</phrase>
+			<phrase id="61111">
+			<text>esc_first_meet_4</text>
+			<next>611111</next>
+			</phrase>
+			<phrase id="611111">
+			<text>esc_first_meet_5</text>
+			<next>6111111</next>
+			<next>6111112</next>
+			<next>6111113</next>
+			</phrase>
+			<phrase id="6111111">
+			<text>esc_first_meet_6</text>
+			<next>12</next>
+			</phrase>
+			<phrase id="12">
+			<text>esc_first_meet_9</text>
+			<next>121</next>
+			</phrase>
+			<phrase id="121">
+			<text>esc_first_meet_10</text>
+			<next>1211</next>
+			</phrase>
+			<phrase id="1211">
+			<text>esc_first_meet_11</text>
+			<give_info>sar_monolith_call</give_info>
+			<give_info>talked_with_leader</give_info>
+			</phrase>
+			<phrase id="5">
+			<text></text>
+			<dont_has_info>escape_lager_complete</dont_has_info>
+			<dont_has_info>escape_lager_help</dont_has_info>
+			<dont_has_info>escape_lager_killers_die</dont_has_info>
+			<has_info>talked_with_leader</has_info>
+			<next>51</next>
+			</phrase>
+			<phrase id="51">
+			<text>Ну что? Обживаешься помаленьку?</text>
+			</phrase>
+			<phrase id="6111112">
+			<text>esc_first_meet_7</text>
+			<next>12</next>
+			</phrase>	
+			<phrase id="6111113">
+			<text>esc_first_meet_8</text>
+			<next>12</next>
+		</phrase>
+        </phrase_list>
+    </dialog>
+
+<dialog id="semi_conductor">
+	<phrase_list>
+		<phrase id="0">
+			<text>Куда ты можешь меня отвести?</text>
+			<next>1</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>Да есть пару мест. Куда тебе нужно?</text>
+			<next>3</next>
+			<next>4</next>
+			<next>2</next>
+			<next>5</next>
+			<next>6</next>
+		</phrase>
+
+		<phrase id="2">
+			<text>%c[UI_orange][Темная долина: Южные ворота.] - 500 рублей.</text>
+			<precondition>semi_conductor.check_money_3</precondition>
+			<action>semi_conductor.dark_valley</action>
+		</phrase>
+
+		<phrase id="3">
+			<text>%c[UI_orange][Кордон: Перед тоннелем] - 150 рублей.</text>
+			<precondition>semi_conductor.check_money</precondition>
+			<action>semi_conductor.esc_tunnel</action>
+		</phrase>
+
+		<phrase id="4">
+			<text>%c[UI_orange][Свалка: Южные ворота] - 750 рублей.</text>
+			<precondition>semi_conductor.check_money_2</precondition>
+			<action>semi_conductor.garbij</action>
+		</phrase>
+
+		<phrase id="5">
+			<text>%c[UI_orange][Бар: Арена] - 1000 рублей.</text>
+			<precondition>semi_conductor.check_money_4</precondition>
+			<action>semi_conductor.bar</action>
+		</phrase>
+
+		<phrase id="6">
+			<text>Пока никуда.</text>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="semi_conductor_mil">
+	<phrase_list>
+		<phrase id="0">
+			<text>Могу проводить тебя до нужного тебе места, за небольшую плату. Только ты учти, я вожу только туда, куда знаю безопасную дорогу. Так куда тебе надо?</text>
+			<next>2</next>
+			<next>1</next>
+			<next>4</next>
+			<next>3</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>%c[UI_orange][Армейские склады. Барьер] - 500 рублей.</text>
+			<precondition>semi_conductor.check_money_3</precondition>
+		</phrase>
+
+		<phrase id="2">
+			<text>%c[UI_orange][Армейские склады. Деревня] - 700 рублей.</text>
+			<precondition>semi_conductor.check_money</precondition>
+		</phrase>
+
+		<phrase id="4">
+			<text>%c[UI_orange][Бар. Переход] - 500 рублей.</text>
+			<precondition>semi_conductor.check_money_2</precondition>
+		</phrase>
+
+		<phrase id="3">
+			<text>Пока никуда.</text>
+			<action>dialogs.break_dialog</action>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="docu_trade">
+	<phrase_list>
+		<phrase id="0">
+			<text>У меня для тебя кое-что есть.</text>
+			<next>1</next>
+		</phrase>
+		
+		<phrase id="1">
+			<text>И что же это?</text>
+			<next>2</next>
+			<next>3</next>
+			<next>4</next>
+			<next>5</next>
+		</phrase>
+		
+		<phrase id="2">
+			<text>%c[UI_orange][Папка с документами]</text>
+			<precondition>dan_dialog.money_maker_1_check</precondition>
+			<action>dan_dialog.relocate_1</action>
+			<next>44</next>
+		</phrase>
+
+		<phrase id="3">
+			<text>%c[UI_orange][Файл с документами]</text>
+			<precondition>dan_dialog.money_maker_2_check</precondition>
+			<action>dan_dialog.relocate_2</action>
+			<next>44</next>
+		</phrase>
+
+		<phrase id="4">
+			<text>%c[UI_orange][Флеш-диск]</text>
+			<precondition>dan_dialog.money_maker_3_check</precondition>
+			<action>dan_dialog.relocate_3</action>
+			<next>44</next>
+		</phrase>
+
+		<phrase id="44">
+			<text>Хм... очень интересно. Молодец, что принес это мне. Вот, за труды:</text>
+			<action>dan_dialog.money_maker_reward</action>
+		</phrase>
+
+		<phrase id="5">
+			<text>Забудь.</text>
+			<next>6</next>
+		</phrase>
+		
+		<phrase id="6">
+			<text>Ладно.</text>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="join_duty">
+	<phrase_list>
+		<phrase id="0">
+			<text>Хочу вступить.</text>
+			<next>2</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>Хорошо, быдло.</text>
+			<precondition>semi_conductor.check_money_3</precondition>
+		</phrase>
+
+		<phrase id="2">
+			<text>%c[UI_orange][Армейские склады. Деревня] - 700 рублей.</text>
+			<precondition>semi_conductor.check_money</precondition>
+		</phrase>
+
+		<phrase id="4">
+			<text>%c[UI_orange][Бар. Переход] - 500 рублей.</text>
+			<precondition>semi_conductor.check_money_2</precondition>
+		</phrase>
+
+		<phrase id="3">
+			<text>Пока никуда.</text>
+			<action>dialogs.break_dialog</action>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="find_plem_quest">
+	<dont_has_info>find_plem_start</dont_has_info>
+	<phrase_list>
+		<phrase id="0">
+			<text>escape_trader_jobs_0</text>
+			<next>1</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>esc_find_plem_quest_1</text>
+			<next>2</next>
+			<next>3</next>
+		</phrase>
+
+		<phrase id="2">
+			<text>esc_find_plem_quest_2</text>
+			<next>4</next>
+		</phrase>
+		
+		<phrase id="4">
+			<text>esc_find_plem_quest_3</text>
+			<give_info>find_plem_start</give_info>
+		</phrase>
+		
+		<phrase id="3">
+			<text>У меня нет на это времени, да он и сам объявится, вот увидишь.</text>
+			<next>5</next>
+		</phrase>
+		
+		<phrase id="5">
+			<text>Ах ты сволачь.</text>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="plem_found">
+	<has_info>find_plem_na_meste</has_info>
+	<dont_has_info>find_plem_well_done</dont_has_info>
+	<phrase_list>
+		<phrase id="0">
+			<text>Вернул бойца.</text>
+			<next>1</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>Молодца.</text>
+			<give_info>find_plem_well_done</give_info>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="plem_found_dead">
+	<has_info>find_plem_motherfucker_died</has_info>
+	<dont_has_info>find_plem_well_done</dont_has_info>
+	<phrase_list>
+		<phrase id="0">
+			<text>В общем... такое дело... убили твоего пацана.</text>
+			<next>1</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>Ептыть, придется сделать пару неприятных звонков.</text>
+			<give_info>find_plem_well_done</give_info>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="find_plem_dialog">
+	<phrase_list>
+		<phrase id="0">
+			<text />
+			<next>1</next>
+			<next>2</next>
+			<next>3</next>
+		</phrase>
+
+		<phrase id="1">
+			<text />
+			<dont_has_info>find_plem_found</dont_has_info>
+			<next>11</next>
+		</phrase>
+
+		<phrase id="2">
+			<text />
+			<dont_has_info>find_plem_move_out</dont_has_info>
+			<has_info>find_plem_found</has_info>
+			<next>22</next>
+		</phrase>
+
+		<phrase id="3">
+			<text />
+			<dont_has_info>find_plem_move_out2</dont_has_info>
+			<has_info>find_plem_move_out</has_info>
+			<next>33</next>
+		</phrase>
+		
+		<phrase id="11">
+			<text>...</text>
+			<next>111</next>
+		</phrase>
+
+		<phrase id="111">
+			<text>Эй! Проснись!</text>
+			<next>1111</next>
+		</phrase>
+		
+		<phrase id="1111">
+			<text>Ты хто?</text>
+			<next>11111</next>
+		</phrase>
+
+		<phrase id="11111">
+			<text>Пидорович тебя ищет</text>
+			<next>111111</next>
+		</phrase>
+
+		<phrase id="111111">
+			<text>И че?</text>
+			<next>1111111</next>
+		</phrase>
+		
+		<phrase id="1111111">
+			<text>Пойдем, вставай.</text>
+			<action>dialogs.break_dialog</action>
+			<give_info>find_plem_found</give_info>
+		</phrase>
+		
+		<phrase id="22">
+			<text>...</text>
+			<next>222</next>
+		</phrase>
+
+		<phrase id="222">
+			<text>Просыпайся</text>
+			<next>2222</next>
+		</phrase>
+		
+		<phrase id="2222">
+			<text>Ты хто?</text>
+			<next>22222</next>
+		</phrase>
+
+		<phrase id="22222">
+			<text>Пидорович тебя ищет</text>
+			<next>222222</next>
+		</phrase>
+
+		<phrase id="222222">
+			<text>И че?</text>
+			<next>2222222</next>
+		</phrase>
+		
+		<phrase id="2222222">
+			<text>Пойдем, вставай.</text>
+			<action>dialogs.break_dialog</action>
+			<give_info>find_plem_move_out</give_info>
+		</phrase>
+		
+		<phrase id="33">
+			<text>...</text>
+			<next>333</next>
+		</phrase>
+
+		<phrase id="333">
+			<text>Просыпайся</text>
+			<next>3333</next>
+		</phrase>
+		
+		<phrase id="3333">
+			<text>Ты хто?</text>
+			<next>33333</next>
+		</phrase>
+
+		<phrase id="33333">
+			<text>Пидорович тебя ищет</text>
+			<next>333333</next>
+		</phrase>
+
+		<phrase id="333333">
+			<text>И че?</text>
+			<next>3333333</next>
+		</phrase>
+		
+		<phrase id="3333333">
+			<text>Пойдем, вставай.</text>
+			<action>dialogs.break_dialog</action>
+			<give_info>find_plem_move_out2</give_info>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="mp_start_dialog">
+	<phrase_list>
+		<phrase id="0">
+			<text />
+			<next>1</next>
+			<next>2</next>
+		</phrase>
+
+		<phrase id="1">
+			<dont_has_info>mp_start_dialog_done</dont_has_info>
+			<text>Здравствуй брат. Что нужно?</text>
+			<next>11</next>
+		</phrase>
+		
+		<phrase id="11">
+			<text>Да так, хожу, знакомлюсь со всеми. Чем ты здесь занимаешься?</text>
+			<next>111</next>
+		</phrase>
+		
+		<phrase id="111">
+			<text>Я, брат, охотник. Ноги, руки, глаза, сердца и прочие интересные части мутантов, в общем, за что платят, то и добываю. Заказов всегда в избытке как и дичи, так что если есть желание поохотиться, то с радостью заберу у тебя трофеи, а взамен могу поделиться патронами. Без лишней скромности скажу, близлежащие территории я знаю как свои пять пальцев, поэтому </text>
+			<next>1111</next>
+		</phrase>
+	</phrase_list>
+</dialog>
+
+<dialog id="monster_parts_barter">
+	<phrase_list>
+		<phrase id="0">
+			<text>monster_parts_barter_1</text>
+			<next>1</next>
+		</phrase>
+
+		<phrase id="1">
+			<text>monster_parts_barter_2</text>
+			<action>sz_monster_parts_barter.monster_parts_barter</action>
+			<next>2</next>
+			<next>3</next>
+			<next>4</next>
+			<next>5</next>
+			<next>6</next>
+			<next>7</next>
+		</phrase>
+
+		<phrase id="2">
+			<precondition>sz_monster_parts_barter.barter_dogtails</precondition>
+			<text>monster_parts_barter_3</text>
+			<action>sz_monster_parts_barter.dogtails_ammo</action>
+			<action>sz_monster_parts_barter.dogtails_remove</action>
+			<next>33</next>
+		</phrase>
+
+		<phrase id="3">
+			<precondition>sz_monster_parts_barter.barter_boarlegs</precondition>
+			<text>monster_parts_barter_4</text>
+			<action>sz_monster_parts_barter.boarlegs_ammo</action>
+			<action>sz_monster_parts_barter.boarlegs_remove</action>
+			<next>33</next>
+		</phrase>
+
+		<phrase id="4">
+			<precondition>sz_monster_parts_barter.barter_flesheyes</precondition>
+			<text>monster_parts_barter_5</text>
+			<action>sz_monster_parts_barter.flesheyes_ammo</action>
+			<action>sz_monster_parts_barter.flesheyes_remove</action>
+			<next>33</next>
+		</phrase>
+
+		<phrase id="5">
+			<precondition>sz_monster_parts_barter.barter_pseudodogtails</precondition>
+			<text>monster_parts_barter_6</text>
+			<action>sz_monster_parts_barter.pseudodogtails_ammo</action>
+			<action>sz_monster_parts_barter.pseudodogtails_remove</action>
+			<next>33</next>
+		</phrase>
+
+		<phrase id="6">
+			<precondition>sz_monster_parts_barter.barter_bloodsuckerjaw</precondition>
+			<text>monster_parts_barter_7</text>
+			<action>sz_monster_parts_barter.bloodsuckerjaw_ammo</action>
+			<action>sz_monster_parts_barter.bloodsuckerjaw_remove</action>
+			<next>33</next>
+		</phrase>
+		
+		<phrase id="33">
+			<text>monster_parts_barter_8</text>
+		</phrase>
+	
+		<phrase id="7">
+			<text>monster_parts_barter_9</text>
+		</phrase>
+	</phrase_list>
+</dialog>
+</game_dialogs>

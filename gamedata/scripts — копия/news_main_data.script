@@ -1,0 +1,166 @@
+--[[---------------------------------------------------------------------------------------
+
+	file: news_main_data.script
+	author: OGS Evolution - team
+	ver.1.0
+	description: Вспомогательные функции для новостей
+
+---------------------------------------------------------------------------------------]]--
+
+local post_message_prob = 1 -- 1 - работает , 0 - вылет!
+
+local prob1 = news_main.show_news_trade
+local prob2 = news_main.show_news_another
+local prob3 = news_main.show_news_dolg
+local prob4 = news_main.show_news_freedom
+local prob5 = news_main.show_news_random
+local prob6 = news_main.show_death_news
+
+local time = time_global()
+local last_morning_day = -1
+local last_evening_day = -1
+
+--Главная функция
+function show_news_main()
+    if (isIsolatedLevel(level.name()) == true) then return end
+
+    local uptime = time_global()
+
+    -- Утренние сообщения: 04:30 – 07:00, раз в игровой день
+    local hour = level.get_time_hours()
+    local minute = level.get_time_minutes()
+    local now_day = level.get_time_days()
+    local minutes_of_day = hour * 60 + minute
+
+    if minutes_of_day >= 270 and minutes_of_day <= 420 and last_morning_day ~= now_day then
+        last_morning_day = now_day
+        morning_templates()
+        return
+    end
+
+    -- Вечерние сообщения: 20:30 – 22:00, раз в игровой день
+    if minutes_of_day >= 1230 and minutes_of_day <= 1320 and last_evening_day ~= now_day then
+        last_evening_day = now_day
+        evening_templates()
+        return
+    end
+
+    -- Обычные рандомные новости
+    if uptime <= time then return else
+        time = time + math.random(90000, 250000) -- срабатывает рандомно
+    end
+
+    local ft = {
+        prob1,
+        prob2,
+        prob3,
+        prob4,
+        prob5,
+        prob6
+    }
+    ft[math.random(#ft)]()
+end
+
+--"Статус соединения:"
+local connect_templates = {
+	"%c[255,160,255,160]Система:\\n%c[default]Связь установлена.",
+	"%c[255,160,255,160]Система:\\n%c[default]Приём сигнала возобновлён.",
+	"%c[255,160,255,160]Система:\\n%c[default]Подключение к сети...",
+	"%c[255,160,255,160]Система:\\n%c[default]Уровень сигнала восстановлен.",
+	"%c[255,160,255,160]Система:\\n%c[default]Подключение к серверу..."
+}
+
+local disconnect_templates = {
+	"%c[255,160,255,160]Система:\\n%c[default]Нет подключения к серверу.",
+	"%c[255,160,255,160]Система:\\n%c[default]Связь прервана.",
+	"%c[255,160,255,160]Система:\\n%c[default]Низкий уровень сигнала.",
+	"%c[255,160,255,160]Система:\\n%c[default]Прием невозможен, связь потеряна.",                  
+	"%c[255,160,255,160]Система:\\n%c[default]Сигнал отсутствует."
+}
+
+--Вспомагательный функции
+function on_connect()
+    local msg = ""
+    if math.random() < post_message_prob then
+        msg = connect_templates[math.random(#connect_templates)]
+    end
+    if (msg ~= "") then
+        db.actor:give_game_news(msg, "ui\\ui_iconsTotal", Frect():set(83,94,83,47), 0, 13000)
+    end
+end
+
+function on_disconnect()
+    local msg = ""
+    if math.random() < post_message_prob then
+        msg = disconnect_templates[math.random(#disconnect_templates)]
+    end
+    if (msg ~= "") then
+        db.actor:give_game_news(msg, "ui\\ui_iconsTotal", Frect():set(83,94,83,47), 0, 13000)
+    end
+end
+
+-- 04:30 - 07:00
+local morning_texts = {
+	"Мужики, рассветает... красиво-то как.",
+	"Рассветает...",
+	"Народ, тут это, рассветает - думаю, можно уже выдвигаться, мало на кого теперь натолкнёмся, не то что ночью.",
+	"Рассвело. Выдвигаемся, сейчас более-менее безопасно.",
+	"Мужики, подъём! Утро уже!",
+	"Эх, мужики! Наконец-то светает, а то устал уже я дрожать от страха в темноте. Уж лучше при свете дня... дрожать...",
+	"Меня кто-нибудь слышит? Сегодня ночью пропала группа наших ребят. Должны были вернуться к утру с Агропрома. До сих пор нет. Через час отправляемся на поиски. Присоединяйтесь.",
+	"Чёрт, кто придумал утро... Сегодня ж всю ночь пили... Повар, сволочь, водку палёную опять притащил откуда-то... \"Свобода\", спим дальше... рейд на базу \"Долга\" подождёт...",
+	"Мужики, вы бы видели, какой тут на Янтаре рассвет. Это что-то... И страшно, и красиво... И трупы снорков так классно дрейфуют в искрящейся в утреннем солнце глади озера... Романтика..."
+}
+
+-- 20:30 - 22:00
+local evening_texts = {
+	"Чёрт, мужики, вы как хотите, а я за хабаром сегодня уже не пойду. Ночь скоро...",
+	"Не, не пойду я уже никуда. Поздно уже, скоро дряни всякой повылазит...",
+	"Так, закат уже... потихоньку возвращайтесь, сейчас в Зоне небезопасно.",
+	"Идите-ка вы, мужики... в ночь... на кровососов... одни. Экстремалы, блин.",
+	"Ну что? Кто со мной пойдёт валить стаю псевдособак? А то я боюсь ночью в палатке спать, вдруг этот... тёмный... водички опять попросит... Уж лучше побродить где-нибудь...",
+	"Луна скоро взойдёт... Чёрт, не успеваю до лагеря добраться... Мужики есть кто поблизости? Чую, меня какая-то тварь уже преследует.",
+	"Всем внимание! Учёные сообщают о подозрительной активности мутантов на Янтаре этой ночью. Всем оставаться в лагерях."
+}
+
+function morning_templates()
+    local msg = morning_texts[math.random(#morning_texts)]
+    local from = news_main.get_random_sname()
+    db.actor:give_game_news("%c[255,238,155,23]".. from ..":\\n%c[default]" .. msg,
+        "ui\\ui_iconsTotal", Frect():set(498,141,83,47), 0, 13000)
+end
+
+function evening_templates()
+    local msg = evening_texts[math.random(#evening_texts)]
+    local from = news_main.get_random_sname()
+    db.actor:give_game_news("%c[255,238,155,23]".. from ..":\\n%c[default]" .. msg,
+        "ui\\ui_iconsTotal", Frect():set(498,141,83,47), 0, 13000)
+end
+
+
+function isIsolatedLevel(level_name)
+	local result = false
+	local ln = level_name
+	if (ln == "l03u_agr_underground" or ln == "l04u_labx18" or ln == "l08u_brainlab" or ln == "l10u_bunker") then
+		result = true
+	end
+	return result
+end
+
+
+-------------------- Advanced Reconstruction Stalker Mod v0.5 --------------------
+--[[
+
+If you're going to use the whole of this script or its parts in your own creative 
+developments for the S.T.A.L.K.E.R. game, please don't become such a goddamn 
+motherfucker like the notorious author of the ABC Mod - Carbrobro. Leave the 
+copyrights, note the real author(s) and don't claim others' ideas and their 
+realization to be your own ones. It's just simple Modmakers' Ethics. Thank you!
+
+Если вы собираетесь использовать данный скрипт целиком или частично в своих 
+разработках по игре S.T.A.L.K.E.R., пожалуйста не опускайтесь до уровня печально 
+известного автора ABC мода - Carbrobro. Не удаляйте копирайты, указывайте настоящего 
+автора(ов) и не выдавайте чужие идеи и их реализацию за свои. Ведь это элементарная 
+этика модостроителей! Спасибо за понимание.
+
+]]--

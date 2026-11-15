@@ -1,0 +1,95 @@
+[smart_terrains]
+none = true
+
+[logic]
+active = sleeper@esc_bolvan_sleep
+on_hit = hit
+on_death = death
+danger = danger_condition@pryanya
+combat_ignore = combat_ignore
+ 
+[danger_condition@pryanya]
+ignore_distance       		= 1
+ignore_distance_grenade 	= 1
+ignore_distance_corpse  	= 0
+ignore_distance_danger_hit  = 1 
+ignore_distance_sound   	= 0 
+danger_inertion_time_hit 	= 1
+
+[combat_ignore]
+
+[hit]
+on_info = %+alert%
+
+[death]
+on_info = %+find_plem_motherfucker_died%
+
+[sleeper@esc_bolvan_sleep]
+path_main = esc_bolvan_sleep1
+wakeable = false
+on_info = {+find_plem_found} walker@waypoint1
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}
+meet_state = sleep
+
+[walker@waypoint1]
+path_walk = esc_bolvan_waypoint_1
+path_look = esc_bolvan_lookpoint_1
+def_state_moving1 = walk
+def_state_moving2 = walk
+def_state_moving3 = walk
+def_state_standing = drunk_idle
+meet = no_meet
+on_timer = 45000|remark@zasnul_pidor
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}
+sound_idle = drunk
+
+[remark@zasnul_pidor]
+anim = sleep
+snd = sleep
+on_info = {+find_plem_move_out} walker@waypoint2
+on_info2 = %+find_plem_dogs%
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}
+
+[walker@waypoint2]
+path_walk = esc_bolvan_waypoint_2
+path_look = esc_bolvan_lookpoint_2
+def_state_moving1 = walk
+def_state_moving2 = walk
+def_state_moving3 = walk
+def_state_standing = drunk_idle
+meet = no_meet
+on_timer = 35000|remark@zasnul_pidor2
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}
+sound_idle = drunk
+
+[remark@zasnul_pidor2]
+anim = sleep
+snd = sleep
+on_info = {+find_plem_move_out2} walker@waypoint3
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}
+
+[walker@waypoint3]
+path_walk = esc_bolvan_waypoint_3
+path_look = esc_bolvan_lookpoint_3
+def_state_moving1 = walk
+def_state_moving2 = walk
+def_state_moving3 = walk
+def_state_standing = drunk_idle
+meet = no_meet
+on_timer = 110000|sleeper@zasnul_pidor3
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}
+sound_idle = drunk
+
+[sleeper@zasnul_pidor3]
+path_main = esc_bolvan_sleep2
+wakeable = false
+on_info = %+find_plem_na_meste%
+meet = no_meet
+danger = danger_condition@pryanya
+combat_ignore_cond = {-alert}

@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<window>
+	<!-- PDA OFF BUTTON -->
+	<off_button x="100" y="100" width="33" height="34">
+		<texture>ui\ui_pda_button</texture>
+		<text x="0" y="0" font="letterica18" r="220" g="220" b="220"/>
+	</off_button>
+
+
+    <!-- ÊÏÊ -->
+
+	<btn_pda_exit x="100" y="100" width="33" height="34" hint="PDA_quick">
+        <texture_t>lw_blank_01</texture_t>
+        <texture_e>lw_blank_01</texture_e>
+        <texture_h>lw_blank_01</texture_h>
+	</btn_pda_exit>
+
+
+	<main x="0" y="0" width="1280" height="768"/>
+	<background_static x="0" y="0" width="819" height="768" heading="1">
+		<texture>ui_pda</texture>
+	    <auto_static x="0" y="0" width="130" height="768" stretch="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_left</texture>
+	    </auto_static>
+	    <auto_static x="895" y="0" width="130" height="768" stretch="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_right</texture>
+	    </auto_static>
+	</background_static>
+
+
+	<!-- Main buttons background -->
+	<mbbackground_frame_line x="133" y="44" width="761" height="32">
+		<texture>lw_blank_01</texture>		
+	</mbbackground_frame_line>
+
+	<!-- TIME DISPLAY BACKGROUND -->
+	<timer_frame_line x="800" y="40" width="150" height="32">
+		<texture>lw_blank_01</texture>		
+		<title x="20" y="8" width="140" height="18">
+			<text font="letterica18" r="220" g="220" b="220" complex_mode="0"/>
+		</title>
+	</timer_frame_line>
+                   
+                  
+
+	<!-- TAB CONTROL -->
+	<tab x="160" y="33" width="550" height="30">
+		<!-- BUTTONS -->
+		<button x="0" y="7" width="50" height="20" hint="pda_btn_quests_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_quests</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button>
+		<button x="65" y="7" width="40" height="20" hint="pda_btn_map_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_map</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button> 
+		<button x="120" y="7" width="60" height="20" hint="pda_btn_diary_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_diary</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button>
+		<button x="195" y="7" width="60" height="20" hint="pda_btn_contacts_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_contacts</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button>
+		<button x="275" y="7" width="53" height="20" hint="pda_btn_ranking_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_ranking</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button>
+		<button x="345" y="7" width="78" height="20" hint="pda_btn_statistics_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_statistics</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button>
+		<button x="440" y="7" width="100" height="20" hint="pda_btn_encyclopedia_hint">
+			<text align="l" x="0" y="0" font="letterica18" r="220" g="220" b="220">pda_btn_encyclopedia</text>
+			<text_color>
+				<t r="255" g="255" b="255"/>
+				<d r="255" g="255" b="255"/>
+				<e r="200" g="200" b="200"/>
+				<h r="170" g="170" b="170"/>
+			</text_color>
+			<sound_t>detectors\geiger_1</sound_t>
+		</button>
+	</tab>
+
+
+	<updated_section_static x="0" y="0" width="5" height="11">
+		<texture>ui_pda_m_noupdate</texture>
+	</updated_section_static>
+	
+	<old_section_static x="0" y="0" width="5" height="11">
+		<texture>ui_pda_m_update</texture>
+	</old_section_static>
+	
+</window>

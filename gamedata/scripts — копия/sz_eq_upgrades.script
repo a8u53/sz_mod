@@ -1,0 +1,269 @@
+function modificate(obj)
+       local hud = mod_ui(get_hud()) -- указываем на class "mod_ui" (CUIScriptWnd)
+         level.start_stop_menu(hud, true) -- открываем меню
+end
+
+class "mod_ui" (CUIScriptWnd)
+ 
+function mod_ui:__init(owner) super()
+	self.owner = owner
+	self:InitControls()
+	self:InitCallBacks()
+end
+ 
+function mod_ui:__finalize() end
+ 
+function mod_ui:InitControls()
+	self:Init(0,0,661,968)
+ 
+	local xml = CScriptXmlInit()
+	xml:ParseFile("ui_mod.xml")
+ 
+	xml:InitStatic("background", self)
+ 
+	self:Register(xml:Init3tButton("caption", self),"caption")
+	self:Register(xml:Init3tButton("btn_quit", self),"btn_quit")
+	self:Register(xml:Init3tButton("mod_armor", self),"mod_armor")
+	self:Register(xml:Init3tButton("mod_weapon_1", self),"mod_weapon_1")
+	self:actor_money()
+end
+
+function mod_ui:on_quit()
+    self:GetHolder():start_stop_menu(self, true)
+end
+
+function mod_ui:del_slot2() 
+    local weap = db.actor:item_in_slot(2)
+	alife():release(alife():object(weap:id()), true)
+end
+
+function mod_ui:show_armor() 
+	if db.actor:item_in_slot(6) ~= nil then
+	local outfit_name = db.actor:item_in_slot(6):section()
+	local x, y, width, height, y_fix, x_fix, w_fix, h_fix = icon_pos(outfit_name,6)
+	local weapon_tex = CUIStatic()
+
+	weapon_tex:SetAutoDelete(true)
+	self:AttachChild(weapon_tex)	
+	weapon_tex:InitTexture("ui\\ui_icon_equipment")
+	weapon_tex:SetStretchTexture(true)
+	weapon_tex:SetOriginalRect(x, y, width, height)
+	weapon_tex:Init((565 + x_fix), (160 + y_fix), w_fix, height)
+end
+end
+
+function mod_ui:show_weapon_1() 
+	if db.actor:item_in_slot(2) ~= nil then
+		local weapon_2_name = db.actor:item_in_slot(2):section()
+		local x, y, width, height, y_fix, x_fix, w_fix = icon_pos(weapon_2_name,2)
+		local weapon_tex = CUIStatic()
+
+		weapon_tex:SetAutoDelete(true)
+		self:AttachChild(weapon_tex)	
+		weapon_tex:InitTexture("ui\\ui_icon_equipment")
+		weapon_tex:SetStretchTexture(true)
+		weapon_tex:SetOriginalRect(x, y, width, height)
+		weapon_tex:Init((560 + x_fix), (160 + y_fix), w_fix, height)
+	local xml = CScriptXmlInit()
+	xml:ParseFile("ui_mod.xml")
+	local weapon = db.actor:item_in_slot(2)
+	if weapon:section() == "wpn_ak74"
+	or weapon:section() == "wpn_m16"
+	or weapon:section() == "wpn_ak74u"
+	or weapon:section() == "wpn_abakan"
+	or weapon:section() == "wpn_vintorez"
+	or weapon:section() == "wpn_lr300"
+	then
+    	self:Register(xml:Init3tButton("btn_1", self),"btn_1")
+		self:Register(xml:Init3tButton("btn_2", self),"btn_2")
+		self:Register(xml:Init3tButton("btn_3", self),"btn_3")
+		self:Register(xml:Init3tButton("btn_4", self),"btn_4")
+	end
+end
+end
+
+function mod_ui:InitCallBacks()
+	self:AddCallback("btn_1", ui_events.BUTTON_CLICKED, self.light_upgrade, self)
+	self:AddCallback("btn_2", ui_events.BUTTON_CLICKED, self.capacity_upgrade, self)
+	self:AddCallback("btn_3", ui_events.BUTTON_CLICKED, self.calibre_upgrade, self)
+	self:AddCallback("btn_4", ui_events.BUTTON_CLICKED, self.firerate_upgrade, self)
+	self:AddCallback("btn_quit", ui_events.BUTTON_CLICKED, self.on_quit, self)
+	self:AddCallback("mod_armor", ui_events.BUTTON_CLICKED, self.show_armor, self)
+	self:AddCallback("mod_weapon_1", ui_events.BUTTON_CLICKED, self.show_weapon_1, self)
+end
+
+--��������
+function mod_ui:light_upgrade(actor, npc)
+    local weapon = db.actor:item_in_slot(2)
+	local UPcost = weapon:cost()
+	UPcost =  (UPcost/10*2)
+	if weapon:section() == "wpn_ak74" then 
+	db.actor:give_money(-UPcost)
+    self:spawn_item("wpn_ak74_l", 1)
+	elseif weapon:section() == "wpn_m16" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_m16_l", 1)
+	elseif weapon:section() == "wpn_abakan" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_abakan_l", 1)
+	elseif weapon:section() == "wpn_ak74u" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_ak74u_l", 1)
+	elseif weapon:section() == "wpn_lr300" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_lr300_l", 1)
+end
+	self:del_slot2()
+	self:on_quit()
+end
+
+function mod_ui:calibre_upgrade()
+    local weapon = db.actor:item_in_slot(2)
+	local UPcost = weapon:cost()
+	UPcost =  (UPcost/10*4)
+	if weapon:section() == "wpn_ak74" then 
+	db.actor:give_money(-UPcost)
+    self:spawn_item("wpn_ak74_5", 1)
+	elseif weapon:section() == "wpn_m16" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_m16_545", 1)
+	elseif weapon:section() == "wpn_abakan" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_abakan_5", 1)
+	elseif weapon:section() == "wpn_lr300" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_lr300_5", 1)
+end
+	self:del_slot2()
+	self:on_quit()
+end
+
+function mod_ui:capacity_upgrade()
+    local weapon = db.actor:item_in_slot(2)
+	local UPcost = weapon:cost()
+	UPcost =  (UPcost/10*3)
+	if weapon:section() == "wpn_ak74" then 
+	db.actor:give_money(-UPcost)
+    self:spawn_item("wpn_ak74_plus", 1)
+	weapon:unload_magazine()
+	elseif weapon:section() == "wpn_m16" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_m16_plus", 1)
+	elseif weapon:section() == "wpn_abakan" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_abakan_plus", 1)
+	elseif weapon:section() == "wpn_ak74u" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_ak74u_plus", 1)
+	elseif weapon:section() == "wpn_lr300" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_lr300_plus", 1)
+end
+	self:del_slot2()
+	self:on_quit()
+end
+
+function mod_ui:firerate_upgrade()
+    local weapon = db.actor:item_in_slot(2)
+	local UPcost = weapon:cost()
+	local magazine = weapon:get_ammo_in_magazine()
+	UPcost =  (UPcost/10*4)
+	if weapon:section() == "wpn_ak74" then 
+	db.actor:give_money(-UPcost)
+    self:spawn_item("wpn_ak74_s", 1)
+	weapon:unload_magazine()
+	elseif weapon:section() == "wpn_m16" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_m16_s", 1)
+	elseif weapon:section() == "wpn_abakan" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_abakan_s", 1)
+	elseif weapon:section() == "wpn_ak74u" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_ak74u_s", 1)
+	elseif weapon:section() == "wpn_lr300" then 
+	db.actor:give_money(-UPcost)
+	self:spawn_item("wpn_lr300_s", 1)
+	self:spawn_item("magazine")
+end
+	self:del_slot2()
+	self:on_quit()
+end
+
+function mod_ui:spawn_item(spawn_item, dist)
+	if self:check_game() then
+	 	alife():create	(spawn_item, db.actor:position(),  db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+	end
+end
+
+function mod_ui:actor_money()
+	local xml = CScriptXmlInit()
+	xml:ParseFile("ui_mod.xml")
+	self:Register(xml:InitStatic("money_static", self), "money_static")
+	local actor_money =  db.actor:money()
+	self:GetStatic("money_static"):SetText(" " .. actor_money .. " RU ")
+end
+
+function mod_ui:upgrade_cost()
+	local xml = CScriptXmlInit()
+	xml:ParseFile("ui_mod.xml")
+	self:Register(xml:InitStatic("upgrade_cost", self), "upgrade_cost")
+	self:GetStatic("upgrade_cost"):SetText(" " .. -UPcost .. " RU ")
+end
+
+function mod_ui:check_game() -- проверка запущена ли игра
+	local check = false
+	if level.present() and (db.actor ~= nil) and db.actor:alive() then
+		check = true
+	end
+	return check
+end
+
+function icon_pos(Pitem, slot)
+	local y_fix = 0
+        local x_fix = 0
+        local w_fix = 0
+        local h_fix = 0
+        local x = system_ini():r_float(Pitem, "inv_grid_x") * 50
+	local y = system_ini():r_float(Pitem, "inv_grid_y") * 50
+	local width = system_ini():r_float(Pitem, "inv_grid_width") * 50
+	local height = system_ini():r_float(Pitem, "inv_grid_height") * 50
+
+
+     if slot == 1 or slot == 2 then        
+        if width > 150 then
+            x_fix = 5
+            w_fix = 150
+        else
+            w_fix = width-5
+            x_fix = (148 - (width/2))
+        end
+        
+        if height < 100 then
+            y_fix = (54 - (height/2))
+        else
+            y_fix = 0
+        end
+
+    elseif slot == 6 then 
+
+       if system_ini():r_float(Pitem, "inv_grid_height") == 2 and system_ini():r_float(Pitem, "inv_grid_width") == 2 then
+          y_fix = 25
+          x_fix = 35
+          w_fix = width - 20
+          h_fix = height
+        elseif system_ini():r_float(Pitem, "inv_grid_height") == 3 and system_ini():r_float(Pitem, "inv_grid_width") == 2 then
+          y_fix = 15
+          x_fix = 32
+          w_fix = width - 20
+          h_fix = height - 20
+        elseif system_ini():r_float(Pitem, "inv_grid_height") == 3 and system_ini():r_float(Pitem, "inv_grid_width") == 3 then
+          y_fix = 15
+          x_fix = 10
+          w_fix = width - 25
+          h_fix = height - 20
+        end
+     end
+	
+	return x, y, width, height, y_fix, x_fix, w_fix, h_fix
+end

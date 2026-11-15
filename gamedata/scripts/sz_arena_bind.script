@@ -1,0 +1,10 @@
+-- sz_arena NPC binder.
+-- Pattern follows the existing AEM bind_npc: add arena restrictor and initialize stalker motivator.
+function bind_npc(npc)
+    if npc == nil then
+        return
+    end
+
+    npc:add_restrictions("bar_arena_restrictor", "")
+    bind_stalker.init(npc)
+end

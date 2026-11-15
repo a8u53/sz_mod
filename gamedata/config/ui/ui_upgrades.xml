@@ -1,0 +1,30 @@
+<ui_texture>
+
+<file_name>ui\ui_upgrades</file_name>
+
+    <texture id="ui_weight" 	x="0" y="0" width="69" height="40" />
+    <texture id="ui_weight_1"   x="80" y="0" width="69" height="40" stretch = "1"/>
+	
+    <texture id="ui_capacity"   x="0" y="84" width="79" height="40" />
+    <texture id="ui_capacity_1" x="80" y="84" width="79" height="40" />
+
+    <texture id="ui_fortify"	x="0" y="126" width="79" height="40" />
+    <texture id="ui_fortify_1"	x="80" y="126" width="79" height="40" />
+    
+    <texture id="ui_firerate"	x="0" y="42" width="79" height="40" />
+    <texture id="ui_firerate_1"	x="80" y="42" width="79" height="40" />
+
+    <texture id="ui_accuracy"	x="0" y="42" width="79" height="40" />
+    <texture id="ui_accuracy_1"	x="80" y="42" width="79" height="40" />
+
+    <texture id="ui_longshot"	x="0" y="42" width="79" height="40" />
+    <texture id="ui_longshot_1"	x="80" y="42" width="79" height="40" />
+	
+	<texture id="ui_recoil"	x="0" y="42" width="79" height="40" />
+    <texture id="ui_recoil_1"	x="80" y="42" width="79" height="40" />
+	
+    <texture id="ui_mod_weapon"	x="266" y="0" width="236" height="68" />	
+	
+	<texture id="ui_mod_armor"	x="261" y="74" width="101" height="103" />
+</ui_texture>
+

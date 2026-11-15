@@ -1,0 +1,176 @@
+function multiple_objects (section,quantity)
+    local actor = db.actor
+    if actor then
+        local count = 0
+        actor:iterate_inventory(
+            function (dummy, item)
+                if item:section() == section then count = count + 1 end
+            end
+            ,nil)
+        return count >= quantity
+    end
+    return false
+end
+
+function barter_dogtails()
+	if level.get_time_hours() >= 0 and level.get_time_hours() <= 11 then
+	return multiple_objects ("mutant_dog_tail",3)
+	end
+end
+
+function barter_boarlegs()
+	if level.get_time_hours() >= 0 and level.get_time_hours() <= 11 then
+	return multiple_objects ("mutant_boar_leg",2)
+	end
+end	
+
+function barter_flesheyes()
+	if level.get_time_hours() >= 0 and level.get_time_hours() <= 11 then
+	return multiple_objects ("mutant_flesh_eye",3)
+	end
+end	
+
+function barter_pseudodogtails()
+	if level.get_time_hours() >= 12 and level.get_time_hours() <= 23 then
+	return multiple_objects ("mutant_psevdodog_tail",2)
+	end
+end	
+
+function barter_bloodsuckerjaw()
+	if level.get_time_hours() >= 12 and level.get_time_hours() <= 23 then
+	return multiple_objects ("mutant_krovosos_jaw",1)
+	end
+end	
+
+function monster_parts_barter()
+	if level.get_time_hours() >= 0 and level.get_time_hours() <= 11 then
+		db.actor:give_talk_message("%c[red]x3 %c[default]ìåíÿþ íà %c[green]x1 Ïàòðîíû 9x18 ìì ÏÁÌ", "ui\\ui_icon_equipment",Frect():set(450,50,50,50),"iconed_barter_menu")
+		db.actor:give_talk_message("%c[red]x2 %c[default]ìåíÿþ íà %c[green]x2 Ïàòðîíû 12x70 êàðòå÷ü", "ui\\ui_icon_equipment",Frect():set(550,50,50,50),"iconed_barter_menu")
+		db.actor:give_talk_message("%c[red]x3 %c[default]ìåíÿþ íà %c[green]x3 Ïàòðîíû 12x70 äðîáü", "ui\\ui_icon_equipment",Frect():set(400,950,50,50),"iconed_barter_menu")
+	elseif level.get_time_hours() >= 12 and level.get_time_hours() <= 23 then
+		db.actor:give_talk_message("%c[red]x2 %c[default]ìåíÿþ íà %c[green]x3 Ïàòðîíû 12õ70 êàðòå÷ü", "ui\\ui_icon_equipment",Frect():set(450,950,50,50),"iconed_barter_menu")
+		db.actor:give_talk_message("%c[red]x1 %c[default]ìåíÿþ íà %c[green]x1 Ïàòðîíû 5,45x39 ìì Ðàçðûâíîé", "ui\\ui_icon_equipment",Frect():set(850,100,50,50),"iconed_barter_menu")
+	end
+end
+
+function dogtails_ammo(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "mutant_dog_tail", "out")
+	dialogs.relocate_item_section(first_speaker, "mutant_dog_tail", "out")
+	dialogs.relocate_item_section(first_speaker, "mutant_dog_tail", "out")
+	dialogs.relocate_item_section(first_speaker, "ammo_9x18_pbp", "in")
+end
+
+function boarlegs_ammo(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "mutant_boar_leg", "out")
+	dialogs.relocate_item_section(first_speaker, "mutant_boar_leg", "out")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_kar", "in")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_kar", "in")
+end
+
+function flesheyes_ammo(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "mutant_flesh_eye", "out")
+	dialogs.relocate_item_section(first_speaker, "mutant_flesh_eye", "out")
+	dialogs.relocate_item_section(first_speaker, "mutant_flesh_eye", "out")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_buck", "in")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_buck", "in")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_buck", "in")
+end
+
+function pseudodogtails_ammo(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "mutant_psevdodog_tail", "out")
+	dialogs.relocate_item_section(first_speaker, "mutant_psevdodog_tail", "out")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_kar", "in")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_kar", "in")
+	dialogs.relocate_item_section(first_speaker, "ammo_12x70_kar", "in")
+end
+
+function bloodsuckerjaw_ammo(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "mutant_krovosos_jaw", "out")
+	dialogs.relocate_item_section(first_speaker, "ammo_5.45x39_exp", "in")
+end
+
+function boarlegs_remove()
+    local cnt = db.actor:object_count()
+    local ch=0
+    for i=0, cnt-1 do
+        local item = db.actor:object(i)
+        if item:section() == "mutant_boar_leg" then
+            local sobj = alife():object(item:id())
+            if sobj then
+                alife():release(sobj,true)
+                ch = ch+1
+                if ch == 2 then --7 - ÐºÐ¾Ð»-Ð²Ð¾ ÑƒÐ´Ð°Ð»ÑÐµÐ¼Ñ‹Ñ… Ð°Ð¿Ñ‚ÐµÑ‡ÐµÐº
+                break end
+            end
+        end
+    end
+end
+
+function dogtails_remove()
+    local cnt = db.actor:object_count()
+    local ch=0
+    for i=0, cnt-1 do
+        local item = db.actor:object(i)
+        if item:section() == "mutant_dog_tail" then
+            local sobj = alife():object(item:id())
+            if sobj then
+                alife():release(sobj,true)
+                ch = ch+1
+                if ch == 3 then --7 - ÐºÐ¾Ð»-Ð²Ð¾ ÑƒÐ´Ð°Ð»ÑÐµÐ¼Ñ‹Ñ… Ð°Ð¿Ñ‚ÐµÑ‡ÐµÐº
+                break end
+            end
+        end
+    end
+end
+
+function flesheyes_remove()
+    local cnt = db.actor:object_count()
+    local ch=0
+    for i=0, cnt-1 do
+        local item = db.actor:object(i)
+        if item:section() == "mutant_flesh_eye" then
+            local sobj = alife():object(item:id())
+            if sobj then
+                alife():release(sobj,true)
+                ch = ch+1
+                if ch == 3 then --7 - ÐºÐ¾Ð»-Ð²Ð¾ ÑƒÐ´Ð°Ð»ÑÐµÐ¼Ñ‹Ñ… Ð°Ð¿Ñ‚ÐµÑ‡ÐµÐº
+                break end
+            end
+        end
+    end
+end
+
+function pseudodogtails_remove()
+    local cnt = db.actor:object_count()
+    local ch=0
+    for i=0, cnt-1 do
+        local item = db.actor:object(i)
+        if item:section() == "mutant_psevdodog_tail" then
+            local sobj = alife():object(item:id())
+            if sobj then
+                alife():release(sobj,true)
+                ch = ch+1
+                if ch == 2 then --7 - ÐºÐ¾Ð»-Ð²Ð¾ ÑƒÐ´Ð°Ð»ÑÐµÐ¼Ñ‹Ñ… Ð°Ð¿Ñ‚ÐµÑ‡ÐµÐº
+                break end
+            end
+        end
+    end
+end
+
+function bloodsuckerjaw_remove()
+    local cnt = db.actor:object_count()
+    local ch=0
+    for i=0, cnt-1 do
+        local item = db.actor:object(i)
+        if item:section() == "mutant_krovosos_jaw" then
+            local sobj = alife():object(item:id())
+            if sobj then
+                alife():release(sobj,true)
+                ch = ch+1
+                if ch == 1 then --7 - ÐºÐ¾Ð»-Ð²Ð¾ ÑƒÐ´Ð°Ð»ÑÐµÐ¼Ñ‹Ñ… Ð°Ð¿Ñ‚ÐµÑ‡ÐµÐº
+                break end
+            end
+        end
+    end
+end
+-------------------------------------------------------------------------

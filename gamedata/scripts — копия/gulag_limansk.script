@@ -1,0 +1,160 @@
+-- Job -------------------------------------------------------------------
+local t = {}
+
+function load_job(sj, gname, type, squad, groups)
+
+	if type == "lim_mon_construction_smart" then
+		t = { section = "logic@lim_mon_construction_smart",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+       table.insert(sj, t)	
+        t = { section = "logic@lim_mon_construction_smart",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)	
+	    t = { section = "logic@lim_mon_construction_smart_patrol",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_smart_patrol_2",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_smart_patrol_3",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_smart_patrol_4",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_smart_patrol_5",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_smart_sniper",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_smart_sniper_2",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+		t = { section = "logic@lim_mon_construction_camper",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = "lim_monolit_stroyka_rest"
+		}
+		table.insert(sj, t)
+  end
+  
+	if type == "lim_mon_prip_road" then
+		t = { section = "logic@lim_mon_prip_road",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+	   	t = { section = "logic@lim_mon_prip_road_follower1",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+	   	t = { section = "logic@lim_mon_prip_road_follower2",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+	   	t = { section = "logic@lim_mon_prip_road_rpg",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+	   	t = { section = "logic@lim_mon_prip_road_sniper",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+	   	t = { section = "logic@lim_mon_prip_base",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+	   	t = { section = "logic@lim_mon_prip_base_2",
+			idle = 0,
+			prior = 1, state = {0},
+			in_rest = "", out_rest = ""
+		}
+       table.insert(sj, t)
+  end
+end
+
+function load_states(gname, type)
+
+	if type == "lim_mon_construction_smart" then
+		return function(gulag)
+			return 0
+		end
+	end
+	
+	if type == "lim_mon_prip_road" then
+		return function(gulag)
+			return 0
+		end
+	end	
+
+end
+
+--------------------------------------------------------------------------
+-- Dynamic ltx
+--------------------------------------------------------------------------
+function load_ltx(gname, type)
+	return nil
+end
+
+function checkStalker(npc_community, gulag_type)
+
+	if gulag_type == "lim_mon_construction_smart" or	
+	   gulag_type == "lim_mon_prip_road" then
+	   return npc_community == "monolith"
+	end
+		
+	return false
+end
+
+function checkMonster(npc_community, gulag_type)
+	if gulag_type == "bb" then
+			return npc_community == "boar"
+	end
+	if gulag_type == "bba" then
+			return npc_community == "boar"
+	end
+	if gulag_type == "bbs" then
+			return npc_community == "boar"
+	end
+	return false
+	
+end

@@ -1,0 +1,71 @@
+-- ============================================================
+-- sz_hunger_effect.script
+-- Голод ограничивает максимальную выносливость (с обучением)
+-- ============================================================
+
+-- Пороги сытости (satiety от 0.0 до 1.0)
+local SATIETY_MILD   = 0.3
+local SATIETY_MEDIUM = 0.2
+local SATIETY_SEVERE = 0.1
+
+-- Доля от штатного максимума выносливости
+local LIMIT_MILD   = 0.75
+local LIMIT_MEDIUM = 0.50
+local LIMIT_SEVERE = 0.25
+
+local base_power_max = nil
+local cached_actor_id = nil
+local last_update_time = 0
+
+function update_hunger_effect()
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    local now = time_global()
+    if now - last_update_time < 100 then return end
+    last_update_time = now
+
+    local condition = actor.conditions
+    if not condition then return end
+
+    -- Запоминаем исходный power_max для текущего актора
+    local actor_id = actor:id()
+    if base_power_max == nil or cached_actor_id ~= actor_id then
+        base_power_max = condition.power_max
+        cached_actor_id = actor_id
+    end
+
+    if not base_power_max or base_power_max <= 0 then return end
+
+    local satiety = actor.satiety or 1.0
+    local limit = 1.0
+
+    if satiety < SATIETY_SEVERE then
+        limit = LIMIT_SEVERE
+    elseif satiety < SATIETY_MEDIUM then
+        limit = LIMIT_MEDIUM
+    elseif satiety < SATIETY_MILD then
+        limit = LIMIT_MILD
+    end
+
+    local new_power_max = base_power_max * limit
+    condition.power_max = new_power_max
+
+    if condition.power > new_power_max then
+        condition.power = new_power_max
+    end
+
+    -- Обучающее оповещение (один раз за всю игру, сохраняется в pstor)
+    if satiety < SATIETY_MILD then
+        local warned = xr_logic.pstor_retrieve(actor, "hunger_warned", false)
+        if not warned then
+            xr_logic.pstor_store(actor, "hunger_warned", true)
+            actor:give_game_news(
+                "%c[255,255,180,80]Внимание: голод\\n%c[default]Голод снижает максимальный запас выносливости. Следите за питанием.",
+                "ui\\ui_iconsTotal", Frect():set(0, 517, 83, 47), 0, 5000
+            )
+            local snd = xr_sound.get_safe_sound_object([[device\pda\pda_tip]])
+            if snd then snd:play_no_feedback(actor, sound_object.s2d, 0, vector(), 1.0) end
+        end
+    end
+end

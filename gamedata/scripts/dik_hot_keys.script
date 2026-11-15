@@ -1,0 +1,11 @@
+-- ============================================================
+-- dik_hot_keys.script
+-- Обработка горячих клавиш
+-- ============================================================
+
+function dik_t()
+    -- Вызываем меню ожидания
+    if sz_wait_menu and sz_wait_menu.open_wait_menu then
+        sz_wait_menu.open_wait_menu()
+    end
+end

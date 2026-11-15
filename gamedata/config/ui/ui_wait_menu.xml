@@ -1,0 +1,33 @@
+<w>
+    <background x="347" y="320" width="330" height="140" stretch="1">
+        <texture>ui\ui_wait_menu</texture>
+    </background>
+
+    <btn_minus x="470" y="397" width="10" height="10">
+        <texture></texture>
+        <text font="graffiti50">-</text>
+    </btn_minus>
+
+    <txt_hours x="500" y="380" width="10" height="10">
+        <text font="graffiti50">1</text>
+    </txt_hours>
+
+    <btn_plus x="530" y="397" width="10" height="10">
+        <texture></texture>
+        <text font="graffiti50">+</text>
+    </btn_plus>
+
+    <btn_wait x="430" y="433" width="40" height="10">
+        <texture></texture>
+        <text font="letterica18">∆дать</text>
+    </btn_wait>
+
+    <btn_quit x="550" y="433" width="40" height="10">
+        <texture></texture>
+        <text font="letterica18">ќтмена</text>
+    </btn_quit>
+	
+	<txt_clock x="440" y="350" width="300" height="40">
+        <text font="letterica25">00:00</text>
+    </txt_clock>
+</w>

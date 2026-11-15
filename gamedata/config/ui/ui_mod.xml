@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+
+<mod_ui>	
+
+	<background x="70" y="0" width="760" height="768" stretch="1">
+		<texture x="0" width="1024" height="768">ui\ui_mod</texture>
+			<auto_static x="740" y="0" width="232" height="768" stretch="1" heading="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_right</texture>
+	    </auto_static>
+	    <auto_static x="-90" y="0" width="232" height="768" stretch="1" heading="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_left</texture>
+	    </auto_static>
+	</background>
+
+	<caption x="605" y="23" width="50" height="35">
+		<text x="0" y="0" font="graffiti32" r="240" g="215" b="185">Модификация</text>
+	</caption>
+
+	<caption x="605" y="55" width="50" height="35">
+		<text x="0" y="0" font="graffiti32" r="240" g="215" b="185">Список пизды</text>
+	</caption>
+	
+	<btn_1 x="461" y="390" width="69" height="40" hint="ui_upgrade_weight" highlight_text="1" stretch = "1">
+	<texture_e>ui_weight</texture_e>
+	<texture_t>ui_weight</texture_t>
+	<texture_h>ui_weight_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Снижение веса оружия.</text>
+	</btn_1>
+	
+	<btn_2 x="461" y="440" width="69" height="40" hint="ui_cap_weapon" highlight_text="1">
+	<texture_e>ui_capacity</texture_e>
+	<texture_t>ui_capacity</texture_t>
+	<texture_h>ui_capacity_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Увеличение ёмкости магазина.</text>
+	</btn_2>
+	
+	<btn_3 x="461" y="490" width="69" height="40" hint="ui_cal_weapon" highlight_text="1">
+	<texture_e>ui_fortify</texture_e>
+	<texture_t>ui_fortify</texture_t>
+	<texture_h>ui_fortify_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Повышение надёжности.</text>
+	</btn_3>
+	
+	<btn_4 x="461" y="540" width="69" height="40" hint="ui_firerate_weapon" highlight_text="1">
+	<texture_e>ui_firerate</texture_e>
+	<texture_t>ui_firerate</texture_t>
+	<texture_h>ui_firerate_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Увеличение темпа стрельбы.</text>
+	</btn_4>
+	
+	<btn_5 x="461" y="540" width="69" height="40" hint="ui_firerate_weapon" highlight_text="1">
+	<texture_e>ui_accuracy</texture_e>
+	<texture_t>ui_accuracy</texture_t>
+	<texture_h>ui_accuracy_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Повышение точности</text>
+	</btn_5>
+	
+	<btn_6 x="461" y="540" width="69" height="40" hint="ui_firerate_weapon" highlight_text="1">
+	<texture_e>ui_longshot</texture_e>
+	<texture_t>ui_longshot</texture_t>
+	<texture_h>ui_longshot_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Настильнее</text>
+	</btn_6>
+
+	<btn_7 x="461" y="540" width="69" height="40" hint="ui_firerate_weapon" highlight_text="1">
+	<texture_e>ui_recoil</texture_e>
+	<texture_t>ui_recoil</texture_t>
+	<texture_h>ui_recoil_1</texture_h>
+		<text x="82" y="0" font="letterica16" r="240" g="215" b="185" align="l" vert_align="c">Отдача</text>
+	</btn_7>
+	
+	<btn_quit x="240" y="710" width="157" height="48" hR="255" hB="83" hG="179" highlight_text="1">
+		<texture>ui_button_main01</texture>
+	<text align="c"	font="letterica18" r="240" g="215" b="185">ui_inv_exit</text>
+	</btn_quit>
+
+	<mod_armor x="270" y="240" width="117" height="29">
+	<texture_e>ui_mod_armor</texture_e>
+	<texture_t>ui_mod_armor</texture_t>
+	<texture_h>ui_mod_armor</texture_h>
+		<text x="-20" y="35" font="di" r="240" g="215" b="185" highlight_text="1">Костюм</text>
+	</mod_armor>
+
+	<mod_weapon_1 x="223" y="150" width="117" height="29">
+	<texture_e>ui_mod_weapon</texture_e>
+	<texture_t>ui_mod_weapon</texture_t>
+	<texture_h>ui_mod_weapon</texture_h>
+		<text x="30" y="0" font="di" r="240" g="215" b="185" highlight_text="1">Осн. оружие</text>
+	</mod_weapon_1>
+	
+	<bar_frame1 x="487" y="301.5" width="48" height="5" horz="1" min="0" max="100" pos="100">
+		<min_color r="196" g="18" b="18"/>
+		<middle_color r="255" g="255" b="118"/>
+		<max_color r="107" g="207" b="119"/>
+		<progress stretch="1">
+			<texture>ui_scale_green</texture>
+		</progress>        
+    </bar_frame1>
+	
+	<money_static x="345" y="77" width="50" height="35">
+		<text x="0" y="0" font="letterica16" r="240" g="215" b="185" align="l"/>
+	</money_static>
+	
+	<upgrade_cost x="345" y="100" width="50" height="35">
+		<text x="0" y="0" font="letterica16" r="255" g="255" b="255" a="255" align="l"/>
+	</upgrade_cost>
+</mod_ui>

@@ -1,0 +1,11 @@
+[logic]
+active = ph_sound@1
+
+[ph_sound@1]
+snd = esc_radio
+random = true
+on_info = {+escape_lager_spawn_killers} ph_sound@2	
+
+[ph_sound@2]
+snd = none
+on_info = {+escape_lager_killers_die} ph_sound@1

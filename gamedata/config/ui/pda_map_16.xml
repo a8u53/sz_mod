@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<window>
+
+	<map_wnd>
+	<main_wnd x="133" y="90" width="761" height="592">
+			<text_hint x="735" y="450" width="100" height="22" complex_mode="1">
+				<text font="letterica25"/>
+			</text_hint>
+
+
+			<map_header_frame_line x="8" y="17" width="747" height="21">
+				<title x="15" y="1" width="435" height="27">
+					<text font="letterica25" r="127" g="127" b="127" complex_mode="0">Карта "Зоны"</text>
+				</title>
+				<texture>lw_blank_01</texture>
+
+
+
+	<tool_bar x="17" y="600" width = "100" height="16">
+	<global_map_btn x="176" y="4" width="17" height="21" check_mode="0" hint="global_map_btn_hint"  stretch="1">
+		<window_name>global_map_btn</window_name>
+		<texture>ui_icons_newPDA_compas</texture>
+					<sound_t>detectors\geiger_1</sound_t>
+			</global_map_btn>
+
+	<actor_btn x="198" y="4" width="17" height="21"  hint="actor_btn_hint" stretch="1">
+		<window_name>actor_btn</window_name>
+		<texture>ui_icons_newPDA_showpers</texture>
+					<sound_t>detectors\geiger_1</sound_t>
+	</actor_btn>	
+
+	<notused_add_spot_btn x="100" y="4" width="21" height="15" check_mode="1" hint="add_spot_btn_hint">
+		<window_name>add_spot_btn</window_name>
+		<texture>ui_icons_newPDA_perssign</texture>
+	</notused_add_spot_btn>								
+
+	<zoom_in_btn x="220" y="4" width="17" height="21" hint="zoom_in_btn_hint" stretch="1">
+		<window_name>zoom_in_btn</window_name>
+		<texture>ui_icons_newPDA_zoom</texture>
+					<sound_t>detectors\geiger_1</sound_t>
+	</zoom_in_btn>								
+
+	<zoom_out_btn x="242" y="4" width="17" height="21" hint="zoom_out_btn_hint" stretch="1">
+		<window_name>zoom_out_btn</window_name>
+		<texture>ui_icons_newPDA_ZoomMin</texture>
+					<sound_t>detectors\geiger_1</sound_t>
+	</zoom_out_btn>	
+											
+		</tool_bar>							
+	</map_header_frame_line>
+
+
+	<main_map_frame x="0" y="0" width="761" height="592" dx="0" dy="3" sx="15" sy="22">
+		<texture>ui\lw_pda_frame_sub</texture>				
+		<level_frame x="8" y="45" width="745" height="535"/>
+	</main_map_frame>
+
+		</main_wnd>
+	</map_wnd>
+	
+</window>

@@ -1,0 +1,57 @@
+ <?xml version="1.0" encoding="windows-1251" ?>
+ 
+<main>
+	<main_window x="0" y="0" width="340" height="550" stretch="1">
+		<texture>ui\ui_its_repair_list</texture>
+	</main_window>
+	<repair_text x="28" y="3" width="50" height="35">
+		<text>Ремонт</text>
+	</repair_text>
+
+	<money_static x="34" y="460" width="50" height="35">
+		<text x="0" y="0" font="graffiti22" r="238" g="153" b="26" a="255" align="l"/>
+	</money_static>
+	<no_money x="100" y="42" width="50" height="35">
+		<text x="0" y="0" font="graffiti22" r="255" g="255" b="255" a="255" align="l"/>
+	</no_money>
+
+
+	<weapon_1_cost x="195" y="385" width="50" height="35">
+		<text x="0" y="0" font="graffiti22" r="255" g="255" b="255" a="255" align="l"/>
+	</weapon_1_cost>
+
+	<weapon_2_cost x="35" y="183" width="50" height="35">
+		<text x="0" y="0" font="graffiti22" r="255" g="255" b="255" a="255" align="l"/>
+	</weapon_2_cost>
+
+	<outfit_cost x="35" y="385" width="50" height="35">
+		<text x="0" y="0" font="graffiti22" r="255" g="255" b="255" a="255" align="l"/>
+	</outfit_cost>
+
+
+        <repiar_weapon_1 x="191" y="420" width="117" height="29">
+		<texture>ui_button_main06</texture>
+		<text align="c"	font="graffiti22">Чинить</text>
+        </repiar_weapon_1>
+
+        <repiar_weapon_2 x="191" y="180" width="117" height="29">
+		<texture>ui_button_main06</texture>
+		<text align="c"	font="graffiti22">Чинить</text>
+        </repiar_weapon_2>
+
+        <repiar_outfit x="40" y="420" width="117" height="29">
+		<texture>ui_button_main06</texture>
+		<text align="c"	font="graffiti22">Чинить</text>
+        </repiar_outfit>
+
+        <btn_quit x="112" y="485" width="117" height="29">
+        <texture></texture>
+        <text font="graffiti19" r="238" g="153" b="26">Выход</text>
+        <text_color>
+			<e r="240"	g="217" b="182"/>				
+			<t r="0"	g="0"	b="0"/>				
+			<d r="135"	g="123" b="116"/>
+			<h r="0"	g="0"	b="0"/>
+		</text_color>
+        </btn_quit>
+</main>

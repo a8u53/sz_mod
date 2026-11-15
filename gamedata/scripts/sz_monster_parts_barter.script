@@ -1,0 +1,202 @@
+-- ============================================================
+-- Бартер «части монстров > патроны»
+-- ============================================================
+
+-- Проверка: есть ли у актора >= quantity предметов указанной секции
+function multiple_objects(section, quantity)
+    local actor = db.actor
+    if not actor then return false end
+
+    local count = 0
+    actor:iterate_inventory(
+        function(dummy, item)
+            if item and item:section() == section then
+                count = count + 1
+            end
+        end, nil)
+
+    return count >= quantity
+end
+
+-- ============================================================
+-- Условия диалога (по времени суток + наличию предметов)
+-- ============================================================
+
+local function is_day()
+    local h = level.get_time_hours()
+    return h >= 0 and h <= 11
+end
+
+local function is_night()
+    local h = level.get_time_hours()
+    return h >= 12 and h <= 23
+end
+
+function barter_dogtails()
+    if is_day() then
+        return multiple_objects("mutant_dog_tail", 3)
+    end
+    return false
+end
+
+function barter_boarlegs()
+    if is_day() then
+        return multiple_objects("mutant_boar_leg", 2)
+    end
+    return false
+end
+
+function barter_flesheyes()
+    if is_day() then
+        return multiple_objects("mutant_flesh_eye", 3)
+    end
+    return false
+end
+
+function barter_pseudodogtails()
+    if is_night() then
+        return multiple_objects("mutant_psevdodog_tail", 2)
+    end
+    return false
+end
+
+function barter_bloodsuckerjaw()
+    if is_night() then
+        return multiple_objects("mutant_krovosos_jaw", 1)
+    end
+    return false
+end
+
+-- ============================================================
+-- Тексты предложений в диалоге
+-- ============================================================
+
+function monster_parts_barter()
+    if is_day() then
+        db.actor:give_talk_message("%c[red]x3 %c[default]меняю на %c[green]x1 Патроны 9x18 мм ПБМ",
+            "ui\\ui_icon_equipment", Frect():set(450, 50, 50, 50), "iconed_barter_menu")
+        db.actor:give_talk_message("%c[red]x2 %c[default]меняю на %c[green]x2 Патроны 12x70 картечь",
+            "ui\\ui_icon_equipment", Frect():set(550, 50, 50, 50), "iconed_barter_menu")
+        db.actor:give_talk_message("%c[red]x3 %c[default]меняю на %c[green]x3 Патроны 12x70 дробь",
+            "ui\\ui_icon_equipment", Frect():set(400, 950, 50, 50), "iconed_barter_menu")
+    elseif is_night() then
+        db.actor:give_talk_message("%c[red]x2 %c[default]меняю на %c[green]x3 Патроны 12x70 картечь",
+            "ui\\ui_icon_equipment", Frect():set(450, 950, 50, 50), "iconed_barter_menu")
+        db.actor:give_talk_message("%c[red]x1 %c[default]меняю на %c[green]x1 Патроны 5,45x39 мм Разрывной",
+            "ui\\ui_icon_equipment", Frect():set(850, 100, 50, 50), "iconed_barter_menu")
+    end
+end
+
+-- ============================================================
+-- Вспомогательные функции обмена
+-- ============================================================
+
+-- Безопасно вынуть N предметов секции section. Возвращает true, если удалось всё.
+local function take_items(section, count)
+    local actor = db.actor
+    if not actor then return false end
+
+    local taken = 0
+    local to_remove = {}
+
+    actor:iterate_inventory(
+        function(dummy, item)
+            if taken >= count then return end
+            if item and item:section() == section then
+                table.insert(to_remove, item:id())
+                taken = taken + 1
+            end
+        end, nil)
+
+    if taken < count then
+        -- не хватает предметов — ничего не трогаем
+        return false
+    end
+
+    for _, id in ipairs(to_remove) do
+        local sobj = alife():object(id)
+        if sobj then
+            alife():release(sobj, true)
+        end
+    end
+
+    return true
+end
+
+-- Безопасно выдать N предметов секции section
+local function give_items(section, count)
+    local actor = db.actor
+    if not actor then return false end
+
+    for i = 1, count do
+        alife():create(section, actor:position(), actor:level_vertex_id(),
+            actor:game_vertex_id(), actor:id())
+    end
+
+    return true
+end
+
+-- Универсальный обмен: забрать need_count предметов out_section,
+-- выдать give_count предметов in_section. Если не хватает — ничего не происходит.
+local function do_barter(out_section, need_count, in_section, give_count)
+    if not multiple_objects(out_section, need_count) then
+        return false
+    end
+
+    if not take_items(out_section, need_count) then
+        return false
+    end
+
+    give_items(in_section, give_count)
+    return true
+end
+
+-- ============================================================
+-- Обмены (ammo)
+-- ============================================================
+
+function dogtails_ammo(first_speaker, second_speaker)
+    do_barter("mutant_dog_tail", 3, "ammo_9x18_pbp", 1)
+end
+
+function boarlegs_ammo(first_speaker, second_speaker)
+    do_barter("mutant_boar_leg", 2, "ammo_12x70_kar", 2)
+end
+
+function flesheyes_ammo(first_speaker, second_speaker)
+    do_barter("mutant_flesh_eye", 3, "ammo_12x70_buck", 3)
+end
+
+function pseudodogtails_ammo(first_speaker, second_speaker)
+    do_barter("mutant_psevdodog_tail", 2, "ammo_12x70_kar", 3)
+end
+
+function bloodsuckerjaw_ammo(first_speaker, second_speaker)
+    do_barter("mutant_krovosos_jaw", 1, "ammo_5.45x39_exp", 1)
+end
+
+-- ============================================================
+-- «Сжигание» предметов без выдачи патронов (если нужно)
+-- Используйте ТОЛЬКО если в диалоге НЕ вызывается *_ammo,
+-- иначе игрок потеряет предметы дважды.
+-- ============================================================
+
+function boarlegs_remove()
+    take_items("mutant_boar_leg", 2)
+end
+
+function dogtails_remove()
+    take_items("mutant_dog_tail", 3)
+end
+
+function flesheyes_remove()
+    take_items("mutant_flesh_eye", 3)
+end
+
+function pseudodogtails_remove()
+    take_items("mutant_psevdodog_tail", 2)
+end
+
+function bloodsuckerjaw_remove()
+    take_items("mutant_krovosos_jaw", 1)
+end

@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<window>
+
+ 	<main_wnd x="133" y="90" width="761" height="592"/>
+    <left_frame_window x="0" y="0" width="761" height="592" a="80">
+		<texture>ui\lw_pda_frame_sub</texture>        
+    </left_frame_window>
+
+    <left_frame_line x="8" y="17" width="747" height="27">
+        <title x="15" y="1" width="877" height="18">
+            <text font="letterica25" r="127" g="127" b="127">Contacts</text>
+        </title>
+        <texture>lw_blank_01</texture>        
+    </left_frame_line>
+
+    <right_frame_window x="2463" y="0" width="298" height="592" a="80">
+		<texture>ui\lw_pda_frame_sub</texture>
+    </right_frame_window>
+
+    <right_frame_line x="8" y="17" width="284" height="21">
+        <texture>lw_blank_01</texture>        
+    </right_frame_line>
+
+	<list x="2" y="47" width="700" height="540" right_ident="10" bottom_indent="42" always_show_scroll="1" scroll_profile="pda"/> 
+	<detail_list x="20" y="48" width="272" height="540" always_show_scroll="1" left_ident="5" scroll_profile="pda"/>
+
+    <a_static x="715" y="-2" width="32" height="32" frames="16" duration="1000" columns="8" frame_width="32" frame_height="32" cyclic="1" autoplay="1" heading="1">
+        <texture>ui\ui_pda_anims_03</texture>
+    </a_static>
+
+	<left_auto_static x="8" y="53" width="4" height="630"stretch="1">
+		<texture></texture>
+	</left_auto_static>
+	<left_auto_static x="727" y="53" width="4" height="630"stretch="1">
+		<texture></texture>
+	</left_auto_static>
+	<left_auto_static x="14" y="53" width="700" height="2" stretch="1">
+		<texture></texture>
+	</left_auto_static>
+
+	<right_auto_static x="8" y="52" width="4" height="420">
+		<texture></texture>
+	</right_auto_static>
+	<right_auto_static x="269" y="52" width="4" height="420">
+		<texture></texture>
+	</right_auto_static>
+	<right_auto_static x="8" y="48" width="262" height="2" stretch="1">
+		<texture></texture>
+	</right_auto_static>
+</window>

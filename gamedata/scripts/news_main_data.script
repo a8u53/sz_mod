@@ -1,0 +1,214 @@
+--[[---------------------------------------------------------------------------------------
+
+	file: news_main_data.script
+	author: OGS Evolution - team
+	ver.1.0
+	description: Вспомогательные функции для новостей
+
+---------------------------------------------------------------------------------------]]--
+
+local post_message_prob = 1 -- 1 - работает , 0 - вылет!
+
+local time = time_global()
+local NEWS_MORNING_DAY_KEY = "news_last_morning_day"
+local NEWS_EVENING_DAY_KEY = "news_last_evening_day"
+
+-- Абсолютный игровой день: get_time_days() возвращает календарный день месяца (1..31).
+local function get_news_absolute_day()
+    return math.floor(game.time() / 86400000)
+end
+
+-- OGSR script-variable storage сохраняется между уровнями и в сохранении.
+-- pstor оставлен резервным вариантом для сборок без get_stored_vars().
+local function get_news_storage()
+    if type(get_stored_vars) == "function" then
+        local ok, storage = pcall(get_stored_vars)
+        if ok and storage then return storage end
+    end
+
+    if not db or not db.actor or not db.storage then return nil end
+    local id = db.actor:id()
+    if not db.storage[id] then db.storage[id] = {} end
+    if not db.storage[id].pstor then db.storage[id].pstor = {} end
+    return db.storage[id].pstor
+end
+
+-- Отдельное локальное имя, чтобы не зависеть от одноимённой заглушки в news_main.script.
+local function is_news_isolated_level(level_name)
+    return level_name == "l03u_agr_underground"
+        or level_name == "l04u_labx18"
+        or level_name == "l08u_brainlab"
+        or level_name == "l10u_bunker"
+end
+
+--Главная функция
+function show_news_main()
+    if not db or not db.actor then return end
+    if is_news_isolated_level(level.name()) then return end
+
+    local storage = get_news_storage()
+    if not storage then return end
+
+    local uptime = time_global()
+    local hour = level.get_time_hours()
+    local minute = level.get_time_minutes()
+    local now_day = get_news_absolute_day()
+    local minutes_of_day = hour * 60 + minute
+
+    -- Morning: 04:30-07:00, no more than once per in-game day.
+    if minutes_of_day >= 270 and minutes_of_day <= 420 and
+       storage[NEWS_MORNING_DAY_KEY] ~= now_day then
+        if morning_templates() then
+            storage[NEWS_MORNING_DAY_KEY] = now_day
+            time = uptime + math.random(90000, 250000)
+            printf("[NEWS] morning message sent | day=%s", tostring(now_day))
+        end
+        return
+    end
+
+    -- Evening: 20:30-22:00, no more than once per in-game day.
+    if minutes_of_day >= 1230 and minutes_of_day <= 1320 and
+       storage[NEWS_EVENING_DAY_KEY] ~= now_day then
+        if evening_templates() then
+            storage[NEWS_EVENING_DAY_KEY] = now_day
+            time = uptime + math.random(90000, 250000)
+            printf("[NEWS] evening message sent | day=%s", tostring(now_day))
+        end
+        return
+    end
+
+    -- Ordinary random news. Schedule from current uptime to avoid catch-up bursts.
+    if uptime < time then return end
+    time = uptime + math.random(90000, 250000)
+
+    if not news_main then return end
+    local ft = {
+        news_main.show_news_trade,
+        news_main.show_news_another,
+        news_main.show_news_dolg,
+        news_main.show_news_freedom,
+        news_main.show_news_random,
+        news_main.show_death_news
+    }
+    local available = {}
+    for i = 1, #ft do
+        if type(ft[i]) == "function" then
+            available[#available + 1] = ft[i]
+        end
+    end
+
+    if #available == 0 then
+        printf("[NEWS] no news functions are available")
+        return
+    end
+
+    available[math.random(#available)]()
+end
+
+--"Статус соединения:"
+local connect_templates = {
+	"%c[255,160,255,160]Система:\\n%c[default]Связь установлена.",
+	"%c[255,160,255,160]Система:\\n%c[default]Приём сигнала возобновлён.",
+	"%c[255,160,255,160]Система:\\n%c[default]Подключение к сети...",
+	"%c[255,160,255,160]Система:\\n%c[default]Уровень сигнала восстановлен.",
+	"%c[255,160,255,160]Система:\\n%c[default]Подключение к серверу..."
+}
+
+local disconnect_templates = {
+	"%c[255,160,255,160]Система:\\n%c[default]Нет подключения к серверу.",
+	"%c[255,160,255,160]Система:\\n%c[default]Связь прервана.",
+	"%c[255,160,255,160]Система:\\n%c[default]Низкий уровень сигнала.",
+	"%c[255,160,255,160]Система:\\n%c[default]Прием невозможен, связь потеряна.",                  
+	"%c[255,160,255,160]Система:\\n%c[default]Сигнал отсутствует."
+}
+
+--Вспомагательный функции
+function on_connect()
+    local msg = ""
+    if math.random() < post_message_prob then
+        msg = connect_templates[math.random(#connect_templates)]
+    end
+    if (msg ~= "") then
+        db.actor:give_game_news(msg, "ui\\ui_iconsTotal", Frect():set(83,94,83,47), 0, 13000)
+    end
+end
+
+function on_disconnect()
+    local msg = ""
+    if math.random() < post_message_prob then
+        msg = disconnect_templates[math.random(#disconnect_templates)]
+    end
+    if (msg ~= "") then
+        db.actor:give_game_news(msg, "ui\\ui_iconsTotal", Frect():set(83,94,83,47), 0, 13000)
+    end
+end
+
+-- 04:30 - 07:00
+local morning_texts = {
+	"Мужики, рассветает... красиво-то как.",
+	"Рассветает...",
+	"Народ, тут это, рассветает - думаю, можно уже выдвигаться, мало на кого теперь натолкнёмся, не то что ночью.",
+	"Рассвело. Выдвигаемся, сейчас более-менее безопасно.",
+	"Мужики, подъём! Утро уже!",
+	"Эх, мужики! Наконец-то светает, а то устал уже я дрожать от страха в темноте. Уж лучше при свете дня... дрожать...",
+	"Меня кто-нибудь слышит? Сегодня ночью пропала группа наших ребят. Должны были вернуться к утру с Агропрома. До сих пор нет. Через час отправляемся на поиски. Присоединяйтесь.",
+	"Чёрт, кто придумал утро... Сегодня ж всю ночь пили... Повар, сволочь, водку палёную опять притащил откуда-то... \"Свобода\", спим дальше... рейд на базу \"Долга\" подождёт...",
+	"Мужики, вы бы видели, какой тут на Янтаре рассвет. Это что-то... И страшно, и красиво... И трупы снорков так классно дрейфуют в искрящейся в утреннем солнце глади озера... Романтика..."
+}
+
+-- 20:30 - 22:00
+local evening_texts = {
+	"Чёрт, мужики, вы как хотите, а я за хабаром сегодня уже не пойду. Ночь скоро...",
+	"Не, не пойду я уже никуда. Поздно уже, скоро дряни всякой повылазит...",
+	"Так, закат уже... потихоньку возвращайтесь, сейчас в Зоне небезопасно.",
+	"Идите-ка вы, мужики... в ночь... на кровососов... одни. Экстремалы, блин.",
+	"Ну что? Кто со мной пойдёт валить стаю псевдособак? А то я боюсь ночью в палатке спать, вдруг этот... тёмный... водички опять попросит... Уж лучше побродить где-нибудь...",
+	"Луна скоро взойдёт... Чёрт, не успеваю до лагеря добраться... Мужики есть кто поблизости? Чую, меня какая-то тварь уже преследует.",
+	"Всем внимание! Учёные сообщают о подозрительной активности мутантов на Янтаре этой ночью. Всем оставаться в лагерях."
+}
+
+function morning_templates()
+    if not db or not db.actor or not news_main or type(news_main.get_random_sname) ~= "function" then
+        return false
+    end
+    local msg = morning_texts[math.random(#morning_texts)]
+    local sender_ok, from = pcall(news_main.get_random_sname)
+    if not sender_ok or from == nil then return false end
+    local ok = pcall(function()
+        db.actor:give_game_news("%c[255,238,155,23]".. from ..":\\n%c[default]" .. msg,
+            "ui\\ui_iconsTotal", Frect():set(498,141,83,47), 0, 13000)
+    end)
+    return ok
+end
+
+function evening_templates()
+    if not db or not db.actor or not news_main or type(news_main.get_random_sname) ~= "function" then
+        return false
+    end
+    local msg = evening_texts[math.random(#evening_texts)]
+    local sender_ok, from = pcall(news_main.get_random_sname)
+    if not sender_ok or from == nil then return false end
+    local ok = pcall(function()
+        db.actor:give_game_news("%c[255,238,155,23]".. from ..":\\n%c[default]" .. msg,
+            "ui\\ui_iconsTotal", Frect():set(498,141,83,47), 0, 13000)
+    end)
+    return ok
+end
+
+
+-------------------- Advanced Reconstruction Stalker Mod v0.5 --------------------
+--[[
+
+If you're going to use the whole of this script or its parts in your own creative 
+developments for the S.T.A.L.K.E.R. game, please don't become such a goddamn 
+motherfucker like the notorious author of the ABC Mod - Carbrobro. Leave the 
+copyrights, note the real author(s) and don't claim others' ideas and their 
+realization to be your own ones. It's just simple Modmakers' Ethics. Thank you!
+
+Если вы собираетесь использовать данный скрипт целиком или частично в своих 
+разработках по игре S.T.A.L.K.E.R., пожалуйста не опускайтесь до уровня печально 
+известного автора ABC мода - Carbrobro. Не удаляйте копирайты, указывайте настоящего 
+автора(ов) и не выдавайте чужие идеи и их реализацию за свои. Ведь это элементарная 
+этика модостроителей! Спасибо за понимание.
+
+]]--

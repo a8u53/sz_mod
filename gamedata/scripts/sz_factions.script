@@ -1,0 +1,290 @@
+-- ============================================================
+-- sz_factions.script
+-- Фракционные отношения: вражда, кик, ренегаты
+-- ============================================================
+
+-- ============================================================
+-- КОНСТАНТЫ
+-- ============================================================
+
+local HOSTILE_THRESHOLD        = -450
+local BANDIT_STALKER_THRESHOLD = -450
+local KICK_THRESHOLD           = -400
+
+local HOSTILE_NEWS_DELAY = 15000
+local NEWS_SHOW_TIME = 5000
+
+-- Отслеживаемые фракции для сообщения о вражде (NPC-фракции)
+local WATCHED_FACTIONS = { "dolg", "freedom" }
+
+-- Фракции, из которых можно кикнуть.
+-- Ключ — группировка ГГ (character_community), значение — NPC-фракция
+-- для community_goodwill.
+-- "bandit" сюда НЕ входит: из ренегатов не кикают.
+local KICKABLE_FACTIONS = {
+    ["actor_dolg"]    = "dolg",
+    ["actor_freedom"] = "freedom",
+}
+
+-- Стандартная группировка актора-одиночки в OGSR — "actor".
+local PLAYER_SOLO_COMMUNITY = "actor"
+
+-- Русские названия фракций
+local FACTION_NAMES = {
+    ["actor"]         = "Одиночка",
+    ["actor_dolg"]    = "Долг",
+    ["actor_freedom"] = "Свобода",
+    ["stalker"]       = "Одиночки",
+    ["dolg"]          = "Долг",
+    ["freedom"]       = "Свобода",
+    ["bandit"]        = "Ренегаты",
+    ["ecolog"]        = "Учёные",
+    ["killer"]        = "Наёмники",
+    ["military"]      = "Военные",
+    ["monolith"]      = "Монолит",
+    ["zombied"]       = "Зомбированные",
+    ["stranger"]      = "Странники",
+    ["trader"]        = "Торговцы",
+    ["arena_enemy"]   = "Бойцы арены",
+}
+
+-- Иконки/сообщения для каждой фракции.
+-- Координаты — из старого sz_mod.script (freedom_enemy / dolg_enemy / bandit_way).
+local FACTION_NEWS = {
+    ["dolg"] = {
+        texture = "ui\\ui_iconsTotal",
+        rect    = { x = 498, y = 188, w = 83, h = 47 },
+        text    = "Вы объявлены врагом фракции: Долг",
+    },
+    ["freedom"] = {
+        texture = "ui\\ui_iconsTotal",
+        rect    = { x = 498, y = 235, w = 83, h = 47 },
+        text    = "Вы объявлены врагом фракции: Свобода",
+    },
+    ["bandit"] = {
+        texture = "ui\\ui_iconsTotal",
+        rect    = { x = 83, y = 329, w = 83, h = 47 },
+        text    = "Вы стали ренегатом",
+    },
+    ["default"] = {
+        texture = "ui\\ui_iconsTotal",
+        rect    = { x = 0, y = 0, w = 83, h = 47 },
+        text    = "Отношение изменено",
+    },
+}
+
+-- ============================================================
+-- СОСТОЯНИЕ
+-- ============================================================
+
+local hostile_scheduled = {}   -- [faction] = true, если сообщение уже запланировано
+local hostile_known = {}       -- [faction] = true, если мы уже знаем, что игрок враг
+local kicked_from = nil        -- NPC-фракция, из которой только что кикнули
+local first_check_after_spawn = true
+local player_is_bandit = false -- защита от повторного become_bandit
+
+-- ============================================================
+-- ВСПОМОГАТЕЛЬНОЕ
+-- ============================================================
+
+local function faction_name(faction)
+    return FACTION_NAMES[faction] or faction
+end
+
+local function show_news_for(faction, text_override, delay_ms)
+    local actor = db.actor
+    if not actor then return end
+
+    local info = FACTION_NEWS[faction] or FACTION_NEWS["default"]
+    local text = text_override or info.text
+    local r = info.rect
+
+    actor:give_game_news(
+        text,
+        info.texture,
+        Frect():set(r.x, r.y, r.w, r.h),
+        delay_ms or 0,
+        NEWS_SHOW_TIME
+    )
+end
+
+local function play_news_sound()
+    local snd = xr_sound.get_safe_sound_object([[device\pda\pda_sos]])
+    if snd then
+        snd:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
+    end
+end
+
+local function play_rank_sound()
+    local snd = xr_sound.get_safe_sound_object([[device\pda\pda_tip]])
+    if snd then
+        snd:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
+    end
+end
+
+-- ============================================================
+-- БЛОК 1: Вражда с Долгом/Свободой
+-- ============================================================
+
+local function schedule_hostile_news(faction)
+    if hostile_scheduled[faction] then return end
+    hostile_scheduled[faction] = true
+
+    local name = faction_name(faction)
+    local text = "%c[255,255,80,80]ВНИМАНИЕ! \\n%c[default]Вы объявлены врагом фракции: " .. name
+    show_news_for(faction, text, HOSTILE_NEWS_DELAY)
+end
+
+local function check_hostility()
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    for _, faction in ipairs(WATCHED_FACTIONS) do
+        local gw = relation_registry.community_goodwill(faction, actor:id())
+        local is_hostile = gw < HOSTILE_THRESHOLD
+
+        if first_check_after_spawn then
+            -- Первый чек после загрузки: запоминаем состояние,
+            -- но НЕ планируем сообщение (даже если уже враг).
+            hostile_known[faction] = is_hostile
+        else
+            if is_hostile and not hostile_known[faction] then
+                schedule_hostile_news(faction)
+                hostile_known[faction] = true
+            elseif not is_hostile and hostile_known[faction] then
+                hostile_known[faction] = false
+                hostile_scheduled[faction] = nil
+            end
+        end
+    end
+
+    first_check_after_spawn = false
+end
+
+-- ============================================================
+-- БЛОК 2: Стать ренегатом (только если одиночка)
+-- ============================================================
+
+local function become_bandit(reason_text)
+    local actor = db.actor
+    if not actor then return end
+
+    -- Ставим флаг ДО смены community, чтобы check_bandit_path
+    -- не вызвал become_bandit повторно, если set_character_community
+    -- по какой-то причине не сработает.
+    player_is_bandit = true
+
+    actor:set_character_community("bandit", 0, 0)
+    relation_registry.set_community_goodwill("bandit", actor:id(), 0)
+
+    -- ВАЖНО: community_goodwill для Долга/Свободы НЕ трогаем.
+    -- Если игрок был врагом Свободы до становления ренегатом —
+    -- он остаётся врагом Свободы. Иначе «стал ренегатом и всё нормально»
+    -- ломало бы логику.
+
+    show_news_for("bandit", "%c[255,255,80,80]ВНИМАНИЕ! \\n%c[default]" .. reason_text, 0)
+    play_rank_sound()
+end
+
+local function check_bandit_path()
+    if player_is_bandit then return end
+
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    if actor:character_community() ~= PLAYER_SOLO_COMMUNITY then return end
+
+    local gw = relation_registry.community_goodwill("stalker", actor:id())
+    if gw < BANDIT_STALKER_THRESHOLD then
+        become_bandit("Вы стали ренегатом.")
+    end
+end
+
+-- ============================================================
+-- БЛОК 3: Кик из фракции
+-- ============================================================
+
+local function check_faction_kick()
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    local current = actor:character_community()
+    local faction = KICKABLE_FACTIONS[current]
+    if not faction then return end
+
+    local gw = relation_registry.community_goodwill(faction, actor:id())
+    if gw >= KICK_THRESHOLD then return end
+
+    kicked_from = faction
+    actor:set_character_community(PLAYER_SOLO_COMMUNITY, 0, 0)
+
+    -- После кика сбрасываем «знание» о вражде этой фракции,
+    -- чтобы если отношения снова упадут — сообщение запланировалось заново.
+    hostile_known[faction] = nil
+    hostile_scheduled[faction] = nil
+
+    local name = faction_name(faction)
+    local text = "%c[255,255,80,80]ВНИМАНИЕ! \\n%c[default]Вас исключили из фракции: " .. name
+    show_news_for(faction, text, 0)
+    play_news_sound()
+end
+
+-- ============================================================
+-- БЛОК 4: Кик > ренегат
+-- ============================================================
+
+local function check_kicked_to_bandit()
+    if not kicked_from then return end
+    if player_is_bandit then
+        kicked_from = nil
+        return
+    end
+
+    local actor = db.actor
+    if not actor or not actor:alive() then
+        kicked_from = nil
+        return
+    end
+
+    if actor:character_community() ~= PLAYER_SOLO_COMMUNITY then
+        kicked_from = nil
+        return
+    end
+
+    local gw_stalker = relation_registry.community_goodwill("stalker", actor:id())
+    if gw_stalker < BANDIT_STALKER_THRESHOLD then
+        become_bandit("Вас исключили из фракции, и одиночки вас ненавидят. Вы стали ренегатом.")
+    end
+    kicked_from = nil
+end
+
+-- ============================================================
+-- ЕДИНАЯ ТОЧКА ВХОДА
+-- ============================================================
+
+local faction_check_time = 0
+local FACTION_CHECK_INTERVAL = 1000
+
+function update_factions()
+    local now = time_global()
+    if now - faction_check_time < FACTION_CHECK_INTERVAL then return end
+    faction_check_time = now
+
+    check_hostility()
+    check_faction_kick()
+    check_bandit_path()
+    check_kicked_to_bandit()
+end
+
+-- ============================================================
+-- СБРОС ПРИ ЗАГРУЗКЕ УРОВНЯ
+-- ============================================================
+
+function reset_factions()
+    hostile_scheduled = {}
+    hostile_known = {}
+    kicked_from = nil
+    faction_check_time = 0
+    first_check_after_spawn = true
+    player_is_bandit = false
+end

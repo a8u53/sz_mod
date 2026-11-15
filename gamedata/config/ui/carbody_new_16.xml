@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!-- ============================================================
+     ОКНО ЛУТА / ИНВЕНТАРЯ (обыск трупов и т.п.)
+     Разрешение окна: 1280x768
+     ============================================================ -->
+<window>
+    <!-- Основная область окна -->
+    <main x="0" y="0" width="1280" height="768"/>
+
+    <!-- ============================================================
+         ДЕКОРАТИВНЫЕ ИКОНКИ (левый и правый верхние углы)
+         Пустые текстуры — зарезервированы под оформление
+         ============================================================ -->
+    <static_icon x="87" y="0" width="267" height="106" stretch="1">
+        <texture></texture>
+        <texture_offset x="0" y="0"/>
+    </static_icon>
+
+    <static_icon x="660" y="0" width="267" height="106" stretch="1">
+        <texture></texture>
+    </static_icon>
+
+    <!-- ============================================================
+         БЛОК: ВАШ ИНВЕНТАРЬ (левая сторона)
+         ============================================================ -->
+    <our_bag_static x="0" y="0" width="1024" height="768" heading="2">
+        <!-- Фон инвентаря -->
+        <texture width="1024" height="768">ui\ui_dg_inventory_loot</texture>
+
+        <!-- Подпись "Ваши вещи" -->
+        <text x="295" y="738" font="letterica16" r="255" g="255" b="255" a="170" complex_mode="1">st_items</text>
+
+        <!-- Правая декоративная панель -->
+	    <auto_static x="895" y="0" width="130" height="768" stretch="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_right</texture>
+	    </auto_static>
+
+        <!-- Левая декоративная панель -->
+	    <auto_static x="0" y="0" width="130" height="768" stretch="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_left</texture>
+	    </auto_static>
+    </our_bag_static>
+
+    <!-- Подложка сумки (фон для сетки предметов) -->
+    <bag_static x="-40" y="50" width="400" height="800" stretch="0" complex_mode="1">
+        <text x="230" y="668" font="letterica16" r="255" g="255" b="255" a="170"></text>
+    </bag_static>
+
+    <!-- ============================================================
+         СЕТКА ПРЕДМЕТОВ ИГРОКА
+         15 строк ? 8 столбцов, ячейка 31?41
+         ============================================================ -->
+    <dragdrop_list_our x="125" y="103" width="263" height="615"
+                       cell_width="31" cell_height="41" rows_num="15" cols_num="8"
+                       group_similar="1" unlimited="1"/>
+
+    <!-- ============================================================
+         БЛОК: НАЙДЕННЫЕ ВЕЩИ (обыскиваемый труп / контейнер, правая сторона)
+         ============================================================ -->
+    <others_bag_static x="650" y="0" width="512" height="656" stretch="1">
+        <!-- Фон (отзеркален по горизонтали) -->
+        <texture mirror="h" width="512" height="768"></texture>
+
+        <!-- Заголовок "Найденные вещи" -->
+        <text x="22" y="70" font="letterica16" r="255" g="255" b="255" a="170">Найденные вещи:</text>
+    </others_bag_static>
+
+    <!-- Сетка предметов в обыскиваемом контейнере -->
+    <dragdrop_list_other x="0" y="103" width="263" height="615"
+                         cell_width="31" cell_height="41" rows_num="15" cols_num="8"
+                         unlimited="1" group_similar="1"/>
+
+    <!-- ============================================================
+         БЛОК: ОПИСАНИЕ ПРЕДМЕТА (центральная панель)
+         ============================================================ -->
+    <frame_window x="340" y="0" width="300" height="220">
+        <texture></texture>
+        <_left_top_texture x="20" y="10"></_left_top_texture>
+    </frame_window>
+
+    <!-- Текстовое описание выбранного предмета -->
+    <descr_static x="340" y="170" width="260" height="270" stretch="1">
+        <texture width="300" height="274"></texture>
+    </descr_static>
+
+    <!-- ============================================================
+         НАДПИСИ ВЕСА И ЗАГОЛОВКИ
+         ============================================================ -->
+    <!-- Вес в инвентаре игрока -->
+    <auto_static x="241" y="738" width="333" height="235" stretch="1">
+        <text font="letterica16" r="255" g="255" b="255" a="170">Общий вес:</text>
+    </auto_static>
+
+    <!-- Вес в обыскиваемом контейнере -->
+    <auto_static x="850" y="738" width="333" height="235" stretch="1">
+        <text font="letterica16" r="255" g="255" b="255" a="170">Общий вес: --</text>
+    </auto_static>
+
+    <!-- Заголовок "Ваши вещи" -->
+    <auto_static x="97" y="70" width="333" height="235" stretch="1">
+        <text font="letterica16" r="255" g="255" b="255" a="170">Ваши вещи:</text>
+    </auto_static>
+
+    <!-- ============================================================
+         ФОНОВЫЕ СЛОИ ОКНА
+         ============================================================ -->
+    <top_background width="1024" height="768" heading="1">
+        <texture>ui\ui_char_info</texture>
+    </top_background>
+
+    <!-- Нижний фон (отключён: нулевые размеры) -->
+    <bottom_background x="0" y="656" width="0" height="0">
+        <texture></texture>
+    </bottom_background>
+
+    <!-- ============================================================
+         КНОПКИ ДЕЙСТВИЙ
+         ============================================================ -->
+    <!-- Кнопка "Забрать всё" (горячая клавиша B) -->
+    <take_all_btn x="427" y="725" width="157" height="48"
+                  hR="255" hB="83" hG="179" highlight_text="1" accel="kB">
+        <texture>ui_button_main01</texture>
+        <text align="c" font="letterica16" r="10" g="144" b="189">ui_st_take_all</text>
+    </take_all_btn>
+
+    <!-- Кнопка "Выйти" -->
+    <button x="500" y="724" width="157" height="48"
+            hR="255" hB="83" hG="179" highlight_text="1">
+        <texture>ui_button_main01</texture>
+        <text font="letterica18" color="chara" align="c">ui_st_leave</text>
+    </button>
+
+    <!-- ============================================================
+         ОТОБРАЖЕНИЕ ДЕНЕГ
+         ============================================================ -->
+    <static_money x="700" y="73" width="108" height="20" stretch="1">
+        <text font="letterica16" r="170" g="170" b="170" align="r" vert_align="c">ui_inv_money</text>
+    </static_money>
+</window>

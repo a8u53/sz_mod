@@ -1,0 +1,94 @@
+-- Кордон. Квесты
+function victim_pda_check(task, objective)
+return db.actor:object("device_pda_bodya")
+end
+
+function victim_bounty_collect(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "device_pda_bodya", "out")
+		db.actor:change_character_reputation(db.actor:character_reputation() + 30)
+		db.actor:set_character_rank(db.actor:character_rank() + 20)
+		dialogs.relocate_money(second_speaker, 1500, "in")
+end
+
+function victim_buy_life(first_speaker, second_speaker)
+	dialogs.relocate_item_section(second_speaker, "device_pda_bodya", "in")
+		db.actor:change_character_reputation(db.actor:character_reputation() - 30)
+		db.actor:set_character_rank(db.actor:character_rank() + 20)
+end
+
+function af_create()
+ db.actor:disable_info_portion("otkaz_ot_raboti")
+end
+
+function reward_af(first_speaker, second_speaker)
+    dialogs.relocate_item_section(first_speaker, "medkit", "in")
+    dialogs.relocate_item_section(first_speaker, "wpn_pm", "in")
+    dialogs.relocate_item_section(first_speaker, "ammo_9x18_fmj", "in")  
+	dialogs.relocate_item_section(first_speaker, "ammo_9x18_fmj", "in")
+	dialogs.relocate_item_section(first_speaker, "af_blood_tutorial", "out")
+		db.actor:change_character_reputation(db.actor:character_reputation() + 5)
+		db.actor:set_character_rank(db.actor:character_rank() + 5)
+end
+
+function scared_novice_reward(first_speaker, second_speaker)
+    dialogs.relocate_item_section(first_speaker, "af_medusa", "in")
+		db.actor:change_character_reputation(db.actor:character_reputation() + 5)
+end
+--------------------------------------------------------------------
+----------------------Карточки--------------------------------------
+function cards_transfer(first_speaker, second_speaker)
+	dialogs.relocate_item_section(first_speaker, "card_1", "out")
+	dialogs.relocate_item_section(first_speaker, "card_2", "out")
+	dialogs.relocate_item_section(first_speaker, "card_3", "out")
+	dialogs.relocate_item_section(first_speaker, "card_4", "out")
+	dialogs.relocate_item_section(first_speaker, "card_5", "out")
+	dialogs.relocate_item_section(first_speaker, "card_6", "out")
+	dialogs.relocate_item_section(first_speaker, "card_7", "out")
+	dialogs.relocate_item_section(first_speaker, "card_8", "out")
+	dialogs.relocate_item_section(first_speaker, "card_9", "out")
+	dialogs.relocate_item_section(first_speaker, "card_10", "out")
+	dialogs.relocate_item_section(first_speaker, "af_rog", "in")	
+		db.actor:change_character_reputation(db.actor:character_reputation() + 50)
+		db.actor:set_character_rank(db.actor:character_rank() + 30)	
+end
+
+function cards_check(task, objective)
+	return db.actor:object("card_1") and db.actor:object("card_2") and db.actor:object("card_3") and db.actor:object("card_4") and db.actor:object("card_5") and db.actor:object("card_6") and db.actor:object("card_7") and db.actor:object("card_8") and db.actor:object("card_9") and db.actor:object("card_10")
+end
+
+-------------------------------------------------------------------------
+---------------Продажа документов----------------------------------------
+function money_maker_1_check(task, objective)
+return db.actor:object("money_maker_1")
+end
+
+function money_maker_2_check(task, objective)
+return db.actor:object("money_maker_2")
+end
+
+function money_maker_3_check(task, objective)
+return db.actor:object("money_maker_3")
+end
+
+function relocate_1(first_speaker, second_speaker)
+	dialogs.relocate_item_section(second_speaker, "money_maker_1", "out")
+end
+function relocate_2(first_speaker, second_speaker)
+	dialogs.relocate_item_section(second_speaker, "money_maker_2", "out")
+end
+function relocate_3(first_speaker, second_speaker)
+	dialogs.relocate_item_section(second_speaker, "money_maker_3", "out")
+end
+		
+function money_maker_reward()
+local reward = math.random (400,1500)
+	db.actor:give_talk_message(reward .. " RU", "ui\\ui_iconstotal",Frect():set(0,0,83,47),"iconed_trade_info")
+	db.actor:give_money(reward)
+end
+---------------------------------------------------------------------------
+--Пьяный хуй
+function drunken_bastard()
+local npc = level_object_by_sid(884)
+local snd = xr_sound.get_safe_sound_object( [[characters_voice\scenario\bar\bar_visitor\bar_visitor_13]] )
+snd:play_at_pos(npc, vector ():set (0, 0, 0), 5, sound_object.s2d)
+end

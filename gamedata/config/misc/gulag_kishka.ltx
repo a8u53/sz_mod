@@ -1,0 +1,71 @@
+;========================================================
+; Farm
+;========================================================
+;CAMP
+
+[logic@ds2_domik_st_kamp]
+active = kamp@ds2_domik_st_kamp
+
+[kamp@ds2_domik_st_kamp]
+center_point = kamp_1
+path_walk    = kamp_1
+
+
+;SLEEPERS (1-3)
+
+[logic@ds2_domik_st_sleeper1]
+active = sleeper@ds2_domik_st_sleeper1
+
+[sleeper@ds2_domik_st_sleeper1]
+path_main = sleep_1
+wakeable = false
+
+[logic@ds2_domik_st_sleeper2]
+active = sleeper@ds2_domik_st_sleeper2
+
+[sleeper@ds2_domik_st_sleeper2]
+path_main = sleep_2
+wakeable = false
+
+[logic@ds2_domik_st_sleeper3]
+active = sleeper@ds2_domik_st_sleeper3
+
+[sleeper@ds2_domik_st_sleeper3]
+path_main = sleep_3
+wakeable = false
+
+
+;RAIDER
+
+[logic@ds2_domik_st_walker]
+active = walker@ds2_domik_st_walker
+
+[walker@ds2_domik_st_walker]
+path_walk = way1
+path_look = look1
+
+
+;========================================================
+; Fucking boars
+;========================================================
+[logic@ds_boars_nest]
+active = mob_home@ds_boars_nest
+
+[mob_home@ds_boars_nest]
+path_home = kaban1
+home_min_radius = 40
+home_max_radius = 100
+
+[mob_home@ds_boars_nest_1]
+path_home = kaban2
+home_min_radius = 40
+home_max_radius = 100
+
+[mob_home@ds_boars_nest_2]
+path_home = kaban3
+home_min_radius = 40
+home_max_radius = 100
+
+
+
+

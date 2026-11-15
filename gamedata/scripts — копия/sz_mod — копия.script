@@ -1,0 +1,776 @@
+--СТАТИК АРМОРА
+function armor_static()
+    local actor = db.actor
+    if not actor or not actor.alive then return end
+    
+    local hud = get_hud()
+    if not hud then return end
+    
+    local suit = actor:item_in_slot(6)
+    local cond = suit and suit:condition() * 100 or 0
+    
+    -- Пороги и соответствующие статики
+    local thresholds = {
+        { min = 61, static = nil },      -- вообще никакой иконки
+        { min = 31, max = 60, static = "hud_show_armor" },
+        { min = 11, max = 30, static = "hud_show_armor2" },
+        { min = 0,  max = 10, static = "hud_show_armor3" }
+    }
+    
+    local target_static = nil
+    for _, t in ipairs(thresholds) do
+        if cond >= t.min and (not t.max or cond <= t.max) then
+            target_static = t.static
+            break
+        end
+    end
+    
+    -- Удаляем все статики брони
+    local all_statics = {"hud_show_armor", "hud_show_armor2", "hud_show_armor3"}
+    for _, name in ipairs(all_statics) do
+        hud:RemoveCustomStatic(name)
+    end
+    
+    -- Добавляем нужный
+    if target_static then
+        hud:AddCustomStatic(target_static, true)
+    end
+end
+
+--ФУНКЦИЯ ВЫВОДА ШКАЛЫ РАДИАЦИИ НА ЭКРАН. MOD UI RADIATION BY SOKOL_JACK
+
+local posx = 0
+local posy = 0
+local width = 0
+local height = 0
+local p_dx = 0
+local p_dy = 0
+local p_width = 0
+local p_height = 0
+local p_horz = 0
+local saved_aspect = 0
+local saved_width = -1
+
+function update(obj)
+	if (obj == nil) then return end
+	if (obj.radiation == nil) then return end
+	local hud_rad = get_hud()
+	local wnd_
+	if (hud_rad) then
+		local custom_static_rad_back = hud_rad:GetCustomStatic("hud_rad_back")
+		local custom_static_rad = hud_rad:GetCustomStatic("hud_rad_level")
+		if (device().aspect_ratio ~= saved_aspect) then
+			local asp = device().aspect_ratio
+			if (math.abs(asp - saved_aspect) > 0.01) then
+				mylog("aspect_ratio changed. New is "..device().aspect_ratio..", old was "..saved_aspect..".")
+				saved_aspect = device().aspect_ratio
+				if(custom_static_rad_back) then hud_rad:RemoveCustomStatic("hud_rad_back") end
+				if(custom_static_rad) then hud_rad:RemoveCustomStatic("hud_rad_level") end
+				custom_static_rad_back = nil
+				custom_static_rad = nil
+			end
+		end
+		local bDetected = false
+		if (obj:object("detector_simple")) then
+			bDetected = true
+		end
+		if (bDetected == false) then
+			if (custom_static_rad_back) then hud_rad:RemoveCustomStatic("hud_rad_back") end
+			if (custom_static_rad) then hud_rad:RemoveCustomStatic("hud_rad_level") end
+			return
+		end
+		if (custom_static_rad_back == nil or custom_static_rad == nil) then
+			mylog("creating radiation on HUD")
+			mylog("aspect_ratio = "..device().aspect_ratio)
+			if (device().aspect_ratio < 0.75) then --widescreen. Use coords from maingame_16.xml		
+				read_params(true)
+			else --normal -- Use coords from maingame.xml
+				read_params()		
+			end		
+
+			if custom_static_rad_back == nil then
+				hud_rad:AddCustomStatic("hud_rad_back", true)
+				custom_static_rad_back = hud_rad:GetCustomStatic("hud_rad_back")
+				if (custom_static_rad_back and custom_static_rad_back.wnd) then
+					 wnd_ = custom_static_rad_back:wnd()
+					 if (wnd_) then
+						wnd_:SetWndPos(posx, posy)
+						wnd_:SetHeight(height)
+						wnd_:SetWidth(width)
+						mylog("Setting hud_rad_back. New coords: ["..posx..", "..posy..", w="..width..", h="..height..p_horz.."]")
+					end
+				end
+			end
+			if custom_static_rad == nil then
+				hud_rad:AddCustomStatic("hud_rad_level", true)
+				custom_static_rad = hud_rad:GetCustomStatic("hud_rad_level")
+				if (custom_static_rad and custom_static_rad.wnd) then
+					wnd_ = custom_static_rad:wnd()
+					if(wnd_) then
+						wnd_:SetWndPos(posx + p_dx, posy + p_dy)
+						wnd_:SetHeight(p_height)
+						wnd_:SetWidth(p_width)
+						mylog("Setting hud_rad_level. New coords: ["..posx + p_dx..", "..posy + p_dy..", w="..p_width..", h="..p_height..",horz="..p_horz.."]")
+					end
+				end
+			end
+		end
+		local new_width = obj.radiation * p_width
+		if (saved_width ~= new_width) then
+			if obj.radiation > 0.0 then
+				custom_static_rad:wnd():SetWidth(obj.radiation * p_width)
+			else
+				custom_static_rad:wnd():SetWidth(obj.radiation * p_width)
+				--hud_rad:RemoveCustomStatic("hud_rad_level")
+			end
+		end
+	end
+end
+
+function read_params(bWide)
+	local section = ""
+	local ui_rad_ini = ini_file("misc\\ui_rad.ltx")
+	local id, value = "", "", result
+	local n = 0	
+	section = "ui_rad"
+	if bWide == true then section = "ui_rad_wide" end
+	if (ui_rad_ini and ui_rad_ini:section_exist(section)) then
+		n = ui_rad_ini:line_count(section)
+		for i=0, n-1 do
+			result, id, value = ui_rad_ini:r_line(section, i, "", "")
+			if (id == "x") then
+				posx = value
+			elseif(id == "y") then
+				posy = value
+			elseif(id == "width") then
+				width = value
+			elseif(id == "height") then
+				height = value
+			elseif(id == "horz") then
+				horz = value
+			end
+		end
+	end
+	section = "ui_rad_progress"
+	if bWide == true then section = "ui_rad_progress_wide" end
+	if (ui_rad_ini and ui_rad_ini:section_exist(section)) then
+		n = ui_rad_ini:line_count(section)		
+		for i=0, n-1 do
+			result, id, value = ui_rad_ini:r_line(section, i, "", "")
+			if (id == "dx") then
+				p_dx = value
+			elseif(id == "dy") then
+				p_dy = value
+			elseif(id == "width") then
+				p_width = value
+			elseif(id == "height") then
+				p_height = value
+			elseif(id == "horz") then
+				p_horz = value
+			end
+		end
+	end	
+end
+function dbglog(fmt,...)
+		local msg = string.format(fmt, ...)
+		local msg_no_ws = string.gsub(msg, "%s", "_")
+		get_console():execute("dbg:" .. msg_no_ws)
+		get_console():execute("flush")		
+end
+
+function mylog(text)
+	--dbglog("==> "..text)
+end
+
+--ФУНКЦИЯ ВЗЯТИЯ С ТРУПОВ ДЕНЕГ LOOTMONEY МОД
+
+function lootmoney(npc)
+	if npc ~= nil and not string.find(npc:section(),"arena") and npc:character_community()~="arena_enemy" then
+		local money = npc:money()
+		if money ~= nil and money ~=0 then
+				local deadmoney = money
+
+                                local npc_rank
+		npc_rank = ranks.get_obj_rank_name(npc)
+		if npc_rank ~= nil then
+			if npc_rank == "novice" and deadmoney >=300 then deadmoney=math.random(25,85)    
+			elseif npc_rank == "beginner" and deadmoney >=400 then deadmoney=math.random (35,100)
+			elseif npc_rank == "experienced" and deadmoney >=500 then deadmoney=math.random(55,150)  
+			elseif npc_rank == "veteran" and deadmoney >=600 then deadmoney=math.random(70,235) 
+			elseif npc_rank == "master" and deadmoney >=700 then deadmoney=math.random(110,325)  
+                          end
+						  end
+				local news_text = "%c[255,160,160,160]"..game.translate_string("st_tip").."\\n".."%c[255,255,255,255]Обнаружены деньги: %c[default]".."%c[124,247,136,1]"..game.translate_string(tostring(deadmoney).."%c[default] руб.")
+				db.actor:give_game_news(news_text, "ui\\ui_iconsTotal", Frect():set(0,0,83,47), 1, 3000)
+				db.actor:give_money(deadmoney)
+				game_stats.money_quest_update(deadmoney) 
+				npc:give_money(-money)
+				game_stats.money_quest_update(-money)
+			end
+		end
+	end
+	
+--ФУНКЦИЯ ВЫВОДА ВРЕМЕНИ НА ЭКРАН
+
+function show_time()
+    local hud = get_hud()
+    local cs = hud:GetCustomStatic("hud_show_time")
+    if cs == nil then
+        hud:AddCustomStatic("hud_time_static", true)
+        hud:AddCustomStatic("hud_show_time", true)
+        cs = hud:GetCustomStatic("hud_show_time")
+    end
+ 
+    local time_h = level.get_time_hours()
+    local time_m = level.get_time_minutes()
+    local msg
+    if time_m >= 10 then
+        msg = string.format(" %02d:%02d\n", time_h, time_m)
+    else
+        msg = string.format(" %02d:%02d\n", time_h, time_m)
+    end
+ 
+    if cs ~= nil then cs:wnd():SetText(msg) end
+end
+
+--Стать бандито
+function bandit_perda()
+	local news_text = "%c[255,160,160,160]" ..game.translate_string("Байбак").."\\n".."%c[default]"..game.translate_string("Лысый")
+	if relation_registry.community_goodwill ("stalker") < -200 then
+    db.actor:set_character_community("bandit", 0, 0)
+	db.actor:give_game_news(news_text, "ui\\ui_iconsTotal", Frect():set(83,376,83,47), 1000, 7000)
+end
+end
+
+--Оповещение о повышении ранга
+function rank_up()
+	if (db.actor:character_rank() >= 150) and not (db.actor:character_rank() >= 300) then db.actor:give_info_portion("got_it")
+		elseif (db.actor:character_rank() >= 300) and not (db.actor:character_rank() >= 600) then db.actor:give_info_portion("got_it_2")
+		elseif (db.actor:character_rank() >= 600) and not (db.actor:character_rank() >= 900) then db.actor:give_info_portion("got_it_3")
+		elseif (db.actor:character_rank() >= 900) and not (db.actor:character_rank() >= 300) then db.actor:give_info_portion("got_it_4")
+		elseif relation_registry.community_goodwill ("stalker") < -450 then db.actor:give_info_portion("bandit_way")
+		elseif relation_registry.community_goodwill ("freedom") < -500 then db.actor:give_info_portion("freedom_enemy")
+		elseif relation_registry.community_goodwill ("dolg") < -500 then db.actor:give_info_portion("dolg_enemy")
+	end
+end
+
+function callback_on_rank(info)
+local rank_up = "%c[124,247,136,1]Сообщение: \\n%c[default]Ранг повышен."
+	if has_alife_info("got_it") and not has_alife_info("no_cycle_infoportion") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(0,517,83,47), 1000, 5000)
+		db.actor:give_info_portion("no_cycle_infoportion")
+		rank_up_sound()
+		elseif has_alife_info("got_it_2") and not has_alife_info("no_cycle_infoportion_2") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(0,517,83,47), 1000, 5000)
+		db.actor:give_info_portion("no_cycle_infoportion_2")
+		rank_up_sound()
+		elseif has_alife_info("got_it_3") and not has_alife_info("no_cycle_infoportion_3") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(0,517,83,47), 1000, 5000)
+		db.actor:give_info_portion("no_cycle_infoportion_3")
+		rank_up_sound()
+		elseif has_alife_info("got_it_4") and not has_alife_info("no_cycle_infoportion_4") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(0,517,83,47), 1000, 5000)
+		db.actor:give_info_portion("no_cycle_infoportion_4")
+		rank_up_sound()
+		elseif has_alife_info("freedom_enemy") and not has_alife_info("freedom_enemy_1") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(498,235,83,47), 1000, 5000)
+		db.actor:give_info_portion("freedom_enemy_1")
+		news_sound()
+		elseif has_alife_info("dolg_enemy") and not has_alife_info("dolg_enemy_1") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(498,188,83,47), 1000, 5000)
+		db.actor:give_info_portion("dolg_enemy_1")
+		news_sound() 
+		elseif has_alife_info("bandit_way") and not has_alife_info("bandit_way_1") then
+		db.actor:give_game_news(rank_up, "ui\\ui_iconsTotal", Frect():set(83,329,83,47), 1000, 5000)
+		db.actor:give_info_portion("bandit_way_1")
+		news_sound() 
+		elseif has_alife_info("stalker_now") and not has_alife_info("stalker_now2") then
+		db.actor:set_character_community("stalker", 0, 0)
+		db.actor:restore_weapon()
+		db.actor:give_info_portion("stalker_now2")
+	end 		
+end
+
+function news_sound()
+	local snd_obj
+	snd_obj = xr_sound.get_safe_sound_object([[device\pda\pda_sos]]) -- путь до звукового файла
+	snd_obj:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
+end
+
+function rank_up_sound()
+	local snd_obj
+	snd_obj = xr_sound.get_safe_sound_object([[device\pda\pda_tip]]) -- путь до звукового файла
+	snd_obj:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
+end
+
+-- ФУНКЦИЯ ВЫВОДА СООБЩЕНИЯ О СМЕРТИ СТАЛКЕРОВ
+
+local community = {
+	["stalker"] = "Вольный сталкер",
+	["monolith"] = "\"Монолит\"",
+	["military"] = "Военный",
+	["bandit"] = "Ренегат",
+	["killer"] = "Наемник",
+	["ecolog"] = "Ученый",
+	["dolg"] = "\"Долг\"",
+	["freedom"] = "\"Свобода\"",
+	["zombied"] = "Зомбированный",
+	["trader"] = "Торговец",
+	["arena_enemy"] = "Боец арены"
+	}
+
+ 
+function kill_npc(victim, who)
+  if victim and IsStalker(victim) then
+	action(victim, particle("hit_fx\\group_items\\blood_pool","bip01_r_thigh"))
+   end
+end
+
+--ФУНКЦИЯ СНА
+
+function sleep(obj)
+   if obj ~= nil then
+      if obj:section() == "sleep_bag" then -- при использоваании спального мешка будет открываться выборочное меню
+       local hud = sleep_ui(get_hud()) -- указываем на class "sleep_ui" (CUIScriptWnd)
+         level.start_stop_menu(hud, true) -- открываем меню
+	end
+    end
+end
+ 
+ 
+class "sleep_ui" (CUIScriptWnd)
+
+function sleep_ui:__init(owner) super()
+	self.owner = owner
+	self:InitControls()
+	self:InitCallBacks()
+end
+ 
+function sleep_ui:__finalize() end
+ 
+function sleep_ui:InitControls()
+	self:Init(50,50,550,450)
+ 
+	local xml = CScriptXmlInit()
+	xml:ParseFile("ui_sleep.xml") -- настройки будут воспроизводиться в этом xml файле
+ 
+	xml:InitStatic("back_video", self) -- видео сзади
+ 
+	xml:InitStatic("background", self) -- рамка сзади
+ 
+	self:Register(xml:Init3tButton("caption", self),"caption") -- заголовок
+	self:Register(xml:Init3tButton("btn_1", self),"btn_1") -- кнопка на сон одного часа
+	self:Register(xml:Init3tButton("btn_2", self),"btn_2") -- кнопка на сон трех часов
+	self:Register(xml:Init3tButton("btn_3", self),"btn_3") -- кнопка на сон девяти часов
+	if db.actor.health < 0.9 then -- если здоровье упало, то
+	self:Register(xml:Init3tButton("btn_4", self),"btn_4") -- кнопка на выздоровления
+    end
+	self:Register(xml:Init3tButton("btn_quit", self),"btn_quit") -- кнопка выхода
+end
+ 
+function sleep_ui:InitCallBacks()
+	self:AddCallback("btn_1", ui_events.BUTTON_CLICKED, self.sleep_ui1, self) -- кнопка один идет на функцию sleep_ui1
+	self:AddCallback("btn_2", ui_events.BUTTON_CLICKED, self.sleep_ui2, self) -- кнопка два идет на функцию sleep_ui2
+	self:AddCallback("btn_3", ui_events.BUTTON_CLICKED, self.sleep_ui3, self) -- кнопка три идет на функцию sleep_ui3
+	if db.actor.health < 0.9 then
+	self:AddCallback("btn_4", ui_events.BUTTON_CLICKED, self.sleep_ui4, self) -- кнопка идет на sleep_ui4
+    end
+	self:AddCallback("btn_quit", ui_events.BUTTON_CLICKED, self.on_quit, self) -- кнопка идет на выход
+end
+ 
+function sleep_ui:OnKeyboard(dik, keyboard_action) -- функция на отмену сна при нажатии клавиши Esc
+	CUIScriptWnd.OnKeyboard(self,dik,keyboard_action)
+	if keyboard_action == ui_events.WINDOW_KEY_PRESSED then
+		if dik == DIK_keys.DIK_ESCAPE then
+			self:on_quit()
+		end
+		if dik == DIK_keys.DIK_NUMPAD1 then
+			self:sleep_ui1()
+		end
+		if dik == DIK_keys.DIK_NUMPAD2 then
+			self:sleep_ui2()
+		end
+		if dik == DIK_keys.DIK_NUMPAD3 then
+			self:sleep_ui3()
+		end
+		if dik == DIK_keys.DIK_NUMPAD4 then
+			self:sleep_ui4()
+		end
+	end
+	return true
+end
+ 
+function sleep_ui:sleep_ui1() -- вот функция от кнопки один
+		sleep_one_hour() -- спим один час
+		self:on_quit() -- выход
+end
+function sleep_ui:sleep_ui2() -- вот функция от кнопки два
+		sleep_three_hours() -- спим три часа
+		self:on_quit()
+end
+function sleep_ui:sleep_ui3() -- вот функция от кнопки три
+		sleep_nine_hours() -- спим девять часов
+		self:on_quit()
+end
+function sleep_ui:sleep_ui4() -- функция от кнопкм четыри
+		sleep_health(scale) -- спим до выздоровления
+		self:on_quit()
+end
+ 
+function sleep_ui:check_game() -- проверка запущена ли игра
+	local check = false
+	if level.present() and (db.actor ~= nil) and db.actor:alive() then
+		check = true
+	end
+	return check
+end
+ 
+function sleep_ui:on_quit() -- вот кнопка выхода
+    self:GetHolder():start_stop_menu(self, true)
+    alife():create("sleep_bag", db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id()) -- спаун мешка обратно
+end
+
+function sleep_one_hour() -- сон один час
+	main(1)
+end
+ 
+function sleep_three_hours() -- сон три часа
+	main(3)
+end
+ 
+function sleep_nine_hours() -- сон девять часов
+	main(9)
+end
+ 
+function sleep_health(scale) -- сон до выздоровления
+	local sleep_time = (1 - db.actor.health)*5.00
+	main(sleep_time)
+end
+ 
+function main(scale) -- основная функция
+	basic_time_factor = level.get_time_factor () -- вычисление стандартной скорости течения времени
+	db.actor:stop_talk() -- если игрок с кем-нибудь говорит, диалог закрывается. Здесь в ней нет смысла, но вдруг кому пригодится
+	starter (scale) -- запуск скрипта, перематывающего время 
+	level.disable_input() -- отключение управления  
+end
+ 
+function starter(scale) -- скрипт перемотки на нужное время
+	local factor = scale * 2930 -- вычисление времени "пробуждения"
+	game.start_tutorial("time_scaling") -- вызов функции перемотки
+	level.set_time_factor(factor) -- собственно сама перемотка 
+end
+ 
+function dreamer() -- отвечает за сны
+	level.set_time_factor(basic_time_factor) --остановка перемотки. basic_time_factor - стандартная скорость течения времени
+	local dream = dream.sleep_video_name_callback () -- позволяет "показать" сон
+	if dream ~= "" then
+	game.start_tutorial(dream) -- показ одного из трёх снов
+	else
+	game.start_tutorial("without_dream")  -- "без сна"
+	end
+end
+ 
+function stopper()
+	alarm_sound()
+	level.add_cam_effector("camera_effects\\prison_1.anm", 1, false, "") -- эффект подъема
+	level.add_pp_effector("yantar_underground_psi.ppe", 222, false, "") -- эффект подъема
+	db.actor:hide_weapon() -- ГГ прячет оружие в рюкзак
+	set_inactivate_input_time(30)
+	db.actor:restore_weapon() -- ГГ достаёт оружие
+end
+
+function alarm_sound()
+local snd_obj
+snd_obj = xr_sound.get_safe_sound_object([[device\pda\pda_alarm]])
+snd_obj:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0)
+end
+
+--Спавн итема
+
+function spawn_item(spawn_item, dist)
+	local a = vector()
+		a.y = 1
+	local pos = db.actor:position():add(a)
+	local dir = db.actor:direction()
+	pos = pos:add(dir:mul(dist))
+	alife():create(spawn_item, pos, 1, db.actor:game_vertex_id())
+end
+	
+--ЗВУКИ ИСПОЛЬЗОВАНИЯ ЕДЫ
+
+local cards = {"card_1", "card_2", "card_3", "card_4", "card_5", "card_6", "card_7", "card_8", "card_9", "card_10"}
+local eatbles = {"bread_sub", "conserva_sub", "kolbasa_sub"}
+objectinuse=0
+objectused=0
+
+function start(obj)
+sound_obj_left = sound_object([[$no_sound]])
+sound_obj_right = sound_object([[$no_sound]])
+	if (db.actor~=nil) and (obj~=nil) then
+	slotinuse=db.actor:active_slot()
+	slot_div=1
+		if obj:section() == "medkit" or obj:section() == "medkit_army" or obj:section() == "medkit_scientic" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_medkit]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_medkit]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		spawn_item("medkit_e", 0.3)
+			
+		elseif obj:section() == "antirad" or obj:section() == "antirad_pills" or obj:section() == "painkiller_1" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_pills]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_pills]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+1000
+			if (objectinuse==1) then
+			holster_time=holster_time+1000
+			end
+		soundhub()
+		spawn_item("tabletki_e", 0.3)
+		
+		elseif obj:section() == "bandage" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_bandage]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_bandage]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+	
+		elseif obj:section() == "painkiller_4" or obj:section() == "painkiller_3" or obj:section() == "painkiller_2" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_pills]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_pills]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+1000
+			if (objectinuse==1) then
+			holster_time=holster_time+1000
+			end
+		soundhub()
+		
+		elseif obj:section() == "vodka" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\drink_1]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\drink_1]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		spawn_item("vodka_a", 0.3)
+		db.actor.psy_health = 0.1
+		
+		elseif obj:section() == "af_rog" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[anomaly\anomaly_gravy_blast]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[anomaly\anomaly_gravy_blast]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		alife():create(eatbles[math.random(3)],db.actor:position(),db.actor:level_vertex_id(),db.actor:game_vertex_id(),db.actor:id())
+		alife():create("af_rog", db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+			
+		elseif obj:section() == "energy_drink" or obj:section() == "voda" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_softdrink]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_softdrink]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		spawn_item("energy_drink_e", 0.3)
+		
+		elseif obj:section() == "rukzachok" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_ruck]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_ruck]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+1000
+			if (objectinuse==1) then
+			holster_time=holster_time+1000
+			end
+		soundhub()
+		alife():create("box", db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id())
+		
+		elseif obj:section() == "rich_sigs_full" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_ruck]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_ruck]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+1000
+			if (objectinuse==1) then
+			holster_time=holster_time+1000
+			end
+		soundhub()
+		alife():create(cards[math.random(10)],db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+		alife():create("rich_sigs",db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+		
+		elseif obj:section() == "rich_sigs" or obj:section() == "sigs" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_smoke]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_smoke]])
+		level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "")  
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		spawn_item("siga_e", 0.3)
+		db.actor.psy_health = 0.05
+		
+		elseif obj:section() == "conserva" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_food]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_food]])
+        level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		spawn_item("conserva_e", 0.3)
+		
+		elseif obj:section() == "bread" or obj:section() == "kolbasa" or obj:section() == "galata" then
+		sound_obj_left = xr_sound.get_safe_sound_object([[actor\inv_food]])
+		sound_obj_right = xr_sound.get_safe_sound_object([[actor\inv_food]])
+        level.add_cam_effector("camera_effects\\inv_use.anm", 999, false, "") 
+		holster_time=time_global()+2000
+			if (objectinuse==1) then
+			holster_time=holster_time+2000
+			end
+		soundhub()
+		end
+	end
+end
+
+function soundhub()
+	if db.actor:alive() then
+	sound_obj_left:play_at_pos ( db.actor, vector():set(-1, 0, 0), 0, sound_object.s2d)
+	sound_obj_right:play_at_pos ( db.actor, vector():set( 1, 0, 0), 0, sound_object.s2d)	
+	sound_obj_left = sound_object([[$no_sound]])
+	sound_obj_right = sound_object([[$no_sound]])
+
+		if (objectinuse==0) then
+		db.actor:hide_weapon()
+		objectinuse=1
+			if slotinuse == 1 then
+			slot_div = ((holster_time-time_global())/1.5)
+			else
+			slot_div = 0
+			end
+		end
+	objectused=objectused+1
+	weapontimer()
+	end
+end
+
+function weapontimer()
+	if (holster_time~=nil) and (time_global()>(holster_time-slot_div)) and level.present() then
+	objectused=objectused-1
+		if (objectused==0) then
+		db.actor:restore_weapon()
+		objectinuse=0
+		holster_time=nil
+		end
+	end
+end
+
+--Звук подбора предметов
+
+function item_take(obj)
+	if obj:section() == "vodka" then
+	snd_obj = xr_sound.get_safe_sound_object([[item\bottle]])
+	snd_obj:play_at_pos(db.actor,vector():set(0,0,0),0.1,sound_object.s2d)
+
+	elseif obj:section() == "money_maker_1" or obj:section() == "money_maker_2" or obj:section() == "agr_yan_document" then
+		snd_obj = xr_sound.get_safe_sound_object([[item\document]])
+	snd_obj:play_at_pos(db.actor,vector():set(0,0,0),0.1,sound_object.s2d)
+	
+	elseif obj:clsid() == clsid.wpn_ammo then
+		snd_obj = xr_sound.get_safe_sound_object([[item\cartridges]])
+	snd_obj:play_at_pos(db.actor,vector():set(0,0,0),0.1,sound_object.s2d)
+	
+	elseif obj:clsid() == clsid.equ_stalker_s or obj:clsid() == clsid.equ_exo then
+		snd_obj = xr_sound.get_safe_sound_object([[item\outfit]])
+	snd_obj:play_at_pos(db.actor,vector():set(0,0,0),0.1,sound_object.s2d)
+	
+	elseif obj:section() then
+		snd_obj = xr_sound.get_safe_sound_object([[interface\inv_ruck]])
+	snd_obj:play_at_pos(db.actor,vector():set(0,0,0),0.1,sound_object.s2d)	
+	end
+end
+
+--Коллекционные карточки
+function cigarettes_pack(obj)
+	if obj:section() == "painkiller_4" then
+		alife():create("painkiller_3",db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+	elseif obj:section() == "painkiller_3" then
+		alife():create("painkiller_2",db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+	elseif obj:section() == "painkiller_2" then
+		alife():create("painkiller_1",db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id())
+	end
+end
+
+--Выброс
+class "blowout"
+function blowout:__init()
+	self.update_time = time_global()
+	self.delta_time = 120000
+end
+
+function blowout:update()
+	if self.update_time < time_global() then
+		if self:update_time_blowout() then
+		end
+		self.update_time = time_global() + self.delta_time
+	end
+end
+
+function blowout:update_time_blowout()
+    -- включаем предварительный эффект выброса
+    xr_effects.start_small_reject (actor, npc)
+ 
+    -- сделаем чтобы для урона была вероятность
+    if math.random(0, 1001) < 999 then
+ 
+    -- создаем урон
+    local h = hit()
+    h.direction = vector():set( 1, 0, 0 ) 
+    h.impulse = 1 
+    h.draftsman = db.actor 
+    h.power = 0.1 
+    h.type = hit.telepatic
+    db.actor:hit(h)
+	end
+end
+
+--Фикс доп. характеристик брони (частичный)
+class "fix_armor"
+
+function fix_armor:__init()
+--	dbglog("fix_armor:_init()")
+	self.update_time = time_global()
+	self.delta_time = 1000
+end
+
+function fix_armor:update()
+	if self.update_time < time_global() then
+		if self:update_outfit_section() then
+		end
+		self.update_time = time_global() + self.delta_time
+	end
+end
+
+function fix_armor:update_outfit_section()
+	local item = db.actor:item_in_slot(6)
+	if item and item:section() == "outfit_novice_m1" then
+		db.actor.health = tonumber(0.0006) * 1
+		db.actor.power = tonumber(0.003) * 1
+	elseif item and item:section() == "outfit_stalker_m1" then
+		db.actor.health = tonumber(0.0006) * 1
+	elseif item and item:section() == "outfit_killer_m2" then
+		db.actor.power = tonumber(0.001) * 1
+	end
+end

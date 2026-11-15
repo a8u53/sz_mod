@@ -1,0 +1,42 @@
+-- sz_helmet_system.script
+-- Этап 1: управление нативным визором OGSR.
+-- Поведение перенесено из actor_binder:update без изменения параметров.
+
+local visor_outfit_section = nil
+
+local visor_outfit = "exo_dolg_outfit"
+
+function update(actor)
+    if not actor then
+        return
+    end
+
+    local outfit = actor:get_current_outfit()
+    local outfit_section = outfit and outfit:section() or ""
+
+    -- Выполняем команды только при смене секции костюма.
+    if visor_outfit_section == outfit_section then
+        return
+    end
+
+    local console = get_console()
+    if not console then
+        return
+    end
+
+    visor_outfit_section = outfit_section
+
+    if outfit_section == visor_outfit then
+        console:execute("r2_visor_refl on")
+        console:execute("r2_visor_refl_control on")
+        console:execute("r2_rain_drops on")
+        console:execute("r2_rain_drops_intensity 0.00025")
+        console:execute("r2_rain_drops_speed 1.25")
+        console:execute("r2_rain_drops_control on")
+    else
+        console:execute("r2_rain_drops_control off")
+        console:execute("r2_rain_drops off")
+        console:execute("r2_visor_refl_control off")
+        console:execute("r2_visor_refl off")
+    end
+end

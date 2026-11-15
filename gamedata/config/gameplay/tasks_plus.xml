@@ -1,0 +1,85 @@
+	<game_task id="collection_cards">
+        <title>Вредная привычка</title>
+        <objective>
+				<text>Собрать полную коллекцию.</text>
+				<icon>ui_iconsTotal_find_railroad_passage</icon>
+				<infoportion_complete>find_ten_cards_complete</infoportion_complete>	
+		</objective>
+            <objective>
+				<text>Собрать и принести карты заказчику.</text>
+				<infoportion_complete>found_ten_cards_complete</infoportion_complete>
+				<map_location_type hint="bar_cards_man">blue_location</map_location_type>
+				<object_story_id>bar_cards_man</object_story_id>
+        	</objective>
+        </game_task>
+
+	<game_task id="esc_kill_victim_quest">
+        <title>Мексиканская ничья</title>
+        <objective>
+				<text>Убить предателя</text>
+				<icon>ui_iconsTotal_tutorial_help_wounded</icon>
+				<infoportion_complete>esc_victim_done</infoportion_complete>	
+		</objective>
+            <objective>
+				<text>Убить сталкера предателя</text> 
+				<infoportion_complete>esc_victim_dead</infoportion_complete>
+				<infoportion_fail>esc_victim_alive</infoportion_fail>
+        	</objective>
+			<objective>
+            	<text>Поговорить с Волком</text> 
+            	<map_location_type hint="volk">blue_location</map_location_type>
+				<object_story_id>Escape_novice_lager_volk</object_story_id>
+                 <infoportion_complete>esc_victim_done</infoportion_complete>
+        	</objective>
+        </game_task>
+		
+	<game_task id="from_ship_to_ball">
+        <title>А где здесь туалет?</title>
+        <objective>
+				<text>Добраться до лагеря</text>
+				<icon>ui_iconsTotal_find_railroad_passage</icon>
+				<infoportion_complete>from_ship_to_bal_complete</infoportion_complete>	
+				<infoportion_fail>esc_wolf_dead</infoportion_fail>
+		</objective>
+            <objective>
+				<text>Поговорить с лидером лагеря</text>
+			<map_location_type hint="volk">green_location</map_location_type>
+            <object_story_id>Escape_novice_lager_volk</object_story_id>
+				<infoportion_complete>talked_with_leader</infoportion_complete>
+				<infoportion_fail>esc_wolf_dead</infoportion_fail>
+        	</objective>
+			<objective>
+            	<text>Поговорить с Сидоровичем</text> 
+            <map_location_type hint="escape_trader">blue_location</map_location_type>
+            <object_story_id>Escape_Trader</object_story_id>
+                 <infoportion_complete>from_ship_to_bal_complete</infoportion_complete>
+        	</objective>
+        </game_task>
+
+	<game_task id="find_plem">
+        <title>find_plem_title</title>
+        <objective>
+            <text>find_plem_obj_one</text>
+            <icon>ui_iconsTotal_tutorial_find_artefact</icon>            
+            <infoportion_complete>find_plem_well_done</infoportion_complete>
+        </objective>
+        <objective>
+            <text>find_plem_obj_two</text>
+            <map_location_type hint="af_blood_tutorial">green_location</map_location_type>
+            <object_story_id>af_blood_tutorial</object_story_id>
+            <infoportion_complete>find_plem_found</infoportion_complete>
+        </objective>
+        <objective>
+            <text>find_plem_obj_three</text>
+            <map_location_type hint="escape_trader">blue_location</map_location_type>
+            <object_story_id>Escape_Trader</object_story_id>
+            <infoportion_complete>find_plem_na_meste</infoportion_complete>
+			<infoportion_fail>find_plem_motherfucker_died</infoportion_fail>
+        </objective>
+		<objective>
+            <text>find_plem_obj_four</text>
+            <map_location_type hint="escape_trader">blue_location</map_location_type>
+            <object_story_id>Escape_Trader</object_story_id>
+            <infoportion_complete>find_plem_well_done</infoportion_complete>
+        </objective>
+    </game_task>

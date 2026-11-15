@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<window>
+
+	<static_icon x="87" y="0" width="267" height="106" stretch="0">
+		<texture></texture>
+		<texture_offset x="0" y="0"/>
+	</static_icon>
+	<static_icon x="660" y="0" width="267" height="106" stretch="0">
+		<texture></texture>
+	</static_icon>
+
+	<main x="0" y="0" width="1280" height="768"/>
+	<our_bag_static x="0" y="0" width="1024" height="768" heading="1">
+		<texture width="1024" height="768">ui\ui_dg_inventory_exchange_trade</texture>
+		<auto_static x="927" y="0" width="104" height="768" heading="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_right</texture>
+	    </auto_static>
+	    <auto_static x="-31" y="0" width="104" height="768" heading="1">
+		    <texture>ui_inGame2_widescreen_sidepanels_left</texture>
+	    </auto_static>
+	</our_bag_static>
+
+	<top_background width="1024" height="768" heading="1">
+		<texture>ui\ui_char_info</texture>
+	</top_background>
+
+	<bottom_background x=0 y=656 width=0 height=0>
+		<texture></texture>
+	</bottom_background>
+
+	<button x="370" y="724" width="157" height="48"  hR="255" hB="83" hG="179" highlight_text="1" accel="kB">
+		<texture>ui_button_main01</texture>
+		<text font="letterica18" color="chara" align="c">ui_st_trade</text>
+	</button>
+	<button x="500" y="724" width="157" height="48"  hR="255" hB="83" hG="179" highlight_text="1">
+		<texture>ui_button_main01</texture>
+		<text font="letterica18" color="chara" align="c">ui_st_leave</text>
+	</button>
+	
+	<our_money_static x="153" y="67" width="90" height="20">
+	<texture></texture>
+		<text align="r" y="0" font="letterica16" r="240" g="215" b="185" complex_mode="0" vert_align="c"/>
+	</our_money_static>
+
+	<dragdrop_list x="95" y="270" width="263" height="452"
+			cell_width = "31" cell_height="41" rows_num="11" cols_num="8" 
+			group_similar="1" unlimited="1"/>
+
+
+	<others_bag_static x="617" y="0" width="1024" height="768" stretch="0">
+		<texture mirror="h" width="512" height="768"></texture>
+	</others_bag_static>
+
+	<other_money_static x="110" y="67" width="90" height="20">
+	<texture></texture>
+		<text align="r" y="0" font="letterica16" r="240" g="215" b="185" complex_mode="0" vert_align="c"/>
+	</other_money_static>
+
+	<dragdrop_list x="50" y="270" width="263" height="452"
+			cell_width = "31" cell_height="41" rows_num="11" cols_num="8" 
+			group_similar="1" unlimited="1"/>
+
+	<static x="95" y="125" width="333" height="200" stretch="0">
+		<texture width="359" height="232"></texture>
+	</static>
+
+	<dragdrop_list x="0" y="0" width="263" height="125"
+			cell_width = "31" cell_height="41"
+			rows_num="3" cols_num="8" 
+			group_similar="0" unlimited="1"/>
+
+
+	<static x="667" y="125" width="333" height="235" stretch="0">
+		<texture width="359" height="232"></texture>
+	</static>
+
+	<dragdrop_list x="0" y="0" width="263" height="125"
+			cell_width = "31" cell_height="41"
+			rows_num="3" cols_num="8" 
+			group_similar="0" unlimited="1"/>
+
+
+	<desc_frame_window x="300" y="0" width="450" height="230" stretch="1">
+		<texture></texture>		
+	</desc_frame_window>
+	
+	<desc_static x="340" y="0" width="260" height="335" stretch="1">
+		<texture></texture>		
+	</desc_static>
+
+    <bag_static x="5" y="70" width="400" height="800" stretch="0" complex_mode="1">		
+        <text x="230" y="668" font="letterica16" r="255" g="255" b="255" a="170"></text>
+    </bag_static>
+			
+	<price_mt_static x="0" y="0" width="300" height="140">
+		<phrase x="30" y="-24" width="170" font="letterica18" color="chara">ui_st_your_items</phrase>
+		<phrase x="160535" y="-23" font="letterica18" r="10" g="144" b="189">ui_st_price</phrase>
+		<phrase x="190" y="-23" font="letterica18" r="240" g="215" b="185"></phrase>
+	</price_mt_static>
+</window>
+

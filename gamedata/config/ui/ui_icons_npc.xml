@@ -1,0 +1,50 @@
+<ui_texture>
+    <file_name>ui\ui_icon_equipment</file_name>
+
+    <texture id="npc_icon_without_outfit"			x="0" y="0"      width="10" height="10" />
+    <texture id="npc_icon_novice_outfit" 			x="0" y="900"    width="100" height="100" />
+	<texture id="npc_icon_white_novice_outfit" 		x="500" y="1600" width="100" height="100" />
+	<texture id="npc_icon_novice_m1_outfit" 		x="600" y="1050" width="100" height="100" />
+	<texture id="npc_icon_citizen_outfit"			x="800" y="850"  width="100" height="100" />
+    <texture id="npc_icon_bandit_outfit" 			x="600" y="0"    width="100" height="100" />
+	<texture id="npc_icon_red_bandit_outfit" 		x="600" y="1550" width="100" height="100" />
+	<texture id="npc_icon_green_bandit_outfit" 		x="500" y="1500" width="100" height="100" />
+	<texture id="npc_icon_antigas_bandit_outfit" 	x="900" y="1550" width="100" height="100" />
+	<texture id="npc_icon_bandit_m1_outfit" 		x="700" y="1050" width="100" height="100" />
+    <texture id="npc_icon_killer_outfit" 			x="200" y="750"  width="100" height="100" />
+	<texture id="npc_icon_killer_m1_outfit" 		x="900" y="950"  width="100" height="100" />
+    <texture id="npc_icon_monolit_outfit"			x="500" y="750"  width="100" height="100" />
+    <texture id="npc_icon_specops_outfit"			x="500" y="650"  width="100" height="100" />
+	<texture id="npc_icon_specnaz_m1_outfit"		x="900" y="1150" width="100" height="100" />
+    <texture id="npc_icon_military_outfit"			x="900" y="850"  width="100" height="100" />
+    <texture id="npc_icon_stalker_outfit"			x="300" y="750"  width="100" height="100" />
+	<texture id="npc_icon_stalker_m1_outfit"		x="800" y="1150" width="100" height="100" />
+    <texture id="npc_icon_scientific_outfit"		x="800" y="650"  width="100" height="100" />
+    <texture id="npc_icon_exo_outfit"				x="700" y="650"  width="100" height="100" />
+	<texture id="npc_icon_exo_m1_outfit"			x="700" y="1150" width="100" height="100" />
+    <texture id="npc_icon_svoboda_light_outfit" 	x="600" y="650"  width="100" height="100" />
+	<texture id="npc_icon_svoboda_m1_outfit" 		x="900" y="1050" width="100" height="100" />
+    <texture id="npc_icon_svoboda_heavy_outfit" 	x="400" y="750"  width="100" height="100" />
+    <texture id="npc_icon_dolg_outfit"				x="600" y="750"  width="100" height="100" />
+	<texture id="npc_icon_dolg_m1_outfit"			x="800" y="1050" width="100" height="100" />
+    <texture id="npc_icon_dolg_scientific_outfit"	x="800" y="750"  width="100" height="100" />
+	<texture id="npc_icon_freedom_scientific_outfit"x="700" y="1450" width="100" height="100" />
+	<texture id="npc_icon_freedom_spec_outfit"		x="800" y="1450" width="100" height="100" />
+    <texture id="npc_icon_ecolog_outfit"			x="900" y="650"  width="100" height="100" />
+    <texture id="npc_icon_protection_outfit"		x="700" y="750"  width="100" height="100" />
+	<texture id="npc_icon_antirad_outfit"		    x="900" y="1250" width="100" height="100" />
+	<texture id="npc_icon_zloy_outfit"		        x="700" y="1350" width="100" height="100" />
+	<texture id="npc_icon_exo_fr_outfit"		    x="900" y="1450" width="100" height="100" />
+	<texture id="npc_icon_exo_do_outfit"		    x="700" y="1550" width="100" height="100" />
+	<texture id="npc_icon_cs_heavy_outfit"		    x="700" y="1350" width="100" height="100" />
+	<texture id="npc_icon_cs_outfit"		        x="900" y="1350" width="100" height="100" />
+	<texture id="npc_icon_antigas_2_outfit" 		x="600" y="1300" width="100" height="100" />
+    <texture id="npc_icon_brown_coat_outfit" 		x="600" y="1200" width="100" height="100" />
+	<texture id="npc_icon_do_heavy_outfit" 		    x="800" y="1350" width="100" height="100" />
+	<texture id="npc_icon_free_heavy_outfit" 		x="800" y="1000" width="100" height="100" />
+	<texture id="npc_icon_bandit_med_outfit" 		x="800" y="1250" width="100" height="100" />
+	<texture id="npc_icon_stalker_med_outfit" 		x="700" y="1250" width="100" height="100" />
+	<texture id="npc_icon_soldier_outfit" 			x="500" y="1300" width="100" height="100" />
+	<texture id="npc_icon_dolg_novice_outfit" 		x="800" y="1550" width="100" height="100" />
+	<texture id="npc_icon_black_coat_outfit" 		x="500" y="1400" width="100" height="100" />
+</ui_texture>

@@ -1,0 +1,199 @@
+-- ============================================================
+-- sz_wait_menu.script
+-- Меню ожидания (дата/время, выбор часов, перемотка)
+-- ============================================================
+
+-- ============================================================
+-- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+-- ============================================================
+
+local current_wait_ui = nil   -- ссылка на открытое меню
+local wait_active = false     -- идёт ли перемотка
+local wait_end_time = 0       -- время окончания перемотки (мс)
+local old_time_factor = 1     -- сохранённый старый фактор
+local saved_satiety = nil     -- сохранённая сытость (чтобы не умереть от голода)
+
+-- Проверка, открыто ли меню
+function is_wait_menu_open()
+    return current_wait_ui ~= nil
+end
+
+-- Закрытие меню
+function close_wait_menu()
+    if current_wait_ui then
+        current_wait_ui:GetHolder():start_stop_menu(current_wait_ui, true)
+        current_wait_ui = nil
+        -- Звук закрытия
+        local snd = xr_sound.get_safe_sound_object([[interface\inv_close]])
+        if snd then snd:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0) end
+    end
+end
+
+-- Названия месяцев для вывода
+local MONTHS = {
+    "Января", "Февраля", "Марта", "Апреля", "Мая", "Июня",
+    "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"
+}
+
+-- ============================================================
+-- МЕНЮ (ИНТЕРФЕЙС)
+-- ============================================================
+
+class "wait_ui" (CUIScriptWnd)
+
+function wait_ui:__init(owner) super()
+    self.owner = owner
+    self.hours = 1
+    self:InitControls()
+    self:InitCallBacks()
+end
+
+function wait_ui:__finalize() end
+
+function wait_ui:InitControls()
+    self:Init(0, 0, 1024, 768)
+    local xml = CScriptXmlInit()
+    xml:ParseFile("ui_wait_menu.xml")
+    
+    xml:InitStatic("background", self)
+    
+    self:Register(xml:Init3tButton("btn_minus", self), "btn_minus")
+    self:Register(xml:Init3tButton("btn_plus", self), "btn_plus")
+    self:Register(xml:Init3tButton("btn_wait", self), "btn_wait")
+    self:Register(xml:Init3tButton("btn_quit", self), "btn_quit")
+    
+    self:Register(xml:InitStatic("txt_hours", self), "txt_hours")
+    self:Register(xml:InitStatic("txt_clock", self), "txt_clock")
+    
+    self.txt_hours = self:GetStatic("txt_hours")
+    if self.txt_hours then
+        self.txt_hours:SetText(tostring(self.hours))
+    end
+    
+    self.txt_clock = self:GetStatic("txt_clock")
+    -- Первичное заполнение даты/времени
+    self:update_datetime()
+end
+
+function wait_ui:InitCallBacks()
+    self:AddCallback("btn_minus", ui_events.BUTTON_CLICKED, self.on_minus, self)
+    self:AddCallback("btn_plus", ui_events.BUTTON_CLICKED, self.on_plus, self)
+    self:AddCallback("btn_wait", ui_events.BUTTON_CLICKED, self.on_wait, self)
+    self:AddCallback("btn_quit", ui_events.BUTTON_CLICKED, self.on_quit, self)
+end
+
+function wait_ui:update_datetime()
+    if not self.txt_clock then return end
+    
+    local t = game.get_game_time()
+    local year, month, day, hour, minute = t:get()
+    
+    local month_name = MONTHS[month] or tostring(month)
+    local date_str = string.format("%d %s %d | %02d:%02d", day, month_name, year, hour, minute)
+    self.txt_clock:SetText(date_str)
+end
+
+function wait_ui:on_minus()
+    self.hours = self.hours - 1
+    if self.hours < 1 then self.hours = 1 end
+    if self.txt_hours then self.txt_hours:SetText(tostring(self.hours)) end
+end
+
+function wait_ui:on_plus()
+    self.hours = self.hours + 1
+    if self.hours > 24 then self.hours = 24 end
+    if self.txt_hours then self.txt_hours:SetText(tostring(self.hours)) end
+end
+
+function wait_ui:on_wait()
+    self:GetHolder():start_stop_menu(self, true)
+    current_wait_ui = nil
+    -- Звук закрытия (или можно другой, например, подтверждения)
+    local snd = xr_sound.get_safe_sound_object([[device\pda\pda_tip]])
+    if snd then snd:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0) end
+    start_wait(self.hours)
+end
+
+function wait_ui:on_quit()
+    self:GetHolder():start_stop_menu(self, true)
+    current_wait_ui = nil
+    -- Звук закрытия
+    local snd = xr_sound.get_safe_sound_object([[interface\inv_close]])
+    if snd then snd:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0) end
+end
+
+-- ============================================================
+-- ОТКРЫТИЕ МЕНЮ
+-- ============================================================
+
+function open_wait_menu()
+    current_wait_ui = wait_ui(get_hud())
+    level.start_stop_menu(current_wait_ui, true)
+    -- Звук открытия
+    local snd = xr_sound.get_safe_sound_object([[interface\inv_belt]])
+    if snd then snd:play_no_feedback(db.actor, sound_object.s2d, 0, vector(), 1.0) end
+end
+
+-- Обновление даты/времени (вызывать из bind_stalker раз в секунду)
+function update_wait_datetime()
+    if current_wait_ui then
+        current_wait_ui:update_datetime()
+    end
+end
+
+-- ============================================================
+-- МЕНЕДЖЕР ОЖИДАНИЯ
+-- ============================================================
+
+function start_wait(hours)
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    -- Сохраняем состояние
+    old_time_factor = level.get_time_factor()
+    if not old_time_factor or old_time_factor <= 0 then
+        old_time_factor = 1
+    end
+    -- Скрываем HUD и затемняем экран
+    level.hide_indicators()
+    level.add_pp_effector("peace_fade.ppe", 999, false)
+    level.disable_input()
+
+    -- Рассчитываем время
+    local real_seconds = 3 -- реальных секунд на всю перемотку
+    wait_end_time = time_global() + (real_seconds * 1000)
+
+    -- Фактор: за real_seconds должно пройти hours игровых часов
+    local factor = (hours * 3600) / real_seconds
+    level.set_time_factor(factor)
+
+    wait_active = true
+end
+
+function update_wait()
+    if not wait_active then return end
+
+    if time_global() >= wait_end_time then
+        wait_active = false
+        
+        -- Восстанавливаем фактор времени
+        level.set_time_factor(old_time_factor or 1)
+        
+        -- Убираем затемнение и возвращаем HUD
+        level.remove_pp_effector(999)
+        level.add_pp_effector("peace_unfade.ppe", 998, false)
+
+        -- Ждём окончания анимации затемнения (1.5 сек), потом возвращаем управление
+        local unfade_duration = 1500
+        local unfade_start = time_global()
+        local function delay_unfade()
+            return (time_global() - unfade_start) >= unfade_duration
+        end
+        local function fire_unfade()
+            level.remove_call(delay_unfade, fire_unfade)
+            level.enable_input()
+            level.show_indicators()
+        end
+        level.add_call(delay_unfade, fire_unfade)
+    end
+end

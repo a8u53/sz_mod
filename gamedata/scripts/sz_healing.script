@@ -1,0 +1,531 @@
+-- ============================================================
+-- sz_healing.script
+-- Плавное лечение (тик 100 мс) + плавное мигание статиков
+-- ============================================================
+
+-- ============================================================
+-- НАСТРОЙКИ (значения за 1 секунду)
+-- ============================================================
+local RATE_HEALTH    = 0.06 -- +6% здоровья в секунду
+local RATE_RADIATION = -0.10 -- -10% радиации в секунду
+local RATE_POWER     = 0.05 -- +5% выносливости в секунду
+
+local TICK_INTERVAL = 100
+local ANIMATION_INTERVAL = 16
+local FADE_TIME = 3000 -- За 3 секунды до конца начинаем мигать
+
+-- ============================================================
+-- ТАБЛИЦА ПРЕДМЕТОВ
+-- ============================================================
+local ITEMS = {
+    ["medkit"] = { time = 5000, static = "hud_heal_medkit", health = true, radiation = false, power = false },
+    ["medkit_army"] = { time = 15000, static = "hud_heal_medkit", health = true, radiation = false, power = false },
+    ["medkit_scientic"] = { time = 30000, static = "hud_heal_medkit", static_rad = "hud_heal_antirad", health = true, radiation = true, power = false },
+    ["antirad"] = { time = 10000, static = "hud_heal_antirad", health = false, radiation = true, power = false },
+    ["antirad_pills"] = { time = 5000, static = "hud_heal_antirad", health = false, radiation = true, power = false },
+    ["painkiller_1"] = { time = 2000, static = "hud_heal_medkit", health = true, radiation = false, power = false },
+    ["painkiller_2"] = { time = 2000, static = "hud_heal_medkit", health = true, radiation = false, power = false },
+    ["painkiller_3"] = { time = 2000, static = "hud_heal_medkit", health = true, radiation = false, power = false },
+    ["painkiller_4"] = { time = 2000, static = "hud_heal_medkit", health = true, radiation = false, power = false },
+    ["energy_drink"] = { time = 45000, static = "hud_heal_energy", health = false, radiation = false, power = true },
+    ["voda"] = { time = 15000, static = "hud_heal_energy", health = false, radiation = false, power = true },
+    ["vodka"] = { time = 10000, static = "hud_heal_antirad", health = false, radiation = true, power = false },
+}
+
+-- ============================================================
+-- СОСТОЯНИЕ
+-- ============================================================
+local active_effects = {}
+local static_base_positions = {}
+local pending_restore = nil
+local animation_call = nil
+local animation_generation = 0
+local STATIC_LAYOUT_GAP = 12
+
+function is_heal_item(section)
+    return ITEMS[section] ~= nil
+end
+
+local function is_effect_active(effect)
+    return effect ~= nil
+        and not effect.cancelled
+        and active_effects[effect.key] == effect
+end
+
+local function remove_scheduled_call(call)
+    if not call then return end
+    if level and level.remove_call and call.condition and call.action then
+        level.remove_call(call.condition, call.action)
+    end
+end
+
+-- Единый помощник для отложенных вызовов. У каждого эффекта хранится
+-- ровно один тик лечения; анимация обслуживается одним общим циклом.
+local function add_timed_call(delay_ms, is_valid, on_fire, on_done)
+    local started = time_global()
+    local call = {}
+
+    call.condition = function()
+        if is_valid and not is_valid() then
+            return true
+        end
+        return time_global() - started >= delay_ms
+    end
+
+    call.action = function()
+        if on_done then on_done(call) end
+        if not is_valid or is_valid() then
+            on_fire()
+        end
+    end
+
+    level.add_call(call.condition, call.action)
+    return call
+end
+
+local function get_static_wnd(hud, static_name)
+    if not hud or not static_name then return nil end
+
+    local static = hud:GetCustomStatic(static_name)
+    if not static then
+        hud:AddCustomStatic(static_name, true)
+        static = hud:GetCustomStatic(static_name)
+    end
+    if not static then return nil end
+
+    local wnd = static.wnd and static:wnd() or nil
+    if wnd and not static_base_positions[static_name] then
+        -- Запоминаем исходную позицию из HUD XML, а не сдвинутую раскладкой.
+        static_base_positions[static_name] = {
+            x = wnd:GetPosLeft(),
+            y = wnd:GetPosTop()
+        }
+    end
+
+    return wnd
+end
+
+local function remove_static(hud, static_name)
+    if hud and static_name and hud:GetCustomStatic(static_name) then
+        hud:RemoveCustomStatic(static_name)
+    end
+end
+
+local function set_static_alpha(wnd, alpha)
+    if not wnd then return end
+    if alpha < 0 then alpha = 0 end
+    if alpha > 255 then alpha = 255 end
+
+    -- 0xAARRGGBB: альфа в старшем байте, RGB = белый.
+    local color = math.floor(alpha) * 16777216 + 0xFFFFFF
+    wnd:SetColor(color)
+end
+
+local function collect_static_names()
+    local names = {}
+    local seen = {}
+
+    for _, effect in pairs(active_effects) do
+        if effect.static_name and not seen[effect.static_name] then
+            seen[effect.static_name] = true
+            names[#names + 1] = effect.static_name
+        end
+
+        if effect.static_rad and not seen[effect.static_rad] then
+            seen[effect.static_rad] = true
+            names[#names + 1] = effect.static_rad
+        end
+    end
+
+    table.sort(names)
+    return names, seen
+end
+
+-- Иконка остаётся на экране, пока хотя бы один активный эффект на неё ссылается.
+-- Это важно для научной аптечки, у которой одновременно две иконки.
+local function update_static_layout()
+    local hud = get_hud()
+    if not hud then return end
+
+    local names, required = collect_static_names()
+
+    for name in pairs(static_base_positions) do
+        if not required[name] then
+            remove_static(hud, name)
+        end
+    end
+
+    local windows = {}
+    for _, name in ipairs(names) do
+        local wnd = get_static_wnd(hud, name)
+        local base = static_base_positions[name]
+        if wnd and base then
+            wnd:Show(true)
+            windows[#windows + 1] = {
+                name = name,
+                wnd = wnd,
+                base = base,
+                width = wnd:GetWidth()
+            }
+        end
+    end
+
+    local count = #windows
+    if count == 0 then return end
+
+    if count == 1 then
+        windows[1].wnd:SetWndPos(windows[1].base.x, windows[1].base.y)
+        return
+    end
+
+    local anchor = windows[1]
+    local total_width = 0
+    for _, entry in ipairs(windows) do
+        total_width = total_width + entry.width
+    end
+    total_width = total_width + STATIC_LAYOUT_GAP * (count - 1)
+
+    local x = anchor.base.x - (total_width - anchor.width) / 2
+    for _, entry in ipairs(windows) do
+        entry.wnd:SetWndPos(x, entry.base.y)
+        x = x + entry.width + STATIC_LAYOUT_GAP
+    end
+end
+
+local function cancel_animation()
+    animation_generation = animation_generation + 1
+    remove_scheduled_call(animation_call)
+    animation_call = nil
+end
+
+local function stop_effect(effect, update_hud)
+    if not effect then return end
+
+    effect.cancelled = true
+    remove_scheduled_call(effect.tick_call)
+    effect.tick_call = nil
+
+    if active_effects[effect.key] == effect then
+        active_effects[effect.key] = nil
+    end
+
+    if update_hud ~= false then
+        update_static_layout()
+    end
+
+    if next(active_effects) == nil then
+        cancel_animation()
+    end
+end
+
+local function apply_effect_delta(effect, target_time)
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    local finish_time = math.min(target_time, effect.end_time)
+    local elapsed_ms = finish_time - effect.last_tick
+    if elapsed_ms <= 0 then return end
+
+    local elapsed_seconds = elapsed_ms / 1000
+
+    -- В этой системе OGSR присваивание actor.health / radiation / power
+    -- трактуется как величина изменения показателя, а не абсолютное значение.
+    -- Поэтому передаём только дельту за прошедшее время: не прибавляем к ней
+    -- текущее значение актора, иначе восстановление будет многократно завышено.
+    if effect.health then
+        actor.health = RATE_HEALTH * elapsed_seconds
+    end
+
+    if effect.radiation and (actor.radiation or 0) > 0 then
+        actor.radiation = RATE_RADIATION * elapsed_seconds
+    end
+
+    if effect.power then
+        actor.power = RATE_POWER * elapsed_seconds
+    end
+
+    effect.last_tick = finish_time
+end
+
+local function schedule_effect_tick(effect)
+    local call
+    call = add_timed_call(
+        TICK_INTERVAL,
+        function() return is_effect_active(effect) end,
+        function()
+            if effect.tick_call == call then
+                effect.tick_call = nil
+            end
+
+            local actor = db.actor
+            if not actor or not actor:alive() then
+                reset_healing()
+                return
+            end
+
+            local now = time_global()
+            apply_effect_delta(effect, now)
+
+            if now >= effect.end_time then
+                stop_effect(effect, true)
+                return
+            end
+
+            schedule_effect_tick(effect)
+        end,
+        function(current)
+            if effect.tick_call == current then
+                effect.tick_call = nil
+            end
+        end
+    )
+
+    effect.tick_call = call
+end
+
+local function render_active_statics()
+    local actor = db.actor
+    if not actor or not actor:alive() then
+        reset_healing()
+        return
+    end
+
+    local now = time_global()
+    local expired = {}
+
+    for _, effect in pairs(active_effects) do
+        if now >= effect.end_time then
+            expired[#expired + 1] = effect
+        end
+    end
+
+    -- Если тик задержался, применяем остаток лечения до точного времени окончания.
+    for _, effect in ipairs(expired) do
+        if is_effect_active(effect) then
+            apply_effect_delta(effect, effect.end_time)
+            stop_effect(effect, false)
+        end
+    end
+
+    if #expired > 0 then
+        update_static_layout()
+    end
+
+    if next(active_effects) == nil then
+        return
+    end
+
+    -- Для общей иконки приоритет имеет эффект, который задаёт её через static_rad.
+    local alpha_by_static = {}
+    for _, effect in pairs(active_effects) do
+        local remaining = math.max(0, effect.end_time - now)
+        local alpha = 255
+
+        if remaining <= FADE_TIME then
+            local progress = 1.0 - (remaining / FADE_TIME)
+            if progress < 0 then progress = 0 end
+            if progress > 1.0 then progress = 1.0 end
+
+            local blink_speed = 6
+            local wave = math.abs(math.sin(progress * math.pi * blink_speed))
+            alpha = math.floor(50 + (205 * wave))
+        end
+
+        local names = { effect.static_name, effect.static_rad }
+        for _, name in ipairs(names) do
+            if name then
+                -- Статик, заданный как static_rad (например, научной аптечкой),
+                -- управляет общей иконкой, пока этот эффект активен.
+                -- Собственный static_name антирада не переопределяет его мигание.
+                local is_secondary = name == effect.static_rad
+                local old = alpha_by_static[name]
+                if not old
+                    or (is_secondary and not old.is_secondary)
+                    or (is_secondary == old.is_secondary and remaining < old.remaining) then
+                    alpha_by_static[name] = {
+                        remaining = remaining,
+                        alpha = alpha,
+                        is_secondary = is_secondary
+                    }
+                end
+            end
+        end
+    end
+
+    local hud = get_hud()
+    if not hud then return end
+
+    for name, data in pairs(alpha_by_static) do
+        local wnd = get_static_wnd(hud, name)
+        if wnd then set_static_alpha(wnd, data.alpha) end
+    end
+end
+
+local function ensure_animation()
+    if animation_call or next(active_effects) == nil then return end
+
+    local generation = animation_generation
+    local call
+    call = add_timed_call(
+        ANIMATION_INTERVAL,
+        function()
+            return generation == animation_generation and next(active_effects) ~= nil
+        end,
+        function()
+            render_active_statics()
+            ensure_animation()
+        end,
+        function(current)
+            if animation_call == current then
+                animation_call = nil
+            end
+        end
+    )
+
+    animation_call = call
+end
+
+local function create_effect(section, time_left)
+    local item_data = ITEMS[section]
+    if not item_data or not time_left or time_left <= 0 then return nil end
+
+    local key = item_data.static
+    local old_effect = active_effects[key]
+
+    -- Повторное использование предмета полностью заменяет прежний эффект
+    -- в этом канале: длительность начинается заново и не суммируется.
+    if old_effect then
+        stop_effect(old_effect, false)
+    end
+
+    local now = time_global()
+    local effect = {
+        key = key,
+        section = section,
+        static_name = item_data.static,
+        static_rad = item_data.static_rad,
+        health = item_data.health,
+        radiation = item_data.radiation,
+        power = item_data.power,
+        end_time = now + time_left,
+        last_tick = now,
+        cancelled = false,
+        tick_call = nil
+    }
+
+    active_effects[key] = effect
+    update_static_layout()
+    schedule_effect_tick(effect)
+    ensure_animation()
+
+    return effect
+end
+
+-- ============================================================
+-- УПРАВЛЕНИЕ ЭФФЕКТАМИ
+-- ============================================================
+
+function reset_healing(preserve_pending_restore)
+    cancel_animation()
+
+    for _, effect in pairs(active_effects) do
+        effect.cancelled = true
+        remove_scheduled_call(effect.tick_call)
+        effect.tick_call = nil
+    end
+
+    active_effects = {}
+    if preserve_pending_restore ~= true then
+        pending_restore = nil
+    end
+    update_static_layout()
+    static_base_positions = {}
+end
+
+function use_item(obj)
+    if not obj then return end
+
+    local section = obj:section()
+    if not ITEMS[section] then return end
+
+    local actor = db.actor
+    if not actor or not actor:alive() then return end
+
+    create_effect(section, ITEMS[section].time)
+end
+
+-- ============================================================
+-- СОХРАНЕНИЕ И ЗАГРУЗКА ЭФФЕКТОВ
+-- ============================================================
+-- Состояние записывается в пакет actor_binder. В pstor нельзя класть
+-- вложенную таблицу: pstor_save_all() поддерживает только скалярные типы.
+
+function save_healing_state(packet)
+    if not packet then return end
+
+    local saved = {}
+    local now = time_global()
+
+    for _, effect in pairs(active_effects) do
+        local remaining = math.floor(math.max(0, effect.end_time - now))
+        if remaining > 0 and ITEMS[effect.section] then
+            saved[#saved + 1] = {
+                section = effect.section,
+                time_left = remaining
+            }
+        end
+    end
+
+    table.sort(saved, function(a, b)
+        return a.section < b.section
+    end)
+
+    packet:w_u8(#saved)
+    for _, data in ipairs(saved) do
+        packet:w_stringZ(data.section)
+        packet:w_u32(data.time_left)
+    end
+end
+
+function load_healing_state(reader)
+    if not reader then return false end
+
+    local count = reader:r_u8()
+    local restored = {}
+
+    -- Читаем все сохранённые записи, восстанавливаем только известные предметы.
+    for i = 1, count do
+        local section = reader:r_stringZ()
+        local time_left = reader:r_u32()
+
+        if ITEMS[section] and time_left and time_left > 0 then
+            restored[#restored + 1] = {
+                section = section,
+                time_left = time_left
+            }
+        end
+    end
+
+    pending_restore = restored
+    return true
+end
+
+-- Вызывается из actor_binder:update() после load(), когда актёр и HUD готовы.
+function update()
+    if pending_restore == nil then return end
+
+    local actor = db.actor
+    if not actor or not actor:alive() then
+        pending_restore = nil
+        return
+    end
+
+    local restored = pending_restore
+    pending_restore = nil
+
+    for _, data in ipairs(restored) do
+        create_effect(data.section, data.time_left)
+    end
+
+    update_static_layout()
+end

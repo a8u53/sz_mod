@@ -1,0 +1,216 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				ASSAULT RIFLES				   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				AK 74				   		   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_ak74_mod]:wpn_ak74
+inv_grid_x						= 0
+inv_grid_y						= 30
+cost 							= 6000
+
+;;Легче на 20% и +30% к износу и 10% к мобильности
+[wpn_ak74_l]:wpn_ak74_mod
+inv_name	        			= "АК-74 Облегчённый"
+inv_weight			= 2.56
+condition_shot_dec 			= 0.00065
+
+;;Точнее на 15% и тяжелее на 5%
+[wpn_ak74_a]:wpn_ak74_mod
+inv_name	        			= "АК-74 Точный"
+fire_dispersion_base			= 0.2125		;угол (в градусах) базовой дисперсии оружия (оружия зажатого в тисках)
+control_inertion_factor			= 1.06f
+inv_weight			= 3.36
+
+;;Объемнее на 20%
+[wpn_ak74_plus]:wpn_ak74_mod
+inv_name	        			= "АК-74 Увел. магазин"
+ammo_mag_size					= 36
+
+;;Скорострельнее на 30% и на +15% к износу
+[wpn_ak74_s]:wpn_ak74_mod
+inv_name	        			= wpn-ak74_m1
+rpm                      		= 780
+condition_shot_dec 				= 0.000575
+
+;;;Надежнее на 20%
+[wpn_ak74_n]:wpn_ak74_mod
+inv_name	        			= "АК-74 Надежный"
+condition_shot_dec 				= 0.0004
+
+;;Настильнее на 15% и +5% веса
+[wpn_ak74_f]:wpn_ak74_mod
+inv_name	        			= "АК-74 Дальнобой"
+fire_distance            		= 640
+inv_weight			= 3.36
+
+;;Отдача на 15% меньше
+[wpn_ak74_r]:wpn_ak74_mod
+inv_name	        			= "АК-74 Дальнобой"
+fire_distance            		= 640
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				ABAKAN				   		   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_abakan_mod]:wpn_abakan
+inv_grid_x						= 0
+inv_grid_y						= 20
+cost							= 5000
+
+[wpn_abakan_a]:wpn_abakan_mod
+inv_name	        	= "АН-94 5.56"
+ammo_class		= ammo_5.56x45_ss190, ammo_5.56x45_ap
+condition_shot_dec 			= 0.0004
+
+[wpn_abakan_plus]:wpn_abakan_mod
+inv_name	        	= "АН-94 Увел. магазин"
+ammo_mag_size					= 45
+
+[wpn_abakan_l]:wpn_abakan_mod
+inv_name	        	= "АН-94 Облегчённый"
+inv_weight			= 3.00	
+
+[wpn_abakan_s]:wpn_abakan_mod
+inv_name	        	= "АН-94 Скорострельный"
+rpm                      		= 690
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				AK 74u				   		   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_ak74u_mod]:wpn_ak74u
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_ak74u_plus]:wpn_ak74u_mod
+
+[wpn_ak74u_l]:wpn_ak74u_mod
+
+[wpn_ak74u_s]:wpn_ak74u_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				G36				   		   	   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_g36_mod]:wpn_g36
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_g36_plus]:wpn_g36_mod
+
+[wpn_g36_l]:wpn_g36_mod
+
+[wpn_g36_s]:wpn_g36_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				FN2000				   		   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_fn2000_mod]:wpn_fn2000
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_fn2000_plus]:wpn_fn2000_mod
+
+[wpn_fn2000_l]:wpn_fn2000_mod
+
+[wpn_fn2000_s]:wpn_fn2000_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				GROZA			   		   	   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_groza_mod]:wpn_groza
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_groza_plus]:wpn_groza_mod
+
+[wpn_groza_l]:wpn_groza_mod
+
+[wpn_groza_s]:wpn_groza_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				l85				   		   	   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_l85_mod]:wpn_l85
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_l85_plus]:wpn_l85_mod
+
+[wpn_l85_l]:wpn_l85_mod
+
+[wpn_l85_s]:wpn_l85_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				LR300				   		   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_lr300_mod]:wpn_lr300
+inv_grid_x						= 6
+inv_grid_y						= 39
+cost 							= 10000
+
+[wpn_lr300_l]:wpn_lr300_mod
+inv_name	        			= "Lr300 Облегчённый"
+inv_weight						= 2.3
+condition_shot_dec 				= 0.00050
+
+[wpn_lr300_a]:wpn_lr300_mod
+inv_name	        			= "LR-300 Надёжный"
+condition_shot_dec 				= 0.00020
+
+[wpn_lr300_plus]:wpn_lr300_mod
+inv_name	        			= "LR-300 Увел. магазин"
+ammo_mag_size					= 45
+
+[wpn_lr300_s]:wpn_lr300_mod
+inv_name	        			= "LR-300 С скорострельный"
+rpm                      		= 1092
+cam_dispersion         			= 0.17	;увеличения угла (в градусах) с каждым выстрелом
+cam_dispersion_inc				= 0.17	;увеличениe cam_dispersion с каждым выстрелом
+cam_dispertion_frac				= 0.8
+condition_shot_dec 				= 0.00060
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				SIG550				   		   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_sig550_mod]:wpn_sig550
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_sig550_plus]:wpn_sig550_mod
+
+[wpn_sig550_l]:wpn_sig550_mod
+
+[wpn_sig550_s]:wpn_sig550_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				VAL				   		  	   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_val_mod]:wpn_val
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_val_plus]:wpn_val_mod
+
+[wpn_val_l]:wpn_val_mod
+
+[wpn_val_s]:wpn_val_mod
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;				VINTOREZ				   	   ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[wpn_vintorez_mod]:wpn_vintorez
+inv_grid_x						= 5
+inv_grid_y						= 20
+cost							= 3000
+
+[wpn_vintorez_plus]:wpn_vintorez_mod
+
+[wpn_vintorez_l]:wpn_vintorez_mod
+
+[wpn_vintorez_s]:wpn_vintorez_mod

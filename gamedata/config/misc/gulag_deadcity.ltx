@@ -1,0 +1,276 @@
+;-------------------------------------------------------------------------------------------------
+;--- Bandits ------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------------------------
+;Бандиты в школе
+;-------------------------------------------------------------------------------------------------
+[logic@cit_bandits_base_guard1]
+active = walker@cit_bandits_base_guard1
+
+[walker@cit_bandits_base_guard1]
+path_walk = guard1_walk
+
+[logic@cit_bandits_base_guard2]
+active = walker@cit_bandits_base_guard2
+
+[walker@cit_bandits_base_guard2]
+path_walk = guard2_walk
+
+[logic@cit_bandits_base_leader_guard1]
+active = walker@cit_bandits_base_leader_guard1
+
+[walker@cit_bandits_base_leader_guard1]
+path_walk = leader_guard1_walk
+path_look = leader_guard1_look
+
+[logic@cit_bandits_base_leader_guard2]
+active = walker@cit_bandits_base_leader_guard2
+
+[walker@cit_bandits_base_leader_guard2]
+path_walk = leader_guard2_walk
+path_look = leader_guard2_look
+
+[logic@cit_bandits_base_kamp]
+active = kamp@cit_bandits_base_kamp
+
+[kamp@cit_bandits_base_kamp]
+center_point  = kamp
+path_walk = kamp_task
+soundgroup = cit_base_kamp
+
+[logic@cit_bandits_base_kamp1]
+active = kamp@cit_bandits_base_kamp1
+
+[kamp@cit_bandits_base_kamp1]
+center_point  = kamp1
+path_walk = kamp1_task
+soundgroup = cit_base_kamp1
+
+[logic@cit_bandits_base_kamp1_patrol]
+active = walker@cit_bandits_base_kamp1_patrol
+
+[walker@cit_bandits_base_kamp1_patrol]
+path_walk = kamp1_patrol_walk
+
+[logic@cit_bandits_base_kamp2]
+active = kamp@cit_bandits_base_kamp2
+
+[kamp@cit_bandits_base_kamp2]
+center_point  = kamp2
+path_walk = kamp2_task
+soundgroup = cit_base_kamp2
+
+[logic@cit_bandits_base_kamp2_patrol]
+active = walker@cit_bandits_base_kamp2_patrol
+
+[walker@cit_bandits_base_kamp2_patrol]
+path_walk = kamp2_patrol_walk
+
+[logic@cit_bandits_base_center_patrol]
+active = walker@cit_bandits_base_center_patrol
+
+[walker@cit_bandits_base_center_patrol]
+path_walk = center_patrol_walk
+
+;Охранники у первых ворот
+
+[logic@cit_bandits_gate1_guard1]
+active = walker@cit_bandits_gate1_guard1
+
+[walker@cit_bandits_gate1_guard1]
+path_walk = guard1_walk
+path_look = guard1_look
+
+[logic@cit_bandits_gate1_guard2]
+active = walker@cit_bandits_gate1_guard2
+
+[walker@cit_bandits_gate1_guard2]
+path_walk = guard2_walk
+path_look = guard2_look
+
+[logic@cit_bandits_gate1_guard3]
+active = walker@cit_bandits_gate1_guard3
+
+[walker@cit_bandits_gate1_guard3]
+path_walk = guard3_walk
+path_look = guard3_look
+
+;-------------------------------------------------------------------------------------------------
+;Killers
+;-------------------------------------------------------------------------------------------------
+;Костры
+
+[logic@cit_killers_base_kamp]
+active = kamp@cit_killers_base_kamp
+
+[kamp@cit_killers_base_kamp]
+center_point = kamp
+path_walk    = kamp_task
+soundgroup 	 = cit_base_kamp10
+
+[logic@cit_killers_base_kamp1]
+active = kamp@cit_killers_base_kamp1
+
+[kamp@cit_killers_base_kamp1]
+center_point = kamp1
+path_walk    = kamp1_task
+soundgroup 	 = cit_base_kamp11
+
+[logic@cit_killers_base_sleeper]
+active = sleeper@cit_killers_base_sleeper
+
+[sleeper@cit_killers_base_sleeper]
+path_main = sleep_walk
+wakeable = false
+
+[logic@cit_killers_base_sleeper2]
+active = sleeper@cit_killers_base_sleeper2
+
+[sleeper@cit_killers_base_sleeper2]
+path_main = sleep_walk2
+wakeable = false
+
+[logic@cit_killers_base_kamp2]
+active = kamp@cit_killers_base_kamp2
+
+[kamp@cit_killers_base_kamp2]
+center_point = kamp2
+path_walk    = kamp2_task
+soundgroup 	 = cit_base_kamp12
+
+[logic@cit_killers_base_kamp3]
+active = kamp@cit_killers_base_kamp3
+
+[kamp@cit_killers_base_kamp3]
+center_point = kamp3
+path_walk    = kamp3_task
+soundgroup 	 = cit_base_kamp13
+
+
+;Патрули
+
+[logic@cit_killers_base_patrol]
+active = walker@cit_killers_base_patrol
+
+[walker@cit_killers_base_patrol]
+path_walk = kamp_patrol_walk
+
+[logic@cit_killers_base_patrol1]
+active = walker@cit_killers_base_patrol1
+
+[walker@cit_killers_base_patrol1]
+path_walk = patrol1_walk
+path_look = patrol1_look
+
+[logic@cit_killers_base_patrol2]
+active = walker@cit_killers_base_patrol2
+
+[walker@cit_killers_base_patrol2]
+path_walk = patrol2_walk
+path_look = patrol2_look
+
+[logic@cit_killers_base_patrol3]
+active = walker@cit_killers_base_patrol3
+
+[walker@cit_killers_base_patrol3]
+path_walk = guard_jail_walk
+path_look = guard_jail_walk
+
+[logic@cit_killers_base_patrol4]
+active = walker@cit_killers_base_patrol4
+
+[walker@cit_killers_base_patrol4]
+path_walk = patrol4_walk
+path_look = patrol4_walk
+
+;Охрана
+
+[logic@cit_killers_base_road_patrol]
+active = walker@cit_killers_base_road_patrol
+
+[walker@cit_killers_base_road_patrol]
+path_walk = road_patrol_walk
+path_look = road_patrol_look
+
+[logic@cit_killers_base_road_patrol1]
+active = walker@cit_killers_base_road_patrol1
+
+[walker@cit_killers_base_road_patrol1]
+path_walk = road_patrol1_walk
+path_look = road_patrol1_look
+
+[logic@cit_killers_base_dozor]
+active = camper@cit_killers_base_dozor
+
+[camper@cit_killers_base_dozor]
+path_walk = dozor_walk
+path_look = dozor_look
+sniper = true
+def_state_campering = threat
+
+;Охранники у первых ворот
+
+[logic@cit_killers_base_gate_guard1]
+active = walker@cit_killers_base_gate_guard1
+
+[walker@cit_killers_base_gate_guard1]
+path_walk = gate_guard1_walk
+path_look = gate_guard1_look
+
+[logic@cit_killers_base_gate_guard2]
+active = walker@cit_killers_base_gate_guard2
+
+[walker@cit_killers_base_gate_guard2]
+path_walk = gate_guard2_walk
+path_look = gate_guard2_look
+
+;-------------------------------------------------------------------------------------------------
+;Снайперы
+;-------------------------------------------------------------------------------------------------
+[logic@cit_killers_snipers_sniper1]
+active = camper@cit_killers_snipers_sniper1
+
+[camper@cit_killers_snipers_sniper1]
+path_walk = sniper1_walk
+path_look = sniper1_look
+sniper = true
+def_state_campering = threat
+
+[logic@cit_killers_snipers_sniper2]
+active = camper@cit_killers_snipers_sniper2
+
+[camper@cit_killers_snipers_sniper2]
+path_walk = sniper2_walk
+path_look = sniper2_look
+sniper = true
+def_state_campering = threat
+
+[logic@cit_killers_snipers_sniper3]
+active = camper@cit_killers_snipers_sniper3
+
+[camper@cit_killers_snipers_sniper3]
+path_walk = sniper3_walk
+path_look = sniper3_look
+sniper = true
+def_state_campering = threat
+
+[logic@cit_killers_snipers_sniper4]
+active = camper@cit_killers_snipers_sniper4
+
+[camper@cit_killers_snipers_sniper4]
+path_walk = sniper4_walk
+path_look = sniper4_look
+sniper = true
+def_state_campering = threat
+
+;-------------------------------------------------------------------------------------------------
+;--- Monsters ------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------------------
+[logic@cit_kanaliz1]
+active = mob_home@cit_kanaliz1
+
+[mob_home@cit_kanaliz1]
+path_home = home_1
+home_min_radius = 45
+home_max_radius = 70
