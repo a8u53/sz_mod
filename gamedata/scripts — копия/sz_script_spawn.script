@@ -1,8 +1,0 @@
-function spawn_kutic()
-	local x = -239.90
-	local y = -19.73
-	local z = -132.96
-	local level_vertex = 15571
-	local game_vertex_id = 8
-	alife():create("m_cat_e",vector():set(x,y,z),level_vertex,game_vertex_id)
-end
