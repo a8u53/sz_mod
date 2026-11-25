@@ -1,0 +1,416 @@
+--[[----------------------------------------------------------------------------------------------------------
+    SZ: удар прикладом между NPC.
+    Отдельная механика: штатный xr_punch.script не изменяется.
+    Регистрируется из motivator_binder для всех сталкеров.
+------------------------------------------------------------------------------------------------------------]]
+
+local prop_sz_npc_punch = xr_evaluators_id.zmey_punch_base + 2
+local act_sz_npc_punch  = xr_actions_id.zmey_punch_base + 2
+
+local punch_distance_sqr = 1.5 * 1.5
+local punch_start_timeout = 2000
+local punch_finish_timeout = 3000
+-- Параметры попадания прикладом.
+local punch_hit_distance = 1.8
+local punch_hit_power = 0.15
+local punch_hit_impulse = 15
+
+class "evaluator_sz_npc_punch" (property_evaluator)
+
+function evaluator_sz_npc_punch:__init(name, storage) super(nil, name)
+    self.st = storage
+end
+
+function evaluator_sz_npc_punch:clear_pending()
+    self.st.pending_enemy_id = nil
+    self.st.pending_until = nil
+    self.st.ready_enemy_id = nil
+end
+
+function evaluator_sz_npc_punch:evaluate()
+    if self.st.active then
+        return true
+    end
+
+    local now = time_global()
+    if self.st.cooldown_until and now < self.st.cooldown_until then
+        self:clear_pending()
+        return false
+    end
+
+    local enemy = self.object:best_enemy()
+    if not enemy or not enemy:alive() then
+        self:clear_pending()
+        return false
+    end
+
+    -- Механика предназначена для столкновений сталкер против сталкера.
+    if not IsStalker(enemy) then
+        self:clear_pending()
+        return false
+    end
+
+    if not self.object:see(enemy) then
+        self:clear_pending()
+        return false
+    end
+
+    local distance = self.object:position():distance_to(enemy:position())
+    if distance * distance > punch_distance_sqr then
+        self:clear_pending()
+        return false
+    end
+
+    local enemy_id = enemy:id()
+    if self.st.pending_enemy_id ~= enemy_id then
+        self.st.pending_enemy_id = enemy_id
+        self.st.pending_until = now + math.random(300, 600)
+        self.st.ready_enemy_id = nil
+        return false
+    end
+
+    if now < self.st.pending_until then
+        return false
+    end
+
+    -- Фиксируем именно ту цель, для которой evaluator вернул true.
+    -- initialize() больше не будет повторно выбирать best_enemy().
+    self.st.ready_enemy_id = enemy_id
+
+    return true
+end
+
+--------------------------------------------------------------------------------------------------------------
+-- Вызывается анимационным менеджером между замахом и завершающим движением.
+-- Сами клипы удара не меняются: callback лишь применяет хит к сохранённой цели.
+local function apply_hit_impl(npc)
+    if not npc then
+        return
+    end
+
+    local npc_id = npc:id()
+    local npc_storage = db and db.storage and db.storage[npc_id]
+    local st = npc_storage and npc_storage.sz_npc_punch
+    if not st or not st.active or st.hit_done then
+        return
+    end
+
+    -- Одно попадание на один запуск анимации, даже если ниже произойдёт ошибка.
+    st.hit_done = true
+
+    local enemy_id = st.enemy_id
+    local enemy = enemy_id and level.object_by_id(enemy_id)
+    if not enemy or not enemy:alive() then
+        return
+    end
+
+    local npc_position = npc:position()
+    local enemy_position = enemy:position()
+    local distance = npc_position:distance_to(enemy_position)
+    if distance > punch_hit_distance then
+        return
+    end
+
+    local actor_id = db.actor and db.actor:id()
+    local hit_player = actor_id ~= nil and enemy_id == actor_id
+
+    -- Создание hit и заполнение полей также находится под внешней pcall-защитой.
+    local h = hit()
+    h.draftsman = npc
+    h.type = hit.wound
+    h.direction = enemy_position:sub(npc_position)
+    h:bone("bip01_spine")
+    h.power = punch_hit_power
+    h.impulse = punch_hit_impulse
+
+    local hit_ok = pcall(function()
+        enemy:hit(h)
+    end)
+    if not hit_ok then
+        return
+    end
+
+    -- Камера игрока: только оригинальный эффект, без выброса оружия/блокировки ввода/звука.
+    if hit_player then
+        pcall(function()
+            level.add_cam_effector("camera_effects\\fusker.anm", 999, false, "")
+        end)
+
+    end
+
+end
+
+function apply_hit(npc)
+    -- Animation:anim_callback invokes this function directly. Never allow a Lua
+    -- error from object lookup, vector/hit construction, or hit application to escape it.
+    pcall(apply_hit_impl, npc)
+end
+
+--------------------------------------------------------------------------------------------------------------
+class "action_sz_npc_punch" (action_base)
+
+function action_sz_npc_punch:__init(name, storage) super(nil, name)
+    self.st = storage
+    self.enemy = nil
+end
+
+function action_sz_npc_punch:initialize()
+
+    action_base.initialize(self)
+
+    -- Используем ID, зафиксированный evaluator'ом, а не новый best_enemy().
+    local selected_enemy_id = self.st.ready_enemy_id
+    self.st.ready_enemy_id = nil
+    self.st.pending_enemy_id = nil
+    self.st.pending_until = nil
+    local lookup_ok, selected_enemy = pcall(function()
+        if selected_enemy_id then
+            return level.object_by_id(selected_enemy_id)
+        end
+        return nil
+    end)
+
+    if not lookup_ok or not selected_enemy then
+        self.st.active = false
+        self.st.cooldown_until = time_global() + 1000
+        return
+    end
+
+    self.enemy = selected_enemy
+    local validation_ok, target_valid = pcall(function()
+        if not self.enemy:alive() then
+            return false
+        end
+        if not IsStalker(self.enemy) then
+            return false
+        end
+        local distance = self.object:position():distance_to(self.enemy:position())
+        if distance > 1.5 then
+            return false
+        end
+        return true
+    end)
+
+    if not validation_ok or not target_valid then
+        self.st.active = false
+        self.st.cooldown_until = time_global() + 1000
+        return
+    end
+
+    self.st.enemy_id = selected_enemy_id
+    self.st.hit_done = false
+
+    -- Чередуем две записи одной и той же последовательности.
+    -- Разные animation ID гарантируют повторный запуск даже если body_state
+    -- после предыдущего удара ещё остался в udar_prikladom.
+    local variant = self.st.next_punch_variant or 1
+    if variant ~= 1 and variant ~= 2 then
+        variant = 1
+    end
+    self.st.next_punch_variant = (variant == 1) and 2 or 1
+
+    if variant == 1 then
+        self.state_name = "udar_prikladom"
+        self.animation_name = "sz_npc_punch_a"
+    else
+        self.state_name = "udar_prikladom_alt"
+        self.animation_name = "sz_npc_punch_b"
+    end
+
+    local body_mgr = self.st.body_state_mgr
+    if not body_mgr or not body_mgr.animation then
+        self.st.active = false
+        self.st.cooldown_until = time_global() + 1500
+        return
+    end
+
+    self.animation_target_before = nil
+    local animation_snapshot_ok = pcall(function()
+        self.animation_target_before = body_mgr.animation:target_state()
+    end)
+    if not animation_snapshot_ok then
+        self.st.active = false
+        self.st.cooldown_until = time_global() + 1500
+        return
+    end
+
+    self.st.active = true
+    self.st.pending_enemy_id = nil
+    self.st.pending_until = nil
+    -- Cooldown считается от начала удара и не сокращается при прерывании.
+    self.st.cooldown_until = time_global() + math.random(3000, 4500)
+
+    local now = time_global()
+    self.animation_started = false
+    self.start_deadline = now + punch_start_timeout
+    self.finish_deadline = nil
+
+    local state_ok = pcall(function()
+        self.object:set_movement_type(move.stand)
+        body_mgr:set_state(
+            self.state_name,
+            nil,
+            nil,
+            { look_object = self.enemy },
+            { animation = true }
+        )
+    end)
+
+    if not state_ok then
+        self.st.active = false
+        self.st.cooldown_until = math.max(self.st.cooldown_until or 0, time_global() + 1500)
+        return
+    end
+
+end
+
+function action_sz_npc_punch:stop(interrupted)
+    if not self.st.active then
+        return
+    end
+
+    self.st.active = false
+    self.st.enemy_id = nil
+    self.st.hit_done = true
+    self.enemy = nil
+
+    if interrupted then
+        -- Не перезаписываем более длинный cooldown, выставленный при старте.
+        self.st.cooldown_until = math.max(self.st.cooldown_until or 0, time_global() + 1500)
+    end
+end
+
+function action_sz_npc_punch:execute()
+    action_base.execute(self)
+
+    if not self.st.active then
+        return
+    end
+
+    local now = time_global()
+    local body_mgr = self.st.body_state_mgr
+    if not body_mgr or not body_mgr.animation then
+        if now >= self.start_deadline then
+            self:stop(true)
+        end
+        return
+    end
+
+    local probe_ok, anim_target, anim_current = pcall(function()
+        return body_mgr.animation:target_state(), body_mgr.animation:state()
+    end)
+
+    if not probe_ok then
+        if now >= self.start_deadline then
+            self:stop(true)
+        end
+        return
+    end
+
+    -- Разные A/B animation ID позволяют отличить новый запуск от прошлого состояния.
+    if not self.animation_started and
+       anim_target == self.animation_name and
+       (anim_target ~= self.animation_target_before or anim_current == "_new")
+    then
+        self.animation_started = true
+        self.finish_deadline = now + punch_finish_timeout
+    end
+
+    if self.animation_started then
+        -- animation:state() становится целевым ID только после завершения входной последовательности.
+        if anim_current == self.animation_name then
+            self:stop(false)
+            return
+        end
+
+        if anim_target ~= self.animation_name then
+            self:stop(true)
+            return
+        end
+
+        if now >= self.finish_deadline then
+            self:stop(true)
+            return
+        end
+    elseif now >= self.start_deadline then
+        self:stop(true)
+        return
+    end
+
+end
+
+function action_sz_npc_punch:finalize()
+    -- Если действие прервали извне, не оставляем evaluator в активном состоянии.
+    if self.st.active then
+        self:stop(true)
+    end
+
+    self.enemy = nil
+    self.st.enemy_id = nil
+    self.st.hit_done = true
+    action_base.finalize(self)
+end
+
+--------------------------------------------------------------------------------------------------------------
+function register_npc(npc, storage, manager)
+    if not npc or not storage or not manager then
+        return
+    end
+
+    local st = storage.sz_npc_punch
+
+    if st and st.registered then
+        return
+    end
+
+    if not st then
+        st = {}
+        storage.sz_npc_punch = st
+    end
+
+    st.registered = true
+    st.active = false
+    st.cooldown_until = 0
+    st.pending_enemy_id = nil
+    st.pending_until = nil
+    st.ready_enemy_id = nil
+    st.next_punch_variant = st.next_punch_variant or 1
+    st.hit_done = false
+    st.enemy_id = nil
+    st.body_state_mgr = storage.state_mgr
+
+    manager:add_evaluator(
+        prop_sz_npc_punch,
+        this.evaluator_sz_npc_punch("sz_npc_punch_ready", st)
+    )
+
+    local action = this.action_sz_npc_punch("sz_npc_punch_action", st)
+    action:add_precondition(world_property(stalker_ids.property_alive, true))
+    action:add_precondition(world_property(stalker_ids.property_enemy, true))
+    action:add_precondition(world_property(stalker_ids.property_anomaly, false))
+    action:add_precondition(world_property(prop_sz_npc_punch, true))
+
+    -- Уважаем общие блокировки диалогов, ранений и других приоритетных систем.
+    xr_motivator.addCommonPrecondition(action)
+
+    -- После завершения evaluator станет false из-за cooldown/сброса active,
+    -- и менеджер вернётся к штатному боевому действию.
+    action:add_effect(world_property(stalker_ids.property_enemy, false))
+    action:add_effect(world_property(prop_sz_npc_punch, false))
+
+    manager:add_action(act_sz_npc_punch, action)
+end
+
+--------------------------------------------------------------------------------------------------------------
+-- Совместимость с загрузчиком схем. Основная регистрация выполняется из motivator_binder.
+function add_to_binder(npc, ini, scheme, section, storage)
+    register_npc(npc, db.storage[npc:id()], npc:motivation_action_manager())
+end
+
+function set_scheme(npc, ini, scheme, section)
+    register_npc(npc, db.storage[npc:id()], npc:motivation_action_manager())
+end
+
+function disable_scheme(npc, scheme)
+    -- Механика глобальная и не отключается переключением LTX-схем.
+end

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "sload.h"
 #include "screenspace_hud_raindrops.h"
+#include "screenspace_hud_blood_model.h"
 
 f_deffer main(p_bumped I)
 {
@@ -34,11 +35,23 @@ f_deffer main(p_bumped I)
         drops.w = max(drops.w, 3.0f);
     }
 
+    float blood_load = max(ssfx_hud_blood_params.x, ssfx_hud_blood_params.y);
+    float3 blood_bump_model = 0.0f;
+    float blood_gloss = 0.0f;
+    float4 blood = ssfx_hud_blood_model_space(
+        s_hud_rain, I.RDrops.xyz, I.position.xyz,
+        blood_load, ssfx_hud_blood_params.w, ssfx_hud_blood_params.z,
+        blood_bump_model, blood_gloss);
+    S.base.rgb = lerp(S.base.rgb, blood.rgb, blood.a);
+
     // Sample normal, rotate it by matrix, encode position
     float3 Ne = mul(float3x3(I.M1, I.M2, I.M3), S.normal + float3(drops.xy * drops.w, 1.0f));
-    Ne = normalize(Ne);
+    float2 blood_gradient = float2(ddx(blood.a), ddy(blood.a));
+    float3 blood_bump_eye = mul((float3x3)m_WV, blood_bump_model);
+    Ne = normalize(Ne + blood_bump_eye * 0.20f +
+                   float3(-blood_gradient * 0.38f, 0.0f));
 
-    S.gloss += (ssfx_hud_drops_1.y * ssfx_hud_drops_2.z) + drops.z * ssfx_hud_drops_2.w;
+    S.gloss += (ssfx_hud_drops_1.y * ssfx_hud_drops_2.z) + drops.z * ssfx_hud_drops_2.w + blood_gloss;
 
     // hemi,sun,material
     float ms = xmaterial;

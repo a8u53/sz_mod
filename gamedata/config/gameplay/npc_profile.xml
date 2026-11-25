@@ -728,7 +728,7 @@
 		<class>bar_stalker_lisiy</class>
 	</character>
 	<character id="bar_psih">
-		<class>Bar_psih</class>
+		<class>bar_psih</class>
 	</character>
 	<character id="bar_arena_manager">
 		<class>bar_arena_manager</class>
@@ -739,7 +739,6 @@
 	<character id="bar_arena_savage">
 		<class>bar_arena_savage</class>
 	</character>
-	
 	<character id="bar_dolg_leader">
 		<class>bar_dolg_leader</class>
 	</character>

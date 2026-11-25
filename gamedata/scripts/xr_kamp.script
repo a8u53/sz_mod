@@ -272,7 +272,6 @@ function CKampManager:selectPosition(npc_id)
 end
 function CKampManager:getDestVertex(npc_id, radius)
 	if self.npc[npc_id] == nil or self.npc[npc_id].position == nil then
-		printf("[KAMP_DIAG][POSITION] missing position | npc=%s | camp=%s", tostring(npc_id), tostring(self.kamp_name))
 		return nil
 	end
 
@@ -285,9 +284,9 @@ function CKampManager:getDestVertex(npc_id, radius)
 	local pp = level.vertex_in_direction(self.center, position.dir, radius)
 	pp = level.vertex_in_direction(pp, vector():set(math.random(-1,1), 0, math.random(-1,1)), math.random(0,0.5))
 	position.vertex = pp
-	printf("[KAMP_DIAG][POSITION] assigned | npc=%s | camp=%s | vertex=%s | radius=%.2f", tostring(npc_id), tostring(self.kamp_name), tostring(pp), tonumber(radius) or 0)
 	return pp
 end
+
 function CKampManager:selectInstrumentDirector(state)
 	local eligible = {}
 	local required_state = nil
@@ -306,12 +305,11 @@ function CKampManager:selectInstrumentDirector(state)
 	end
 	if table.getn(eligible) > 0 then
 		local selected = eligible[math.random(table.getn(eligible))]
-		printf("[KAMP_DIAG][INSTRUMENT] eligible | camp=%s | state=%s | required_state=%s | candidates=%s | selected=%s", tostring(self.kamp_name), tostring(state), tostring(required_state), tostring(table.getn(eligible)), tostring(selected))
 		return selected
-	end
-	printf("[KAMP_DIAG][INSTRUMENT] no eligible NPC | camp=%s | state=%s | required_state=%s", tostring(self.kamp_name), tostring(state), tostring(required_state))
+	end			
 	return nil
 end
+
 function CKampManager:proceedState(npc)
 	-- Проверка на таймаут
 	local npc_id = npc:id()
@@ -326,8 +324,6 @@ function CKampManager:proceedState(npc)
 				return
 			end
 
-			printf("[KAMP_DIAG][SOUND_TIMEOUT] sound did not register | npc=%s | camp_state=%s",
-				tostring(npc_id), tostring(self.kamp_state))
 		end
 
 		self.npc[npc_id].need_sound_begin = false
@@ -389,7 +385,6 @@ function CKampManager:proceedState(npc)
 		if p <= 0 then
 			--printf("Selected [%s]", k)
 			if k == "idle" then
-				printf("[KAMP_DIAG] transition %s -> idle | caller=%s | director_before=%s", tostring(self.kamp_state), tostring(npc_id), tostring(self.director))
 				self.director = nil
 				if self.kamp_state ~= "idle" then
 					self.npc[npc_id].begin = nil
@@ -403,7 +398,6 @@ function CKampManager:proceedState(npc)
 				end
 				local instrument_director = self:selectInstrumentDirector(k)
 				self.director = instrument_director or npc_id
-				printf("[KAMP_DIAG] transition %s -> %s | caller=%s | selected_instrument_director=%s | director=%s | soundstart=%s | caller_need_sound_begin=%s", tostring(previous_state), tostring(k), tostring(npc_id), tostring(instrument_director), tostring(self.director), tostring(self.timeout[k].soundstart), tostring(self.npc[npc_id].need_sound_begin))
 				self.censor = nil
 			end			
 			self.kamp_state = k
@@ -428,6 +422,7 @@ function CKampManager:proceedState(npc)
 		end
 	end
 end
+
 function CKampManager:proceedRole(npc, director)
 	--printf("Proceed Role for [%s]", npc:id())
 	-- Определить список доступных анимаций по состоянию лагеря.
@@ -494,6 +489,7 @@ function CKampManager:proceedRole(npc, director)
 	--printf("Proceed Role state [%s] sound [%s]", state, sound)	
 	return state, sound
 end
+
 function CKampManager:updateNpc(npc)
 	-- Проверка что сталкер может делать, а что нет.
 	self:checkNpcAbility(npc)
@@ -513,7 +509,6 @@ function CKampManager:updateNpc(npc)
 	-- Говорим чудаку выбрать себе состояние для текущего состояния лагеря.
 	local state, sound = self:proceedRole(npc, director)
 	if state ~= previous_selected_state then
-		printf("[KAMP_DIAG] npc_state_change | npc=%s | director_role=%s | camp_state=%s | director_id=%s | old_state=%s | new_state=%s | sound=%s | new_flag=%s | need_sound_begin=%s | active_sound_count=%s", tostring(npc_id), tostring(director), tostring(self.kamp_state), tostring(self.director), tostring(previous_selected_state), tostring(state), tostring(sound), tostring(self.npc[npc_id].new), tostring(self.npc[npc_id].need_sound_begin), tostring(npc:active_sound_count()))
 	end
 	
 	local substate = nil
@@ -597,14 +592,6 @@ function CKampManager:updateNpc(npc)
 	else
 		xr_kamp.kamp_stalkers[npc_id] = true
 	end
-	-- Диагностика музыкальных реакций только для исследуемого кемпа.
-	-- Запись фиксирует выбор реакции, а не гарантированный фактический старт звука.
-	if self.kamp_name == "bar_visitors_kamp_1" and (sound == "reac_guitar" or sound == "reac_harmonica") then
-		printf("[KAMP_DIAG][MUSIC_REACTION] selected | npc=%s | name=%s | camp=%s | camp_state=%s | director_id=%s | director_role=%s | npc_state=%s | sound_token=%s | new_flag=%s | active_sound_count=%s",
-			tostring(npc_id), tostring(npc:name()), tostring(self.kamp_name), tostring(self.kamp_state), tostring(self.director), tostring(director),
-			tostring(state), tostring(sound), tostring(self.npc[npc_id].new), tostring(npc:active_sound_count()))
-	end
-
 	-- Выбор реальных звуков
 	if sound == "idle" then
 		sound = "weather, state"
@@ -646,16 +633,12 @@ function CKampManager:updateNpc(npc)
 --				xr_sound.set_sound_play(npc, "story_reac_laughter", math.random(100,300))
 --	end
 
-	--printf("Proceed Update Npc [%s] sound [%s]", state, sound)	
-	if self.kamp_name == "bar_visitors_kamp_1" and sound == "reac_music" then
-		printf("[KAMP_DIAG][MUSIC_REACTION] returned_sound | npc=%s | name=%s | camp_state=%s | director_id=%s | npc_state=%s | sound=%s | active_sound_count=%s",
-			tostring(npc_id), tostring(npc:name()), tostring(self.kamp_state), tostring(self.director), tostring(state), tostring(sound), tostring(npc:active_sound_count()))
-	end
 	return state, sound, substate
 end
 -- Пересчитываем глобальные возможности лагеря по всему составу.
 -- Наличие предмета у одного NPC не должно отключаться из-за другого NPC.
 -- Истории доступны только Опытным, Ветеранам и Мастерам.
+
 function CKampManager:refreshCampAbility()
 	local has_story_teller = false
 	local has_harmonica = false

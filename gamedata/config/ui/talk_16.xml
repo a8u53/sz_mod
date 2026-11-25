@@ -6,7 +6,7 @@
 		<texture_offset x="-11" y="0"/>
 	</left_character_icon>
 	
-	<right_character_icon x="245" y="350" width="200" height="218">
+	<right_character_icon x="1245" y="350" width="200" height="218">
 		<texture></texture>
 	</right_character_icon>
 	
@@ -41,9 +41,9 @@
 		</title>
 	</frame_line_window>
 
-	<questions_list x="30" y="100" width="380" height="120" right_ident="5" always_show_scroll="0"/>
+	<questions_list x="50" y="105" width="380" height="120" right_ident="5" always_show_scroll="0"/>
 
-	<answers_list	x="30" y="100" width="380" height="250" right_ident="0" always_show_scroll="0"/>
+	<answers_list	x="0" y="100" width="380" height="250" right_ident="0" always_show_scroll="0"/>
 
 
 	<question_item x="0" y="0" width="200" height="20" min_height="13" bottom_footer="1">

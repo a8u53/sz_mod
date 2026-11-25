@@ -1,0 +1,60 @@
+; Rain-on-surface audio settings
+; Loaded by XR_3DA from $game_config$ at CEffect_Rain construction.
+; File location: gamedata/config/rain_surface_audio.ltx
+; Changes take effect after restarting the game/level; no engine rebuild is needed.
+;
+; scan_radius is the actual horizontal radius used by the independent acoustic
+; surface scan. It is NOT the visual particle spawn radius (source_radius).
+; max_source_distance is the spatial audio range for discovered sources.
+;
+; The acoustic scan submits one low-weight sample per object/material/static
+; cell each pass. Real predicted rain-particle impacts have weight 1.0 and add
+; more detailed activity close to the player.
+;
+; Loop voices stay playing at zero volume when reassigned/released, preserving
+; playback phase and avoiding restarts while moving along long objects.
+
+[rain_surface_audio]
+enabled                       = true
+emitters_per_type             = 4
+
+; Discovery and spatial audio range (metres)
+scan_radius                   = 32.0
+scan_step                     = 5.0
+scan_interval_ms              = 250.0
+max_source_distance           = 42.0
+min_source_distance           = 2.0
+
+; Acoustic scan contribution. Lower than real particle impacts (weight 1.0).
+scan_activity_weight_hard     = 0.35
+scan_activity_weight_foliage  = 0.15
+
+; Static level geometry is grouped spatially because it has no CObject ID.
+; CObjects are grouped by object ID whether moving or stationary.
+cell_size_xz                  = 8.0
+cell_size_y                   = 5.0
+
+; Activity envelope (milliseconds)
+hard_decay_ms                 = 550.0
+foliage_decay_ms              = 900.0
+hard_max_age_ms               = 850.0
+foliage_max_age_ms            = 1200.0
+
+; Equivalent accumulated hits required for full layer volume
+hard_hits_to_full             = 12.0
+foliage_hits_to_full           = 4.0
+activity_reference_ms         = 3000.0
+distance_score_factor         = 0.035
+
+; Base output level and per-material trims
+surface_max_volume            = 1.0
+volume_roof                   = 1.0
+volume_tin                    = 1.0
+volume_slate                  = 1.0
+volume_leaves                 = 1.0
+
+; Exponential attack/release response rates (higher = faster)
+attack_rate                   = 8.0
+release_rate                  = 8.0
+min_cluster_activity          = 0.001
+min_source_volume             = 0.005

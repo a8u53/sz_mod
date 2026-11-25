@@ -23,6 +23,8 @@ function motivator_binder:__init (obj) super(obj)
 	self.loaded = false
 	self.last_update = 0
 	self.pukanok = 0
+	self.blood_pool_bone = nil
+	self.blood_pool_time = nil
 	
 	----memusage.collect_info(self.object, "__init")
 
@@ -107,6 +109,9 @@ function motivator_binder:net_spawn(sobject)
 		local manager = self.object:motivation_action_manager()
 		manager:remove_evaluator	(stalker_ids.property_anomaly)
 		manager:add_evaluator		(stalker_ids.property_anomaly, property_evaluator_const(false))
+
+		-- Общая механика удара прикладом между NPC (не зависит от боевой схемы).
+		sz_npc_punch.register_npc(self.object, self.st, manager)
 --	end
 	
     --' загрузка озвучки
@@ -145,6 +150,9 @@ function motivator_binder:clear_callbacks()
 end
 
 function motivator_binder:hit_callback(obj, amount, local_direction, who, bone_index)
+	if amount > 0 and bone_index ~= nil then
+		self.blood_pool_bone = bone_index
+	end
 	-- FIXME: коллбеки неплохо было бы регистрировать в общем storage, а не посхемно...
 	-- просто всегда ставить их при включении схемы и снимать при отключении.
 	if self.st.active_section then
@@ -160,13 +168,24 @@ function motivator_binder:hit_callback(obj, amount, local_direction, who, bone_i
 		xr_logic.issue_event(self.object, self.st.hit, "hit_callback", obj, amount, local_direction, who, bone_index)
 	end
 	
-	if sz_blood and sz_blood.check_blood then
-		sz_blood.check_blood(obj, who, amount)
-	end
-	
 	local weapon = nil
-		if who and who:id() == db.actor:id() then
-		weapon = db.actor:active_item()
+	if db.actor and who then
+		local is_player = false
+		local ok, who_id = pcall(function() return who:id() end)
+		if ok and who_id == db.actor:id() then
+			is_player = true
+		else
+			local owner_ok, owner = pcall(function() return who:owner() end)
+			if owner_ok and owner then
+				local owner_id_ok, owner_id = pcall(function() return owner:id() end)
+				if owner_id_ok and owner_id == db.actor:id() then is_player = true end
+			end
+		end
+		if is_player then weapon = db.actor:active_item() end
+	end
+
+	if sz_blood and sz_blood.check_blood then
+		sz_blood.check_blood(obj, who, amount, weapon)
 	end
 	
 	if weapon then
@@ -181,7 +200,10 @@ function motivator_binder:hit_callback(obj, amount, local_direction, who, bone_i
 end
 
 function motivator_binder:death_callback(victim, who)
-    sz_mod.kill_npc(victim, who)
+	-- Schedule the pool even if the hit callback did not provide a bone index.
+	self.blood_pool_time = time_global() + 1500
+	self.blood_pool_growth_step = 0
+	
     if who:id() == db.actor:id() then
         xr_statistic.addKillCount(self.object)
     end
@@ -194,6 +216,15 @@ function motivator_binder:death_callback(victim, who)
         xr_logic.issue_event(self.object, self.st[self.st.active_scheme], "death_callback", victim, who)
     end
     sr_territory.issue_event(self.object, "death_callback", victim, who)
+
+    -- Rostok mutant arena: the Beast is a stalker NPC, so its death is handled here.
+    -- Match the info portions emitted by bind_monster for ordinary mutant opponents.
+    if db ~= nil and db.actor ~= nil and self.object:section() == "bar_arena_savage" then
+        db.actor:give_info_portion("bar_arena_savage_defeated")
+        db.actor:give_info_portion("bar_arena_monstr_dead")
+        -- Territory checks have already received the death event above; release the Beast exception now.
+        db.actor:disable_info_portion("bar_arena_savage_active")
+    end
 
     sr_light.check_light(self.object)
 
@@ -272,6 +303,27 @@ end
 
 function motivator_binder:update(delta)
 	object_binder.update(self, delta)
+
+	-- Grow the pool gradually after the corpse has settled.
+	if self.blood_pool_time and time_global() >= self.blood_pool_time then
+		if self.object and self.object:alive() == false then
+			self.blood_pool_growth_step = (self.blood_pool_growth_step or 0) + 1
+			local scale = self.blood_pool_growth_step / 360
+			-- 65535 is BI_NONE (u16); C++ will use the fallback head/body position.
+			self.object:place_blood_pool(self.blood_pool_bone or 65535, scale)
+			if self.blood_pool_growth_step < 360 then
+				self.blood_pool_time = time_global() + 100
+			else
+				self.blood_pool_time = nil
+				self.blood_pool_bone = nil
+				self.blood_pool_growth_step = nil
+			end
+		else
+			self.blood_pool_time = nil
+			self.blood_pool_bone = nil
+			self.blood_pool_growth_step = nil
+		end
+	end
 
     if self.first_update == false then
         if self.object:alive() == false then

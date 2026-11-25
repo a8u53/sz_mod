@@ -4057,6 +4057,7 @@
             <phrase id="5">
                 <text />
                 <dont_has_info>sz_arena_enemy_dead</dont_has_info>
+                <dont_has_info>bar_arena_monstr_dead</dont_has_info>
                 <precondition>bar_dialogs.arena_hasnt_reward</precondition>
                 <has_info>bar_arena_rank_false</has_info>
                 <next>51</next>
@@ -4064,6 +4065,7 @@
             <phrase id="4">
                 <text />
                 <dont_has_info>sz_arena_enemy_dead</dont_has_info>
+                <dont_has_info>bar_arena_monstr_dead</dont_has_info>
                 <precondition>bar_dialogs.arena_has_reward</precondition>
                 <action>bar_dialogs.arena_give_reward</action>
                 <next>41</next>
@@ -4071,6 +4073,7 @@
             <phrase id="3">
                 <text />
                 <dont_has_info>sz_arena_enemy_dead</dont_has_info>
+                <dont_has_info>bar_arena_monstr_dead</dont_has_info>
                 <precondition>bar_dialogs.arena_hasnt_reward</precondition>
                 <precondition>bar_dialogs.arena_rank_check_false</precondition>
                 <dont_has_info>bar_arena_rank_false</dont_has_info>
@@ -4080,6 +4083,7 @@
             <phrase id="2">
                 <text />
                 <dont_has_info>sz_arena_enemy_dead</dont_has_info>
+                <dont_has_info>bar_arena_monstr_dead</dont_has_info>
                 <precondition>bar_dialogs.arena_hasnt_reward</precondition>
                 <dont_has_info>bar_arena_rank_false</dont_has_info>
                 <has_info>bar_arena_pause</has_info>
@@ -4091,6 +4095,7 @@
 			<phrase id="6">
 			    <text />
                 <dont_has_info>sz_arena_enemy_dead</dont_has_info>
+                <dont_has_info>bar_arena_monstr_dead</dont_has_info>
 				<dont_has_info>bar_arena_first_dialog</dont_has_info>
 				<next>66</next>
             </phrase>
@@ -4101,6 +4106,7 @@
             <phrase id="1">
                 <text />
                 <dont_has_info>sz_arena_enemy_dead</dont_has_info>
+                <dont_has_info>bar_arena_monstr_dead</dont_has_info>
                 <precondition>bar_dialogs.arena_hasnt_reward</precondition>
                 <dont_has_info>bar_arena_pause</dont_has_info>
                 <dont_has_info>bar_arena_fight_8_done</dont_has_info>
@@ -4110,6 +4116,7 @@
             </phrase>
             <phrase id="0">
                 <text />
+                <next>8</next>
                 <next>1</next>
                 <next>2</next>
                 <next>3</next>
@@ -4118,7 +4125,16 @@
 				<next>6</next>
                 <next>7</next>
             </phrase>
-                    <phrase id="7">
+                    <phrase id="8">
+                <text />
+                <precondition>bar_dialogs.sz_arena_mutant_has_reward</precondition>
+                <action>bar_dialogs.sz_arena_mutant_give_reward</action>
+                <next>81</next>
+            </phrase>
+            <phrase id="81">
+                <text>sz_arena_mutant_reward_auto</text>
+            </phrase>
+            <phrase id="7">
                 <text />
                 <precondition>bar_dialogs.sz_arena_has_reward</precondition>
                 <action>xr_effects.sz_arena_give_reward</action>
@@ -4233,4 +4249,158 @@
     </dialog>
 
     <!-- Dedicated priority start dialog: independent of Arni's vanilla start-dialog checks. -->
+
+    <!-- Отдельный пункт выбора: мутантная арена. Не смешивать с сюжетной и повторной аренами. -->
+    <dialog id="sz_arena_mutant_battle">
+        <dont_has_info>bar_arena_spawn_monstr</dont_has_info>
+        <dont_has_info>bar_arena_pseudodog_defeated</dont_has_info>
+        <phrase_list>
+            <phrase id="0">
+                <text>sz_arena_mutants_question</text>
+                <next>1</next>
+            </phrase>
+            <phrase id="1">
+                <text>sz_arena_mutant_pseudodog_offer</text>
+                <next>2</next>
+                <next>3</next>
+            </phrase>
+            <phrase id="2">
+                <text>sz_arena_mutants_yes</text>
+                <give_info>bar_arena_pseudodog_choosen</give_info>
+               <next>4</next>
+            </phrase>
+            <phrase id="3">
+                <text>sz_arena_mutants_no</text>
+            </phrase>
+            <phrase id="4">
+                <text>sz_arena_mutants_ready_warning</text>
+            </phrase>
+        </phrase_list>
+    </dialog>
+    <dialog id="sz_arena_mutant_battle_snork">
+        <has_info>bar_arena_pseudodog_defeated</has_info>
+        <dont_has_info>bar_arena_snork_defeated</dont_has_info>
+        <dont_has_info>bar_arena_spawn_monstr</dont_has_info>
+        <phrase_list>
+            <phrase id="0">
+                <text>sz_arena_mutants_question</text>
+                <next>1</next>
+            </phrase>
+            <phrase id="1">
+                <text>sz_arena_mutant_snork_offer</text>
+                <next>2</next>
+                <next>3</next>
+            </phrase>
+            <phrase id="2">
+                <text>sz_arena_mutants_yes</text>
+                <give_info>bar_arena_snork_choosen</give_info>
+                <next>4</next>
+            </phrase>
+            <phrase id="3">
+                <text>sz_arena_mutants_no</text>
+            </phrase>
+            <phrase id="4">
+                <text>sz_arena_mutants_ready_warning</text>
+            </phrase>
+        </phrase_list>
+    </dialog>
+    <dialog id="sz_arena_mutant_battle_bloodsucker">
+        <has_info>bar_arena_snork_defeated</has_info>
+        <dont_has_info>bar_arena_bloodsucker_defeated</dont_has_info>
+        <dont_has_info>bar_arena_spawn_monstr</dont_has_info>
+        <phrase_list>
+            <phrase id="0">
+                <text>sz_arena_mutants_question</text>
+                <next>1</next>
+            </phrase>
+            <phrase id="1">
+                <text>sz_arena_mutant_bloodsucker_offer</text>
+                <next>2</next>
+                <next>3</next>
+            </phrase>
+            <phrase id="2">
+                <text>sz_arena_mutants_yes</text>
+                <give_info>bar_arena_bloodsucker_choosen</give_info>
+                <next>4</next>
+            </phrase>
+            <phrase id="3">
+                <text>sz_arena_mutants_no</text>
+            </phrase>
+            <phrase id="4">
+                <text>sz_arena_mutants_ready_warning</text>
+            </phrase>
+        </phrase_list>
+    </dialog>
+
+
+
+    <!-- Награда за завершённый бой с мутантом. -->
+    <dialog id="sz_arena_mutant_reward">
+        <precondition>bar_dialogs.sz_arena_mutant_has_reward</precondition>
+        <phrase_list>
+            <phrase id="0">
+                <text>sz_arena_mutant_reward_0</text>
+                <next>1</next>
+            </phrase>
+            <phrase id="1">
+                <text>sz_arena_mutant_reward_1</text>
+                <action>bar_dialogs.sz_arena_mutant_give_reward</action>
+            </phrase>
+        </phrase_list>
+    </dialog>
+    <dialog id="sz_arena_mutant_battle_burer">
+        <has_info>bar_arena_bloodsucker_defeated</has_info>
+        <dont_has_info>bar_arena_burer_defeated</dont_has_info>
+        <dont_has_info>bar_arena_spawn_monstr</dont_has_info>
+        <phrase_list>
+            <phrase id="0">
+                <text>sz_arena_mutants_question</text>
+                <next>1</next>
+            </phrase>
+            <phrase id="1">
+                <text>sz_arena_mutant_burer_offer</text>
+                <next>2</next>
+                <next>3</next>
+            </phrase>
+            <phrase id="2">
+                <text>sz_arena_mutants_yes</text>
+                <give_info>bar_arena_burer_choosen</give_info>
+                            <next>4</next>
+            </phrase>
+            <phrase id="3">
+                <text>sz_arena_mutants_no</text>
+            </phrase>
+            <phrase id="4">
+                <text>sz_arena_mutants_ready_warning</text>
+            </phrase>
+        </phrase_list>
+    </dialog>
+    <dialog id="sz_arena_mutant_battle_savage">
+        <has_info>bar_arena_burer_defeated</has_info>
+        <dont_has_info>bar_arena_savage_defeated</dont_has_info>
+        <dont_has_info>bar_arena_spawn_monstr</dont_has_info>
+        <phrase_list>
+            <phrase id="0">
+                <text>sz_arena_mutants_question</text>
+                <next>1</next>
+            </phrase>
+            <phrase id="1">
+                <text>sz_arena_mutant_savage_offer</text>
+                <next>2</next>
+                <next>3</next>
+            </phrase>
+            <phrase id="2">
+                <text>sz_arena_mutants_yes</text>
+                <give_info>bar_arena_savage_choosen</give_info>
+                            <next>4</next>
+            </phrase>
+            <phrase id="3">
+                <text>sz_arena_mutants_no</text>
+            </phrase>
+            <phrase id="4">
+                <text>sz_arena_mutants_ready_warning</text>
+            </phrase>
+        </phrase_list>
+    </dialog>
+
 </game_dialogs>

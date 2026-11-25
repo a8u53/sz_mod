@@ -43,8 +43,35 @@
             cell_width = "30" cell_height="41" rows_num="2" cols_num="6"
             custom_placement="0" condition_progress_bar="1"/>
 
+    <dragdrop_knife x="700" y="14" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="1" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
 
-	<bottom_static x=0 y=736 width=1024 height=32 stretch="1">
+    <dragdrop_binocular x="0" y="-40" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="1" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
+
+    <dragdrop_helmet x="700" y="50" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="2" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
+
+    <dragdrop_biodetector x="0" y="-40" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="1" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
+	
+    <dragdrop_nv x="0" y="-40" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="1" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
+	
+    <dragdrop_detector x="0" y="-40" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="1" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
+	
+    <dragdrop_torch x="0" y="-40" width="200" height="94"
+            cell_width = "30" cell_height="41" rows_num="1" cols_num="2"
+            custom_placement="0" condition_progress_bar="1"/>
+			
+	<bottom_static x="0" y="736" width="1024" height="32" stretch="1">
 		<texture></texture>
 	</bottom_static>
 	
@@ -57,8 +84,10 @@
     </money_static>
 
    
-    <descr_static x="350" y="55" width="1" height="1">
-        <text x="25" y="-10" font="letterica16" r="255" g="255" a="255"b="255"></text>
+    <descr_static x="4" y="4" width="225" height="1" stretch="1">
+        <!-- x/y задают смещение полной карточки от курсора -->
+        <texture>ui_inGame2_hint_wnd_main_window_lt</texture>
+        <text x="25" y="-10" font="letterica16" r="255" g="255" a="255" b="255"></text>
     </descr_static>
 
     <character_frame_window x="35" y="26" width="202" height="460">
@@ -67,7 +96,7 @@
         </title>
     </character_frame_window>
     
-	<outfit_info x="360" y="75" width="255" height="185">
+	<outfit_info x="363" y="76" width="255" height="185">
 		<auto_static x="15" y="156">
 			<text font="letterica16" color="ui_clr_1" complex_mode="0"></text>
 		</auto_static>
@@ -173,7 +202,7 @@
     </progress_bar_rank>
         
     <time_static x="525" y="740" width="40" height="30" stretch="1">        
-		<texture x=0 y=0 width=190 height=36></texture>
+		<texture x="0" y="0" width="190" height="36"></texture>
         <text x="0" y="0" font="letterica16" r="255" g="255" b="255" a="170">ui_inv_time</text>
 	</time_static>
 	
@@ -222,4 +251,10 @@
 		<snd_item_use>interface\inv_slot</snd_item_use>
 	</action_sounds>
 
+
+	<!-- Короткое имя предмета при наведении курсора -->
+	<hover_name x="0" y="0" width="80" height="1" complex_mode="1" stretch="1">
+		<texture>ui_inGame2_hint_wnd_main_window_lt</texture>
+		<text x="0" y="0" width="50" height="26" font="letterica16" r="240" g="217" b="182" a="255" align="c" vert_align="c"/>
+	</hover_name>
 </w>

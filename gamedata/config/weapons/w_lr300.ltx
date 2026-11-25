@@ -82,9 +82,8 @@ cam_max_angle_horz		= 9.0	;(degree) maximum shot horizontal degree
 cam_step_angle_horz		= 0.5;0.4	;(degree) size of step camera moved in horizontal position while shooting
 
 fire_dispersion_condition_factor 	= 4		;увеличение дисперсии в процентах при максимальном износе 
-misfire_probability 	= 0.007 ;вероятность осечки при максимальном износе
-misfire_condition_k		= 0.1 
-condition_shot_dec 		= 0.00055 ;увеличение износа при каждом выстреле
+misfire_probability 	= 0.0055; базовая составляющая вероятности осечки при износе
+misfire_condition_k		= 0.085condition_shot_dec 		= 0.00065; потеря состояния за выстрел
 ;-----------------------------------------------------------------------------------
 
 fire_point              = 0.0, 0.190, 0.575
@@ -123,7 +122,7 @@ time_to_aim					= 1.0
 silencer_hit_power       	= 0.60
 silencer_hit_impulse	 	= 62
 silencer_fire_distance   	= 150
-silencer_bullet_speed	 	= 600
+silencer_bullet_speed	 	= 980
 
 hud                      	= wpn_lr300_hud
 normal                   	= 0, 1, 0

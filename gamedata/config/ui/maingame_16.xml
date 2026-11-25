@@ -51,37 +51,41 @@
 	</quick_info>
 
 
-	<icons_scroll_view  x="985" y="150" width="48" height="455" right_ident="2" always_show_scroll="0" vert_interval="1" inverse_dir="1" flip_vert="0" />
+	<icons_scroll_view  x="998" y="150" width="48" height="455" right_ident="2" always_show_scroll="0" vert_interval="1" inverse_dir="1" flip_vert="0" />
 
-	<weapon_jammed_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<weapon_jammed_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_weapon</texture>
 	</weapon_jammed_static>
 
-	<radiation_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<armor_condition_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+		<texture>ui_hud_icon_armour</texture>
+	</armor_condition_static>
+
+	<radiation_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_radiation</texture>
 	</radiation_static>
 
-	<wound_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<wound_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_drop</texture>
 	</wound_static>
 
-	<starvation_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<starvation_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_eat</texture>
 	</starvation_static>
 
-	<psy_health_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<psy_health_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_psycho</texture>
 	</psy_health_static>
 
-	<invincible_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<invincible_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_goodmode</texture>
 	</invincible_static>
 	
-	<can_sleep_static x="0" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<can_sleep_static x="0" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_sleep</texture>
 	</can_sleep_static>
 
-	<artefact_static x="-777770" y="0" width="35" height="42" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
+	<artefact_static x="-777770" y="0" width="22" height="27" stretch="1" la_alpha="1" light_anim="ui_slow_blinking_alpha">
 		<texture>ui_hud_icon_artefact</texture>
 	</artefact_static>
 

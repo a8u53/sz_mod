@@ -97,16 +97,16 @@
 		<text>Я готов выйти на арену.</text>
 	</string>
 	<string id="sz_arena_battle_11">
-		<text>Отлично, сколько бойцов против тебя выставлять? Одного, двух, трёх или пятерых?</text>
+		<text>Отлично, сегодня желающих хватает. Сколько соперников готов на тот свет отправить?</text>
 	</string>
 	<string id="sz_arena_battle_111">
-		<text>С тем что ты мне выдашь.</text>
+		<text>%c[UI_orange][Стандартное снаряжение]</text>
 	</string>
 	<string id="sz_arena_battle_112">
-		<text>Я буду со своим.</text>
+		<text>%c[UI_orange][Своё снаряжение]</text>
 	</string>
 	<string id="sz_arena_battle_113">
-		<text>Мне хватит и ножа.</text>
+		<text>%c[UI_orange][Нож]</text>
 	</string>
 	<string id="bar_bar_barman_ecolog_flash_done_0">
 		<text>Вот флешка с информацией, которую мне дал профессор Круглов.</text>
@@ -1369,27 +1369,99 @@
        <text>Вот молодец! Ну договор есть договор, можешь проходить.</text>
     </string>
 	<string id="sz_arena_reward_auto">
-		<text>Победил. Вот твоя награда.</text>
+		<text>Поздравляю! Вот твоя доля.</text>
 	</string>
 	<string id="bar_arena_man_start_81">
 		<text>На сегодня всё. Возвращайся, если захочешь ещё раз.</text>
 	</string>
-
-    <string id="sz_arena_difficulty_menu"><text>Выбери уровень сложности.</text></string>
-    <string id="sz_arena_difficulty_novice"><text>Лёгкий — новички.</text></string>
-    <string id="sz_arena_difficulty_experienced"><text>Средний — опытные.</text></string>
-    <string id="sz_arena_difficulty_master"><text>Тяжёлый — мастера.</text></string>
-    <string id="sz_arena_count_1"><text>Один</text></string>
-    <string id="sz_arena_count_2"><text>Два</text></string>
-    <string id="sz_arena_count_3"><text>Три</text></string>
-    <string id="sz_arena_count_5"><text>Пять</text></string>
-    <string id="sz_arena_loadout_menu"><text>С чем пойдёшь?</text></string>
-
-    <string id="sz_arena_back"><text>Назад</text></string>
-    <string id="sz_arena_back_count"><text>Назад</text></string>
-    <string id="sz_arena_ready_issued"><text>Готов? Снаряжение выдадим.</text></string>
-    <string id="sz_arena_ready_own"><text>Готов? Выходишь со своим снаряжением.</text></string>
-    <string id="sz_arena_ready_knife"><text>Ну, крутой, готов?</text></string>
-    <string id="sz_arena_yes"><text>Готов.</text></string>
-    <string id="sz_arena_no"><text>Я передумал.</text></string>
+    <string id="sz_arena_difficulty_menu">
+		<text>Выбери уровень сложности.</text>
+	</string>
+    <string id="sz_arena_difficulty_novice">
+		<text>Лёгкий — новички.</text>
+	</string>
+    <string id="sz_arena_difficulty_experienced">
+		<text>Средний — опытные.</text>
+	</string>
+    <string id="sz_arena_difficulty_master">
+		<text>Тяжёлый — мастера.</text>
+	</string>
+    <string id="sz_arena_count_1">
+		<text>%c[UI_orange][Один противник]</text>
+	</string>
+    <string id="sz_arena_count_2">
+		<text>%c[UI_orange][Два противника]</text>
+	</string>
+    <string id="sz_arena_count_3">
+		<text>%c[UI_orange][Три противника]</text>
+	</string>
+    <string id="sz_arena_count_5">
+		<text>%c[UI_orange][Пять противников]</text>
+	</string>
+    <string id="sz_arena_loadout_menu">
+		<text>С чем пойдёшь?</text>
+	</string>
+    <string id="sz_arena_back">
+		<text>%c[UI_orange][Назад]</text>
+	</string>
+    <string id="sz_arena_back_count">
+		<text>%c[UI_orange][Назад]</text>
+	</string>
+    <string id="sz_arena_ready_issued">
+		<text>Казёное так казёное, готов?</text>
+	</string>
+    <string id="sz_arena_ready_own">
+		<text>Своё, понял. Готов?</text>
+	</string>
+    <string id="sz_arena_ready_knife">
+		<text>Ну, крутой, готов?</text>
+	</string>
+    <string id="sz_arena_yes">
+		<text>Готов.</text>
+	</string>
+	<string id="sz_arena_no">
+		<text>Я передумал.</text>
+	</string>
+	<string id="sz_arena_daily_limit">
+		<text>На сегодня хватит, боец. Два боя ты уже выиграл. Приходи завтра — тогда снова выпущу тебя на арену.</text>
+</string>
+	<string id="sz_arena_mutant_pseudodog_offer">
+		<text>А начнём с местной публики! Псевдособаку знаешь? Эти твари у самого Бара постоянно ошиваются. Одну из них недавно удалось изловить неподалёку. Решили, так сказать, пустить её на потеху публике. Зверюга шустрая, зубастая, любит заходить со спины. Пока ещё свежий экземпляр, злости хоть отбавляй. Ну что, покажешь ей, кто здесь главный?</text>
+	</string>
+	<string id="sz_arena_mutant_snork_offer">
+		<text>А вот тебе ещё один экземпляр — снорк! Недавно только привезли. Откуда конкретно — уже и не вспомню. Зато погляди, что за чудо: скачет на четвереньках, словно цирковой акробат, да ещё и в противогазе. Только вместо страховочной сетки у него зубы. Не завидую я тому, кому он на шею запрыгнет. Ну что, выпустим?</text>
+	</string>
+	<string id="sz_arena_mutant_bloodsucker_offer">
+		<text>А вот этот красавец чуть не устроил кровавую баню. Гнал группу сталкеров от самой Старой деревни до Бара. Хорошо, что Долговцы вовремя подоспели, иначе неизвестно, чем бы всё закончилось. Так кровосос и попал к нам на арену. Доставили его совсем недавно, публика ещё толком не успела познакомиться с этим красавцем. Ну что, рискнёшь?</text>
+	</string>
+	<string id="sz_arena_mutant_burer_offer">
+		<text>А теперь у нас кое-кто поинтереснее. Бюрер. Откуда он вообще взялся — тайна, покрытая мраком. Одни говорят, нашли его где-то под землёй, другие — что сам объявился. Да только никто толком ничего не знает. Недавно только появился у нас. Зато знаем, на что способен: мелкий, а неприятностей от него на целый отряд. Любит железки покидать да чужие пули останавливать. Ну что, познакомишься поближе?</text>
+	</string>
+	<string id="sz_arena_mutant_savage_offer">
+		<text>Ну и напоследок оставил тебе кое-кого особенного. У нас тут один экземпляр уже давно обитает. Когда-то он целую группу сталкеров порвал. С тех пор немало бойцов на арене полегло, а эта тварь всё ещё здесь. Как его поймали — никто толком не знает. Да и что он такое — каждый рассказывает по-своему. Сам увидишь. Только учти: до сих пор отсюда не все возвращались. Ну что, рискнёшь?</text>
+	</string>
+	<string id="sz_arena_mutants_confirm">
+		<text>Ну что, берёшься? Выпускаем его на арену?</text>
+	</string>
+	<string id="sz_arena_mutants_yes">
+		<text>Давай, выпускай своего уродца.</text>
+	</string>
+	<string id="sz_arena_mutants_no">
+		<text>Не сегодня. Давай в другой раз.</text>
+	</string>
+	<string id="sz_arena_mutant_reward_0">
+		<text>Ну что ж, публика довольна. Хороший бой!</text>
+	</string>
+	<string id="sz_arena_mutant_reward_1">
+		<text>Держи свою награду. Заслужил.</text>
+	</string>
+	<string id="sz_arena_mutants_question">
+		<text>Ну что, Арни, есть кто-нибудь интересный на сегодня?</text>
+	</string>
+	<string id="sz_arena_mutants_ready_warning">
+		<text>Через минуту должен быть на изготовке. Не появишься — буду считать, что сбежал.</text>
+	</string>
+	<string id="sz_arena_mutant_reward_auto">
+		<text>Ну вот, публика довольна. Держи свои деньги — заслужил.</text>
+	</string>
 </string_table>

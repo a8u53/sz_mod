@@ -4,7 +4,27 @@
 
 local visor_outfit_section = nil
 
-local visor_outfit = "exo_dolg_outfit"
+-- Секции костюмов, для которых включается визор.
+-- Добавляй новые секции по аналогии: ["имя_секции"] = true
+local visor_outfits = {
+    ["exo_outfit"] = true,
+    ["exo_dolg_outfit"] = true,
+	["exo_freedom_outfit"] = true,
+    ["svoboda_spec_outfit"] = true,
+	["freedom_scientific_outfit"] = true,
+	["dolg_heavy_outfit"] = true,
+	["dolg_scientific_outfit"] = true,
+	["antirad_outfit"] = true,
+	["ecolog_outfit"] = true,
+	["protection_outfit"] = true,
+	["cs_heavy_outfit"] = true,
+	["stalker_antigas_outfit"] = true,
+	["bandit_antigas_outfit"] = true,
+	["military_outfit"] = true,
+	["scientific_outfit"] = true,
+	["military_stalker_outfit"] = true,
+	["military_commander_outfit"] = true,													
+}
 
 function update(actor)
     if not actor then
@@ -26,7 +46,7 @@ function update(actor)
 
     visor_outfit_section = outfit_section
 
-    if outfit_section == visor_outfit then
+    if visor_outfits[outfit_section] then
         console:execute("r2_visor_refl on")
         console:execute("r2_visor_refl_control on")
         console:execute("r2_rain_drops on")

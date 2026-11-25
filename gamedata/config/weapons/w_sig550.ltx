@@ -74,9 +74,8 @@ cam_max_angle_horz		= 6.0	;(degree) maximum shot horizontal degree
 cam_step_angle_horz		= 0.5;0.4	;(degree) size of step camera moved in horizontal position while shooting
 
 fire_dispersion_condition_factor = 5	;увеличение дисперсии в процентах при максимальном износе 
-misfire_probability 		= 0.003	;вероятность осечки при максимальном износе 
-misfire_condition_k			= 0.05
-condition_shot_dec 			= 0.0006 ;увеличение износа при каждом выстреле
+misfire_probability 		= 0.0045; базовая составляющая вероятности осечки при износе
+misfire_condition_k			= 0.070condition_shot_dec 			= 0.00062; потеря состояния за выстрел
 
 direction              		=  0, 0, 1
 fire_point			= 0.000000,0.137000,0.649000
@@ -92,9 +91,9 @@ shell_particles	 			= weapons\generic_shells
 
 rpm_empty_click 	 		= 200
 
-PDM_disp_base 			= 1.8
-PDM_disp_vel_factor 		= 1.7
-PDM_disp_accel_factor 		= 1.7
+PDM_disp_base 			= 1.4
+PDM_disp_vel_factor 		= 1.5
+PDM_disp_accel_factor 		= 1.5
 PDM_crouch	 		= 1.0
 PDM_crouch_no_acc 		= 1.0
 
@@ -104,7 +103,7 @@ hit_impulse		 	= 30
 hit_type 			= fire_wound
 
 fire_distance           = 400
-bullet_speed			= 980	;начальная скорость пули
+bullet_speed			= 911	;начальная скорость пули
 rpm                     = 700
 ; end ttc
 
@@ -177,7 +176,7 @@ snd_switch					= weapons\sig550\switch
 silencer_hit_power       	= 0.48
 silencer_hit_impulse	 	= 120
 silencer_fire_distance   	= 250
-silencer_bullet_speed	 	= 600
+silencer_bullet_speed	 	= 911
 
 ;silencer_flame_particles 	= weapons\generic_weapon01
 silencer_smoke_particles 	= weapons\generic_shoot_00

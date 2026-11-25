@@ -18,6 +18,12 @@ lasttime	= 0
 post_process = 0
 local weapon_hide = false
 
+-- Звуки усилия при прыжке. Файлы должны лежать в gamedata\sounds\.
+local jump_sound_sections = {
+    [[actor\hero_jump_1]],
+    [[actor\hero_jump_2]]
+}
+
 -- Placement-sound helpers. OGSR exposes place_item_to_box, but some inventory-box
 -- transfer paths also dispatch take_item_from_box for both directions.
 local last_item_transfer_sounds = {}
@@ -97,6 +103,7 @@ function actor_binder:__init (obj) super(obj)
 	self.weather_manager = level_weathers.WeatherManager()
 	self.actor_detector  = xr_detector.actor_detector()
 	self.rain_active = false
+	self.last_jump_sound_index = 0
 end
 ----------------------------------------------------------------------------------------------------------------------
 function actor_binder:net_spawn(data)
@@ -191,6 +198,7 @@ function actor_binder:net_destroy()
 	self.object:set_callback(callback.use_object, nil)
 	self.object:set_callback(callback.entity_alive_before_hit, nil)
 	self.object:set_callback(callback.on_key_press, nil)
+	self.object:set_callback(callback.on_actor_jump, self.on_actor_jump, self)
 	
 	if sr_psy_antenna.psy_antenna then
 		sr_psy_antenna.psy_antenna:destroy()
@@ -235,6 +243,7 @@ function actor_binder:reinit()
 	self.object:set_callback(callback.hit, sz_mod.actor_on_hit_callback, self)
 	self.object:set_callback(callback.entity_alive_before_hit, sz_mod.actor_before_hit_callback, self)
 	self.object:set_callback(callback.on_key_press, self.on_key, self)
+	self.object:set_callback(callback.on_actor_jump, self.on_actor_jump, self)
 end
 ----------------------------------------------------------------------------------------------------------------------
 function actor_binder:place_item_to_box(first, second)
@@ -248,6 +257,24 @@ function actor_binder:on_inv_box_item_drop(first, second)
     -- provide only the item or both the box and the item.
     local item = get_single_transfer_item(first, second)
     play_item_transfer_sound(item)
+end
+----------------------------------------------------------------------------------------------------------------------
+function actor_binder:on_actor_jump(actor)
+	local count = table.getn(jump_sound_sections)
+	if count <= 0 then return end
+
+	-- Не повторяем один и тот же вариант два прыжка подряд.
+	local index = math.random(count)
+	if count > 1 and index == (self.last_jump_sound_index or 0) then
+		index = (index % count) + 1
+	end
+	self.last_jump_sound_index = index
+
+	local snd = xr_sound.get_safe_sound_object(jump_sound_sections[index])
+	if snd then
+		-- play(actor) запускает позиционный 3D-звук от самого персонажа.
+		snd:play(self.object)
+	end
 end
 ----------------------------------------------------------------------------------------------------------------------
 function actor_binder:take_item_from_box(box, item)
@@ -347,6 +374,10 @@ function actor_binder:info_callback(npc, info_id)
     printf("*INFO*: npc='%s' id='%s'", npc:name(), info_id)
     level_tasks.proceed(self.object)
     level_tasks.process_info_portion(info_id)
+    -- Arena-specific callback: spawn the selected mutant after the megaphone intro.
+    if sz_arena and sz_arena.actor_info_portion_received then
+        sz_arena.actor_info_portion_received(self.object, info_id)
+    end
 end
 ----------------------------------------------------------------------------------------------------------------------
 function actor_binder:on_trade (item, sell_bye, money)
@@ -525,8 +556,6 @@ function actor_binder:update(delta)
 	-- HUD и фоновые игровые обновления. У ряда функций уже есть свои интервалы.
 	sz_mod.show_time()
 	sz_mod.rank_up()
-	sz_mod.armor_static()
-
 	sz_dynmusic.update()
 	sz_factions.update_factions()
 

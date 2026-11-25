@@ -54,12 +54,12 @@ local FACTION_NEWS = {
     ["dolg"] = {
         texture = "ui\\ui_iconsTotal",
         rect    = { x = 498, y = 188, w = 83, h = 47 },
-        text    = "Вы объявлены врагом фракции: Долг",
+        text    = "Вы объявлены врагом группировки: Долг",
     },
     ["freedom"] = {
         texture = "ui\\ui_iconsTotal",
         rect    = { x = 498, y = 235, w = 83, h = 47 },
-        text    = "Вы объявлены врагом фракции: Свобода",
+        text    = "Вы объявлены врагом группировки: Свобода",
     },
     ["bandit"] = {
         texture = "ui\\ui_iconsTotal",
@@ -131,7 +131,7 @@ local function schedule_hostile_news(faction)
     hostile_scheduled[faction] = true
 
     local name = faction_name(faction)
-    local text = "%c[255,255,80,80]ВНИМАНИЕ! \\n%c[default]Вы объявлены врагом фракции: " .. name
+    local text = "%c[255,255,80,80]Сообщение: \\n%c[default]Вы объявлены врагом группировки: " .. name
     show_news_for(faction, text, HOSTILE_NEWS_DELAY)
 end
 
@@ -182,7 +182,7 @@ local function become_bandit(reason_text)
     -- он остаётся врагом Свободы. Иначе «стал ренегатом и всё нормально»
     -- ломало бы логику.
 
-    show_news_for("bandit", "%c[255,255,80,80]ВНИМАНИЕ! \\n%c[default]" .. reason_text, 0)
+    show_news_for("bandit", "%c[255,255,80,80]Сообщение: \\n%c[default]" .. reason_text, 0)
     play_rank_sound()
 end
 
@@ -224,7 +224,7 @@ local function check_faction_kick()
     hostile_scheduled[faction] = nil
 
     local name = faction_name(faction)
-    local text = "%c[255,255,80,80]ВНИМАНИЕ! \\n%c[default]Вас исключили из фракции: " .. name
+    local text = "%c[255,255,80,80]Сообщение: \\n%c[default]Вы больше не состоите в группировке: " .. name
     show_news_for(faction, text, 0)
     play_news_sound()
 end

@@ -1,0 +1,24 @@
+[_group]
+version = 3
+flags = 0
+effects_count = 2
+timelimit = 3
+ 
+[effect_0000]
+effect_name = weapons\group_items\generic_smoke_01
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.1
+time1 = 0
+flags = 4
+ 
+[effect_0001]
+effect_name = weapons\generic_gunsmoke
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0
+time1 = 0
+flags = 4
+ 

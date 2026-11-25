@@ -37,7 +37,7 @@
 		<actor_dialog>tm_barman_reward</actor_dialog>
 	</specific_character>
 
-<!--------------------------------Торговец---->
+<!-- Торговец -->
 	<specific_character id="esc_unik_npc" no_random = "1">
 		<name>Немец</name>
 		<icon>ui_npc_u_stalker_zloy</icon>
@@ -625,6 +625,12 @@
 		<start_dialog>bar_arena_man_start</start_dialog>
 		<actor_dialog>bar_arena_man_job</actor_dialog>
 		<actor_dialog>sz_arena_battle</actor_dialog>
+		<actor_dialog>sz_arena_mutant_battle</actor_dialog>
+		<actor_dialog>sz_arena_mutant_battle_snork</actor_dialog>
+		<actor_dialog>sz_arena_mutant_battle_bloodsucker</actor_dialog>
+		<actor_dialog>sz_arena_mutant_battle_burer</actor_dialog>
+		<actor_dialog>sz_arena_mutant_battle_savage</actor_dialog>
+
 	</specific_character>
 
 	<specific_character id="bar_arena_guard" team_default = "1">

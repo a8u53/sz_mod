@@ -140,4 +140,6 @@
 
     <!-- Совместимость со старым ID арены -->
     <info_portion id="bar_arena_test_enemy_dead"></info_portion>
+
+
 </game_information_portions>

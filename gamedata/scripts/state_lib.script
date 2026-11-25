@@ -411,10 +411,17 @@ states = {
 			},
 	udar_prikladom  = {weapon = "unstrapped",
 				movement = move.stand,
-				mental = anim.free,
+				mental = anim.danger,
 				bodystate = move.standing,
 				animstate = "stand",
-				animation = "free_facer_p"
+				animation = "sz_npc_punch_a"
+			},
+	udar_prikladom_alt  = {weapon = "unstrapped",
+				movement = move.stand,
+				mental = anim.danger,
+				bodystate = move.standing,
+				animstate = "stand",
+				animation = "sz_npc_punch_b"
 			},
 	-- Сидячие состояния
 	sit = {		weapon = "strapped",

@@ -1,12 +1,12 @@
--- Централизованный модуль повторяемой арены.
--- Реализация вынесена сюда из bar_dialogs.script и xr_effects.script.
+-- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
+-- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ bar_dialogs.script пїЅ xr_effects.script.
 
 -- new arena
 
 
 local function sz_arena_count_set(actor, npc, count)
-    -- Сбрасываем только выбранное количество противников.
-    -- Сложность уже установлена отдельным выбором и должна сохраняться.
+    -- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+    -- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
     for _, info in ipairs({"sz_arena_count_1", "sz_arena_count_2", "sz_arena_count_3", "sz_arena_count_5"}) do
         actor:disable_info_portion(info)
     end
@@ -27,6 +27,105 @@ local function sz_arena_count_5(actor,npc) sz_arena_count_set(actor,npc,5) end
 local sz_arena_start, sz_arena_reset_counter
 local sz_arena_start_crowd_loop
 local sz_arena_crowd_generation = 0
+
+-- Daily repeat-arena limit. Actor pstor is saved/restored by the existing
+-- xr_logic.pstor_save_all/load_all flow, so the counter survives save/load.
+local function sz_arena_daily_pstor()
+    if not db or not db.actor then return nil end
+    local id = db.actor:id()
+    if not db.storage[id] then db.storage[id] = {} end
+    if not db.storage[id].pstor then db.storage[id].pstor = {} end
+    return db.storage[id].pstor
+end
+
+local function sz_arena_daily_state()
+    local pstor = sz_arena_daily_pstor()
+    if not pstor then return nil, 0 end
+    local now = game.time()
+    if now == nil then return pstor, tonumber(pstor["sz_arena_daily_wins"]) or 0 end
+    local day = math.floor(now / 86400000)
+    if tonumber(pstor["sz_arena_daily_day"]) ~= day then
+        pstor["sz_arena_daily_day"] = day
+        pstor["sz_arena_daily_wins"] = 0
+    end
+    return pstor, tonumber(pstor["sz_arena_daily_wins"]) or 0
+end
+
+local function sz_arena_can_fight_today()
+    local _, wins = sz_arena_daily_state()
+    return wins < 2
+end
+
+local function sz_arena_daily_limit_reached()
+    return not sz_arena_can_fight_today()
+end
+
+local function sz_arena_register_daily_win()
+    local pstor, wins = sz_arena_daily_state()
+    if pstor then
+        pstor["sz_arena_daily_wins"] = math.min(2, wins + 1)
+    end
+end
+
+-- Mutant arena: use the existing Rostok arena spawn point and registered info portions.
+-- The module is loaded already by the ordinary arena callbacks, so the dialog calls it via bar_dialogs.
+local function sz_arena_start_mutant_fight(actor, npc)
+    if actor == nil or has_alife_info("bar_arena_spawn_monstr") then
+        return false
+    end
+
+    local sim = alife()
+    if sim == nil then
+        printf("[sz_arena] alife() unavailable; mutant was not spawned")
+        return false
+    end
+
+    local section = nil
+    if has_alife_info("bar_arena_pseudodog_choosen") then
+        section = "pseudodog_arena"
+    elseif has_alife_info("bar_arena_snork_choosen") then
+        section = "snork_arena"
+    elseif has_alife_info("bar_arena_bloodsucker_choosen") then
+        section = "bloodsucker_arena"
+    elseif has_alife_info("bar_arena_burer_choosen") then
+        section = "burer_arena"
+    elseif has_alife_info("bar_arena_savage_choosen") then
+        section = "bar_arena_savage"
+    end
+    if section == nil then
+        printf("[sz_arena] no supported mutant choice is active")
+        return false
+    end
+
+    -- Beast is a zombified stalker profile, but this fight belongs to the mutant arena.
+    -- Use the mutant arena spawn point/vertices, not the standalone stalker arena point.
+    local pos = vector():set(162.390, 0.098, 110.257)
+    local level_vertex, game_vertex = 47153, 1514
+    local enemy = sim:create(section, pos, level_vertex, game_vertex)
+    if enemy == nil then
+        printf("[sz_arena] failed to spawn '%s' at Rostok arena", section)
+        return false
+    end
+
+    -- Clear only the previous round's result/state. Keep pseudodog_choosen
+    -- until the megaphone finishes the introduction.
+    actor:disable_info_portion("bar_arena_monstr_dead")
+    actor:disable_info_portion("bar_arena_mutant_reward_paid")
+    actor:disable_info_portion("bar_arena_monstr_ready")
+    actor:disable_info_portion("bar_arena_actor_afraid")
+    actor:disable_info_portion("bar_arena_start_introduce")
+    actor:disable_info_portion("bar_arena_pre_room_spawn")
+    if section == "bar_arena_savage" then
+        actor:disable_info_portion("bar_arena_savage_defeated")
+    end
+    actor:give_info_portion("bar_arena_spawn_monstr")
+    -- Ignore Bar territory murder logic only while the Beast is active.
+    if section == "bar_arena_savage" then
+        actor:give_info_portion("bar_arena_savage_active")
+    end
+    return true
+end
+
 -- Standalone arena: configurable opponent count, all spawned at the same arena point.
 local function sz_arena_start_issued(actor, npc) sz_arena_start(actor, npc, "issued") end
 local function sz_arena_start_own(actor, npc) sz_arena_start(actor, npc, "own") end
@@ -35,7 +134,7 @@ local function sz_arena_clear_pick(actor, npc)
     for _, info in ipairs({"sz_arena_pick_issued", "sz_arena_pick_own", "sz_arena_pick_knife"}) do actor:disable_info_portion(info) end
 end
 sz_arena_start = function(actor, npc, loadout)
-    if has_alife_info("sz_arena_active") then return end
+    if has_alife_info("sz_arena_active") or not sz_arena_can_fight_today() then return end
     sz_arena_reset_counter(actor, npc)
     local sim = alife()
     if sim == nil then return end
@@ -48,15 +147,24 @@ sz_arena_start = function(actor, npc, loadout)
     elseif has_alife_info("sz_arena_difficulty_master") then difficulty = "master" end
     local enemy_pos = vector():set(152.525, -21.017, 130.692)
     local enemy_lv, enemy_gv = 44534, 1595
-    local section_ids = {}
-    if count == 1 then section_ids = {"sz_arena_respawner_" .. difficulty .. "_c1_1"}
-    elseif count == 2 then section_ids = {"sz_arena_respawner_" .. difficulty .. "_c2_1", "sz_arena_respawner_" .. difficulty .. "_c2_2"}
-    elseif count == 3 then section_ids = {"sz_arena_respawner_" .. difficulty .. "_c3_1", "sz_arena_respawner_" .. difficulty .. "_c3_2", "sz_arena_respawner_" .. difficulty .. "_c3_3"}
-    else section_ids = {"sz_arena_respawner_" .. difficulty .. "_c5_1", "sz_arena_respawner_" .. difficulty .. "_c5_2", "sz_arena_respawner_" .. difficulty .. "_c5_3", "sz_arena_respawner_" .. difficulty .. "_c5_4", "sz_arena_respawner_" .. difficulty .. "_c5_5"} end
+    -- Choose a random set of unique profiles. Each profile is permanently
+    -- paired with its own existing c5 route (profile 1 -> route c5_1, etc.).
+    local profiles = {1, 2, 3, 4, 5}
+    for i = #profiles, 2, -1 do
+        local j = math.random(i)
+        profiles[i], profiles[j] = profiles[j], profiles[i]
+    end
+
     local spawned = 0
-    for route_index, section_id in ipairs(section_ids) do
+    for i = 1, count do
+        local profile_index = profiles[i]
+        local section_id = "sz_arena_respawner_" .. difficulty .. "_p" .. tostring(profile_index)
         local enemy = sim:create(section_id, enemy_pos, enemy_lv, enemy_gv)
-        if enemy ~= nil then spawned = spawned + 1 else printf("[sz_arena] failed to spawn route %d", route_index) end
+        if enemy ~= nil then
+            spawned = spawned + 1
+        else
+            printf("[sz_arena] failed to spawn profile %d", profile_index)
+        end
     end
     if spawned == 0 then return end
     for _, info in ipairs({"sz_arena_active", "sz_arena_enemy_dead", "sz_arena_reward_paid", "sz_arena_fight_begin", "sz_arena_loadout_issued", "sz_arena_loadout_own", "sz_arena_loadout_knife", "sz_arena_count_1", "sz_arena_count_2", "sz_arena_count_3", "sz_arena_count_5"}) do actor:disable_info_portion(info) end
@@ -89,7 +197,7 @@ sz_arena_reset_counter = function(actor, npc)
 end
 
 local function sz_arena_finish(actor, npc)
-	if db.actor == nil then
+	if db.actor == nil or not has_alife_info("sz_arena_active") or has_alife_info("sz_arena_enemy_dead") then
 		return
 	end
 
@@ -102,6 +210,8 @@ local function sz_arena_finish(actor, npc)
     db.actor:disable_info_portion("sz_arena_active")
     db.actor:disable_info_portion("sz_arena_reward_paid")
     db.actor:give_info_portion("sz_arena_enemy_dead")
+    -- A win is registered only after the final configured opponent is killed.
+    sz_arena_register_daily_win()
 end
 
 -- One-shot ready announcement played as the opening camera fly-by begins.
@@ -335,8 +445,11 @@ local function sz_arena_weapon_give(actor, npc)
 		novice = {
 			{outfit = "novice_outfit", weapon = "wpn_pm", ammo = {"ammo_9x18_fmj", "ammo_9x18_fmj", "ammo_9x18_fmj"}},
 			{outfit = "novice_white_outfit", weapon = "wpn_fort", ammo = {"ammo_9x18_fmj", "ammo_9x18_fmj", "ammo_9x18_fmj"}},
+			{outfit = "bandit_green_outfit", weapon = "wpn_pb", ammo = {"ammo_9x18_fmj", "ammo_9x18_fmj", "ammo_9x18_fmj"}},
 			{outfit = "bandit_red_outfit", weapon = "wpn_bm16", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
 			{outfit = "bandit_green_outfit", weapon = "wpn_toz34", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
+			{outfit = "novice_white_outfit", weapon = "wpn_toz34_shorty", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
+			{outfit = "novice_outfit", weapon = "wpn_bm16_full", ammo = {"ammo_12x70_buck", "ammo_12x70_buck", "ammo_12x70_buck"}},
 		},
 		experienced = {
 			{outfit = "cs_outfit", weapon = "wpn_l85", ammo = {"ammo_5.56x45_ss190", "ammo_5.56x45_ss190", "ammo_5.56x45_ss190", "ammo_5.56x45_ss190"}},
@@ -582,8 +695,8 @@ local function sz_arena_cleanup(actor, npc)
 end
 
 
--- Публичные функции скриптового namespace sz_arena.
--- X-Ray/OGSR загружает .script по имени файла; require("sz_arena") здесь не используется.
+-- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ namespace sz_arena.
+-- X-Ray/OGSR пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ .script пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ; require("sz_arena") пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 function count_set(actor, npc, count) return sz_arena_count_set(actor, npc, count) end
 function difficulty_set(actor, npc, difficulty) return sz_arena_difficulty_set(actor, npc, difficulty) end
 function difficulty_novice(actor, npc) return sz_arena_difficulty_novice(actor, npc) end
@@ -598,7 +711,82 @@ function start_own(actor, npc) return sz_arena_start_own(actor, npc) end
 function start_knife(actor, npc) return sz_arena_start_knife(actor, npc) end
 function clear_pick(actor, npc) return sz_arena_clear_pick(actor, npc) end
 function start(actor, npc, loadout) return sz_arena_start(actor, npc, loadout) end
+function start_mutant_fight(actor, npc) return sz_arena_start_mutant_fight(actor, npc) end
+
+-- Called from actor_binder:info_callback after the mutant introduction finishes.
+-- The mutant is spawned only when the arena announces that the fight is ready.
+function actor_info_portion_received(actor, info_id)
+    if info_id ~= "bar_arena_monstr_ready" then
+        return false
+    end
+    if actor == nil or not (has_alife_info("bar_arena_pseudodog_choosen") or has_alife_info("bar_arena_snork_choosen") or has_alife_info("bar_arena_bloodsucker_choosen") or has_alife_info("bar_arena_burer_choosen") or has_alife_info("bar_arena_savage_choosen")) then
+        return false
+    end
+    if has_alife_info("bar_arena_spawn_monstr") then
+        return false
+    end
+    return sz_arena_start_mutant_fight(actor, nil)
+end
+local function sz_arena_mutant_has_reward()
+    return has_alife_info("bar_arena_monstr_dead")
+        and not has_alife_info("bar_arena_mutant_reward_paid")
+end
+
+local function sz_arena_mutant_give_reward(actor, npc)
+    if db == nil or db.actor == nil or npc == nil or not sz_arena_mutant_has_reward() then
+        return false
+    end
+    -- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+    -- Determine the payout from the defeated mutant, not the *_choosen flags:
+    -- those are cleared as soon as the mutant dies.
+    local reward = 0
+    -- Defeated flags are cumulative progression flags. Check newest stage first.
+    if has_alife_info("bar_arena_savage_defeated") then
+        reward = 2000
+    elseif has_alife_info("bar_arena_burer_defeated") then
+        reward = 1200
+    elseif has_alife_info("bar_arena_bloodsucker_defeated") then
+        reward = 800
+    elseif has_alife_info("bar_arena_snork_defeated") then
+        reward = 500
+    elseif has_alife_info("bar_arena_pseudodog_defeated") then
+        reward = 300
+    end
+
+    if reward <= 0 then
+        printf("[sz_arena] mutant reward: no defeated-mutant infoportion found; payout skipped")
+        return false
+    end
+
+    dialogs.relocate_money(npc, reward, "in")
+    db.actor:give_info_portion("bar_arena_mutant_reward_paid")
+    -- пїЅпїЅпїЅпїЅпїЅ 2 пїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ; пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+    db.actor:disable_info_portion("bar_arena_door_1_open")
+    -- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
+    for _, info in ipairs({
+        "bar_arena_spawn_monstr",
+        "bar_arena_pre_room_entered",
+        "bar_arena_pseudodog_choosen",
+        "bar_arena_snork_choosen",
+        "bar_arena_bloodsucker_choosen",
+        "bar_arena_burer_choosen",
+        "bar_arena_savage_choosen",
+        "bar_arena_start_introduce",
+        "bar_arena_actor_afraid",
+        "bar_arena_monstr_ready",
+        "bar_arena_monstr_dead",
+    }) do
+        db.actor:disable_info_portion(info)
+    end
+    return true
+end
+
+function mutant_has_reward() return sz_arena_mutant_has_reward() end
+function mutant_give_reward(actor, npc) return sz_arena_mutant_give_reward(actor, npc) end
+
 function has_reward() return sz_arena_has_reward() end
+function can_fight_today() return sz_arena_can_fight_today() end
+function daily_limit_reached() return sz_arena_daily_limit_reached() end
 function reset_counter(actor, npc) return sz_arena_reset_counter(actor, npc) end
 function finish(actor, npc) return sz_arena_finish(actor, npc) end
 function ready_sound(actor, npc) return sz_arena_ready_sound(actor, npc) end

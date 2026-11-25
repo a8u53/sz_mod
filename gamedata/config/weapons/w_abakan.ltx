@@ -73,18 +73,19 @@ fire_dispersion_base			= 0.17;0.19		;угол (в градусах) базовой дисперсии оружия 
 control_inertion_factor			= 1.3f
 
 ;отдача
-cam_relax_speed         		= 5.6;0.15;0.125		;скорость возврата в исходное положение
-cam_dispersion          		= 0.3		;увеличения угла (в градусах) с каждым выстрелом
-cam_dispersion_inc			= 0.25		;увеличениe cam_dispersion с каждым выстрелом
+cam_relax_speed         		= 6.2;0.15;0.125		;скорость возврата в исходное положение
+cam_dispersion          		= 0.25;увеличения угла (в градусах) с каждым выстрелом
+cam_dispersion_inc			= 0.22;увеличениe cam_dispersion с каждым выстрелом
 cam_dispertion_frac			= 0.9		;ствол будет подыматься на cam_dispersion*cam_dispertion_frac +- cam_dispersion*(1-cam_dispertion_frac)
 cam_max_angle				= 9.0	    	;максимальный угол отдачи
-cam_max_angle_horz			= 15.0		;(degree) maximum shot horizontal degree 
-cam_step_angle_horz			= 1.9		;(degree) size of step camera moved in horizontal position while shooting
+cam_max_angle_horz			= 13.0;(degree) maximum shot horizontal degree 
+cam_step_angle_horz			= 1.6;(degree) size of step camera moved in horizontal position while shooting
 
 
 fire_dispersion_condition_factor 	= 5	    	;увеличение дисперсии в процентах при максимальном износе 
-misfire_probability 			= 0.0015	;вероятность осечки при максимальном износе 
-condition_shot_dec 			= 0.00045	;увеличение износа при каждом выстреле
+misfire_probability 			= 0.0015; базовая составляющая вероятности осечки при износе
+misfire_condition_k	= 0.040	; коэффициент роста вероятности осечки при износе
+condition_shot_dec 			= 0.00045; потеря состояния за выстрел
 
 fire_point             		=  0,0.225,0.687			; position (3rd person view) for particles of fire 
 fire_point2            		=  0,0.148,0.558			; position (3rd person view) for particles of fire (when shooting with secondary fire)
@@ -96,9 +97,9 @@ grenade_flame_particles		= weapons\generic_weapon01
 shell_point		 			= 0,0.252,0.196				; position (3rd person view) for shell to throw out
 shell_particles	 			= weapons\generic_shells_545	; name of the particles for shells
 
-PDM_disp_base 				= 1.0
-PDM_disp_vel_factor 			= 1.3
-PDM_disp_accel_factor 			= 1.3
+PDM_disp_base 				= 0.95
+PDM_disp_vel_factor 			= 1.15
+PDM_disp_accel_factor 			= 1.15
 PDM_crouch	 			= 1.0
 PDM_crouch_no_acc 			= 1.0
 
@@ -118,7 +119,7 @@ time_to_aim					= 1.0
 silencer_hit_power       		= 0.72
 silencer_hit_impulse	 		= 75
 silencer_fire_distance   		= 750
-silencer_bullet_speed	 		= 950
+silencer_bullet_speed	 		= 900
 
 hud                      	= wpn_abakan_hud				; name of the section of the hud
 

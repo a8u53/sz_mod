@@ -9,9 +9,20 @@ on_info = %+bar_rupor_off%
 snd = dolg_speech
 min_idle = 5000
 max_idle = 15000
-on_info = {+bar_rupor_off} nil, {+bar_arena_start} ph_idle@idle, {+bar_territory_nodolg_1_hit -bar_dolg_territory_1_hit_notify} ph_sound@1_hit, {+bar_territory_nodolg_2_hit -bar_dolg_territory_2_hit_notify} ph_sound@2_hit, {+bar_territory_nodolg_kill -bar_dolg_territory_kill_notify} ph_sound@siren, {=bar_dolg_alarm} ph_sound@siren
+on_info = {+bar_rupor_off} nil, {+bar_arena_pseudodog_choosen} ph_sound@new_fight, {+bar_arena_snork_choosen} ph_sound@new_fight, {+bar_arena_bloodsucker_choosen} ph_sound@new_fight, {+bar_arena_burer_choosen} ph_sound@new_fight, {+bar_arena_savage_choosen} ph_sound@new_fight, {+bar_arena_start} ph_idle@idle, {+bar_territory_nodolg_1_hit -bar_dolg_territory_1_hit_notify} ph_sound@1_hit, {+bar_territory_nodolg_2_hit -bar_dolg_territory_2_hit_notify} ph_sound@2_hit, {+bar_territory_nodolg_kill -bar_dolg_territory_kill_notify} ph_sound@siren, {=bar_dolg_alarm} ph_sound@siren
 on_info2 = {+bar_start_megafon} ph_sound@start_megafon
- 
+
+[ph_sound@new_fight]
+snd = mega_arena_new_fight
+; If the actor reaches the pre-room, interrupt the opening announcement and play the mutant introduction.
+; If the 60-second zone timer expires, interrupt it with the one-shot coward announcement.
+on_info = {+bar_rupor_off} nil, {+bar_arena_actor_afraid} ph_sound@actor_afraid, {+bar_arena_pre_room_entered +bar_arena_pseudodog_choosen} ph_sound@introduce_pseudodog, {+bar_arena_pre_room_entered +bar_arena_snork_choosen} ph_sound@introduce_snork, {+bar_arena_pre_room_entered +bar_arena_bloodsucker_choosen} ph_sound@introduce_bloodsucker, {+bar_arena_pre_room_entered +bar_arena_burer_choosen} ph_sound@introduce_burer, {+bar_arena_pre_room_entered +bar_arena_savage_choosen} ph_sound@introduce_savage
+on_signal = sound_end| ph_idle@mutant_wait_announce
+
+; The opening announcement may finish before the actor enters the pre-room. Wait here for either outcome.
+[ph_idle@mutant_wait_announce]
+on_info = {+bar_arena_actor_afraid} ph_sound@actor_afraid, {+bar_arena_pre_room_entered +bar_arena_pseudodog_choosen} ph_sound@introduce_pseudodog, {+bar_arena_pre_room_entered +bar_arena_snork_choosen} ph_sound@introduce_snork, {+bar_arena_pre_room_entered +bar_arena_bloodsucker_choosen} ph_sound@introduce_bloodsucker, {+bar_arena_pre_room_entered +bar_arena_burer_choosen} ph_sound@introduce_burer, {+bar_arena_pre_room_entered +bar_arena_savage_choosen} ph_sound@introduce_savage
+
 [ph_sound@start_megafon]
 snd = bar_start_megafon
 on_timer = 45000|ph_sound@idle %-bar_start_megafon%
@@ -42,54 +53,62 @@ looped = true
 on_timer = 10000|ph_sound@kill
 on_info = {+bar_rupor_off} nil
 
-
 [ph_idle@idle]
-on_info ={+bar_arena_start_introduce +bar_arena_actor_afraid} ph_sound@actor_afraid, {+bar_arena_start_introduce +bar_arena_pseudodog_choosen} ph_sound@introduce_pseudodog, {+bar_arena_start_introduce +bar_arena_snork_choosen} ph_sound@introduce_snork, {+bar_arena_start_introduce +bar_arena_bloodsucker_choosen} ph_sound@introduce_bloodsucker, {+bar_arena_start_introduce +bar_arena_burer_choosen} ph_sound@introduce_burer, {+bar_arena_start_introduce +bar_arena_savage_choosen} ph_sound@introduce_savage
+on_info = {+bar_arena_start_introduce +bar_arena_actor_afraid} ph_sound@actor_afraid, {+bar_arena_start_introduce +bar_arena_pre_room_entered +bar_arena_pseudodog_choosen} ph_sound@introduce_pseudodog, {+bar_arena_start_introduce +bar_arena_snork_choosen} ph_sound@introduce_snork, {+bar_arena_start_introduce +bar_arena_pre_room_entered +bar_arena_bloodsucker_choosen} ph_sound@introduce_bloodsucker, {+bar_arena_start_introduce +bar_arena_pre_room_entered +bar_arena_burer_choosen} ph_sound@introduce_burer, {+bar_arena_start_introduce +bar_arena_pre_room_entered +bar_arena_savage_choosen} ph_sound@introduce_savage
 
 [ph_sound@actor_afraid]
 snd = arena_actor_afraid
-on_signal = theme_end| ph_idle@idle %-bar_arena_start_introduce +bar_arena_reset%
-	
+; Play once, clear the failed attempt, then return to the ordinary megaphone idle.
+on_signal = sound_end| ph_sound@idle %-bar_arena_start_introduce -bar_arena_actor_afraid -bar_arena_pseudodog_choosen -bar_arena_pre_room_spawn%
+on_info = {+bar_rupor_off} nil
+
 [ph_sound@introduce_pseudodog]
 snd = arena_introduce_pseudodog
-on_signal = theme_end| ph_idle@fight %-bar_arena_start_introduce%
+; After the introduction, announce the start of the fight. The ready info portion
+; starts the mutant spawn at the same moment as the fight-begin announcement.
+on_signal = sound_end| ph_sound@fight_begin %-bar_arena_start_introduce +bar_arena_monstr_ready +bar_arena_door_1_open%
+on_info = {+bar_rupor_off} nil
 
 [ph_sound@introduce_snork]
 snd = arena_introduce_snork
-on_signal = theme_end| ph_idle@fight %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@fight_begin %-bar_arena_start_introduce +bar_arena_monstr_ready +bar_arena_door_1_open%
 
 [ph_sound@introduce_bloodsucker]
 snd = arena_introduce_bloodsucker
-on_signal = theme_end| ph_idle@fight %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@fight_begin %-bar_arena_start_introduce +bar_arena_monstr_ready +bar_arena_door_1_open%
 
 [ph_sound@introduce_burer]
 snd = arena_introduce_burer
-on_signal = theme_end| ph_idle@fight %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@fight_begin %-bar_arena_start_introduce +bar_arena_monstr_ready +bar_arena_door_1_open%
 
 [ph_sound@introduce_savage]
 snd = arena_introduce_savage
-on_signal = theme_end| ph_idle@fight %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@fight_begin %-bar_arena_start_introduce +bar_arena_monstr_ready +bar_arena_door_1_open%
+
+[ph_idle@mutant_fight]
+; The mutant death callback raises bar_arena_monstr_dead; play the original arena victory announcement.
+on_info = {+bar_arena_monstr_dead} ph_sound@victory
 
 [ph_idle@fight]
-on_info = {-bar_arena_start} ph_sound@idle, {+bar_arena_actor_victory +bar_arena_20_p +bar_arena_start_introduce} ph_sound@victory, {+bar_arena_actor_victory +bar_arena_start_introduce} ph_sound@victory, {+bar_arena_actor_lose +bar_arena_start_introduce} ph_sound@lose, {+bar_arena_actor_dead +bar_arena_start_introduce} ph_sound@death,  {+bar_arena_monstr_ready +bar_arena_start_introduce} ph_sound@fight_begin
-
+on_info = {-bar_arena_start} ph_sound@idle, {+bar_arena_actor_victory +bar_arena_20_p +bar_arena_start_introduce} ph_sound@victory, {+bar_arena_actor_victory +bar_arena_start_introduce} ph_sound@victory, {+bar_arena_actor_lose +bar_arena_start_introduce} ph_sound@lose, {+bar_arena_actor_dead +bar_arena_start_introduce} ph_sound@death, {+bar_arena_monstr_ready +bar_arena_start_introduce} ph_sound@fight_begin
 
 [ph_sound@fight_begin]
 snd = arena_fight_begin
-on_signal = theme_end| ph_idle@fight %-bar_arena_start_introduce%
+on_signal = sound_end| ph_idle@mutant_fight %-bar_arena_start_introduce%
+on_info = {+bar_rupor_off} nil
 
 [ph_sound@victory]
-snd = arena_fight_victory
-on_signal = theme_end| ph_sound@idle %-bar_arena_start_introduce%
+snd = arena_fight_victory_notime
+on_signal = sound_end| ph_sound@idle %-bar_arena_start_introduce%
 
 [ph_sound@victory_notime]
 snd = arena_fight_victory_notime
-on_signal = theme_end| ph_sound@idle %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@idle %-bar_arena_start_introduce%
 
 [ph_sound@lose]
 snd = arena_fight_lose
-on_signal = theme_end| ph_sound@idle %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@idle %-bar_arena_start_introduce%
 
 [ph_sound@death]
 snd = arena_fight_death
-on_signal = theme_end| ph_sound@idle %-bar_arena_start_introduce%
+on_signal = sound_end| ph_sound@idle %-bar_arena_start_introduce%

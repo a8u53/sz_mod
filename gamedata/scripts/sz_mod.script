@@ -6,9 +6,6 @@
 -- СЕКЦИЯ 1: КОНСТАНТЫ И ТАБЛИЦЫ
 -- ============================================================
 
--- --- Броня ---
-local armor_last_static = nil
-
 -- --- Радиация ---
 local rad_update_time = 0
 local DETECTOR_SECTION = "detector_simple"
@@ -91,42 +88,6 @@ local community = {
     ["dolg"] = "\"Долг\"", ["freedom"] = "\"Свобода\"", ["zombied"] = "Зомбированный",
     ["trader"] = "Торговец", ["arena_enemy"] = "Боец арены"
 }
-
--- ============================================================
--- СЕКЦИЯ 2: НОВЫЕ ФУНКЦИИ
--- ============================================================
-
--- --- Статик брони ---
-function armor_static()
-    local actor = db.actor
-    if not actor or not actor:alive() then return end
-    local hud = get_hud()
-    if not hud then return end
-
-    local suit = actor:item_in_slot(6)
-    local new_static = nil
-
-    if suit then
-        local cond = suit:condition() * 100
-        if cond <= 60 and cond > 31 then
-            new_static = "hud_show_armor"
-        elseif cond <= 30 and cond > 11 then
-            new_static = "hud_show_armor2"
-        elseif cond <= 10 then
-            new_static = "hud_show_armor3"
-        end
-    end
-
-    if new_static == armor_last_static then return end
-    armor_last_static = new_static
-
-    local statics = {"hud_show_armor", "hud_show_armor2", "hud_show_armor3"}
-    for _, s in ipairs(statics) do
-        if hud:GetCustomStatic(s) then hud:RemoveCustomStatic(s) end
-    end
-
-    if new_static then hud:AddCustomStatic(new_static, true) end
-end
 
 -- ============================================================
 -- Шкала радиации (статик виден всегда при наличии детектора)
@@ -472,7 +433,7 @@ local function start_visual_blowout()
         end
     end
 
-    level.set_weather_fx("surge_day")
+    level.set_weather_fx("start_surge_day")
 
     local snd = xr_sound.get_safe_sound_object([[ambient\earthquake]])
     if snd then
@@ -700,13 +661,6 @@ function rank_up_sound()
     local snd_obj = xr_sound.get_safe_sound_object([[device\pda\pda_tip]])
     if snd_obj then
         snd_obj:play_no_feedback(db.actor, sound_object.s2d, 1, vector(), 1.0)
-    end
-end
-
--- --- Смерть сталкеров ---
-function kill_npc(victim, who)
-    if victim and IsStalker(victim) then
-        action(victim, particle("hit_fx\\group_items\\blood_pool","bip01_r_thigh"))
     end
 end
 

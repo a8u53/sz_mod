@@ -471,6 +471,7 @@ fire_wound_immunity			= 0.01
 [black_coat_outfit]:brown_coat_outfit
 visual          = equipments\black_coat_suit.ogf
 actor_visual	= actors\hero\bandit_visuals\stalker_black_coat.ogf
+player_hud_section	= actor_hud_bandit
 
 inv_name			= stalker_black_coat_name
 inv_name_short		= stalker_black_coat_name
@@ -552,7 +553,7 @@ class			= E_STLK
 cform           = skeleton
 visual          = equipments\military_dolg.ogf
 actor_visual	= actors\new\stalker_military_dolg.ogf
-player_hud_section	= actor_hud_dolg
+player_hud_section	= actor_hud_heavy_dolg
 
 ef_equipment_type	= 2
 
@@ -724,7 +725,7 @@ $spawn 			= "outfit\novice_outfit"
 class			= E_STLK
 cform           = skeleton
 visual          = equipments\novice_suit
-actor_visual	= actors\hero\stalker_military.ogf
+actor_visual	= actors\hero\novice_visuals\stalker_novice_cit.ogf
 player_hud_section	= actor_hud_citizen
 
 ef_equipment_type	= 3
@@ -843,7 +844,7 @@ full_icon_name		= npc_icon_white_novice_outfit
 ;---------------------------------------------------------------------------------------------
 [bandit_red_outfit]:bandit_outfit
 visual          = equipments\bandit_suit
-actor_visual	= actors\hero\stalker_military.ogf
+actor_visual	= actors\hero\bandit_visuals\stalker_bandit_red.ogf
 player_hud_section	= actor_hud_bandit_red
 
 inv_grid_x			= 12
@@ -854,7 +855,7 @@ inv_grid_y			= 31
 ;---------------------------------------------------------------------------------------------
 [bandit_green_outfit]:bandit_outfit
 visual          = equipments\bandit_suit
-actor_visual	= actors\hero\stalker_military.ogf
+actor_visual	= actors\hero\bandit_visuals\stalker_bandit_green.ogf
 player_hud_section	= actor_hud_bandit_green
 
 inv_grid_x			= 10
@@ -865,7 +866,8 @@ inv_grid_y			= 30
 ;---------------------------------------------------------------------------------------------
 [bandit_antigas_outfit]:bandit_outfit
 visual          = equipments\bandit_suit
-actor_visual	= actors\hero\stalker_military.ogf
+actor_visual	= actors\bandit\stalker_bandit_8.ogf
+player_hud_section	= actor_hud_bandit
 
 inv_name			= antigas_bandit_outfit_name
 inv_name_short		= antigas_bandit_outfit_name

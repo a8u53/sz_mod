@@ -51,7 +51,7 @@ kill_msg_height		= 23
 
 ;-----------------------------------------------------------------------------------
 ;базовая дисперсия
-fire_dispersion_base		= 0.4 	;угол (в градусах) базовой дисперсии оружия (оружия зажатого в тисках)
+fire_dispersion_base		= 0.32;угол (в градусах) базовой дисперсии оружия (оружия зажатого в тисках)
 
 ;отдача
 cam_relax_speed         	= 8;1.0	;скорость возврата в исходное положение
@@ -91,9 +91,9 @@ hit_power               = 0.4
 hit_impulse		 		= 15
 hit_type = fire_wound
 
-fire_distance           = 50 ;1000
+fire_distance           = 80;1000
 bullet_speed			= 315 ;290	;начальная скорость пули
-rpm                     = 230
+rpm                     = 250
 ; end ttc
 
 use_aim_bullet				= true		;Поддерживается ли первая суппер пуля
@@ -154,8 +154,6 @@ silencer_y 					= -15
 
 ;params when silencer is attached 
 ;similar to corresponding params without prefix silencer_
-
-silencer_hit_power       	= 47
 silencer_hit_impulse	 	= 60
 silencer_fire_distance   	= 100
 silencer_bullet_speed	 	= 220

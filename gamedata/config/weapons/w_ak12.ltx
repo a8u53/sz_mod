@@ -21,13 +21,13 @@ holder_fov_modifier					= 0.7
 ;-----------------------------------------------------------------------------------
 
 cost						= 12000		
-weapon_class				s= assault_rifle	
+weapon_class = assault_rifle
 	
 ammo_limit					= 210	
 ammo_elapsed				= 30			
 	
 ammo_mag_size				= 30				
-fire_modes					= 1, 3, -1
+fire_modes					= 1, 2, -1
 
 ammo_class					= ammo_5.45x39_fmj, ammo_5.45x39_ap, ammo_5.45x39_exp   ; name of the ltx-section of used ammo 
 grenade_class				= ammo_vog-25, ammo_vog-25p, ammo_vog-25_svet, ammo_vog-25_termo 
@@ -56,21 +56,20 @@ kill_msg_height					= 28
 ;-----------------------------------------------------------------------------------
 ;params of weapon recoil
 fire_dispersion_base				= 0.10		;угол (в градусах) базовой дисперсии оружия (оружия зажатого в тисках)
-control_inertion_factor				= 1.25f
+control_inertion_factor				= 1.15f
 
 ;отдача
-cam_relax_speed         			= 3.0		;скорость возврата в исходное положение
-cam_dispersion          			= 0.15		;увеличения угла (в градусах) с каждым выстрелом
-cam_dispersion_inc				= 0.3		;увеличениe cam_dispersion с каждым выстрелом
+cam_relax_speed         			= 6.5;скорость возврата в исходное положение
+cam_dispersion          			= 0.13;увеличения угла (в градусах) с каждым выстрелом
+cam_dispersion_inc				= 0.18;увеличениe cam_dispersion с каждым выстрелом
 cam_dispertion_frac				= 0.9		;ствол будет подыматься на cam_dispersion*cam_dispertion_frac +- cam_dispersion*(1-cam_dispertion_frac)
-cam_max_angle					= 10.0	    	;максимальный угол отдачи
-cam_max_angle_horz				= 20.0		;(degree) maximum shot horizontal degree 
-cam_step_angle_horz				= 1.1;1		;(degree) size of step camera moved in horizontal position while shooting
+cam_max_angle					= 9.0;максимальный угол отдачи
+cam_max_angle_horz				= 16.0;(degree) maximum shot horizontal degree 
+cam_step_angle_horz				= 0.95;1		;(degree) size of step camera moved in horizontal position while shooting
 
 fire_dispersion_condition_factor 		= 5	    	;увеличение дисперсии в процентах при максимальном износе 
-misfire_probability 				= 0.001		;вероятность осечки при максимальном износе 
-misfire_condition_k				= 0.05
-condition_shot_dec 				= 0.0005	;увеличение износа при каждом выстреле
+misfire_probability 				= 0.0010; базовая составляющая вероятности осечки при износе
+misfire_condition_k				= 0.035condition_shot_dec 				= 0.00042; потеря состояния за выстрел
 ;-----------------------------------------------------------------------------------
 fire_point					= 0, 0.218, 0.656
 fire_point2					= 0, 0.161, 0.583
@@ -83,9 +82,9 @@ grenade_flame_particles		= weapons\generic_weapon01
 shell_point		 			= 0.07,0.2,0.466			; position (3rd person view) for shell to throw out
 shell_particles	 			= weapons\generic_shells_545	; name of the particles for shells
 
-PDM_disp_base 					= 1.0
-PDM_disp_vel_factor 				= 1.3
-PDM_disp_accel_factor 				= 1.3
+PDM_disp_base 					= 0.9
+PDM_disp_vel_factor 				= 1.1
+PDM_disp_accel_factor 				= 1.1
 PDM_crouch	 				= 1.0
 PDM_crouch_no_acc 				= 1.0
 
@@ -103,7 +102,7 @@ time_to_aim					= 1.0
 silencer_hit_power       			= 0.55
 silencer_hit_impulse	 			= 12
 silencer_fire_distance   			= 250
-silencer_bullet_speed	 			= 600
+silencer_bullet_speed	 			= 900
 
 hud                      			= wpn_ak12_hud				
 

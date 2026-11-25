@@ -47,14 +47,15 @@
     <texture id="ui_hud_status_green_03" x="805" y="40" width="46" height="47" />
     <texture id="ui_hud_status_green_04" x="851" y="40" width="46" height="47" />
     <texture id="ui_hud_status_green_05" x="897" y="40" width="46" height="47" />
-    <texture id="ui_hud_icon_sleep" x="97" y="226" width="64" height="64" />
-    <texture id="ui_hud_icon_radiation" x="97" y="290" width="64" height="64" />
-    <texture id="ui_hud_icon_eat" x="161" y="226" width="64" height="64" />
-    <texture id="ui_hud_icon_goodmode" x="161" y="290" width="64" height="64" />
-    <texture id="ui_hud_icon_psycho" x="225" y="226" width="64" height="64" />
-    <texture id="ui_hud_icon_drop" x="225" y="290" width="64" height="64" />
-    <texture id="ui_hud_icon_artefact" x="289" y="226" width="64" height="64" />
-    <texture id="ui_hud_icon_weapon" x="289" y="290" width="64" height="64" />
+    <texture id="ui_hud_icon_sleep" x="97" y="226" width="35" height="37" />
+    <texture id="ui_hud_icon_radiation" x="825" y="518" width="35" height="37" />
+    <texture id="ui_hud_icon_eat" x="545" y="518" width="35" height="37" />
+    <texture id="ui_hud_icon_goodmode" x="161" y="290" width="35" height="37" />
+    <texture id="ui_hud_icon_psycho" x="734" y="518" width="35" height="37" />
+    <texture id="ui_hud_icon_drop" x="592" y="518" width="35" height="37" />
+    <texture id="ui_hud_icon_artefact" x="289" y="226" width="35" height="37" />
+    <texture id="ui_hud_icon_weapon" x="687" y="518" width="35" height="37" />
+	<texture id="ui_hud_icon_armour" x="781" y="518" width="35" height="37" />
     <texture id="ui_hud_frame_moneyNumber" x="905" y="746" width="119" height="46" />
     <texture id="ui_hud_frame_voting" x="424" y="375" width="600" height="371" />
     <texture id="ui_hud_button_voting_01_e" x="65" y="429" width="37" height="25" />

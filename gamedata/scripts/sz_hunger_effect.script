@@ -61,8 +61,8 @@ function update_hunger_effect()
         if not warned then
             xr_logic.pstor_store(actor, "hunger_warned", true)
             actor:give_game_news(
-                "%c[255,255,180,80]Внимание: голод\\n%c[default]Голод снижает максимальный запас выносливости. Следите за питанием.",
-                "ui\\ui_iconsTotal", Frect():set(0, 517, 83, 47), 0, 5000
+                "%c[255,255,180,80]Сообщение:\\n%c[default]Голод снижает максимальный запас выносливости, следите за индикатором и своевременно принимайте пищу.",
+                "ui\\ui_iconsTotal", Frect():set(0, 705, 83, 47), 0, 5000
             )
             local snd = xr_sound.get_safe_sound_object([[device\pda\pda_tip]])
             if snd then snd:play_no_feedback(actor, sound_object.s2d, 0, vector(), 1.0) end

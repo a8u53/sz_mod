@@ -1,0 +1,27 @@
+[logic]
+active = sr_idle@wait_selection
+
+; Selection starts the 60-second countdown; the megaphone plays in parallel.
+[sr_idle@wait_selection]
+on_info = {+bar_arena_pseudodog_choosen} sr_idle@wait_entry, {+bar_arena_snork_choosen} sr_idle@wait_entry, {+bar_arena_bloodsucker_choosen} sr_idle@wait_entry, {+bar_arena_burer_choosen} sr_idle@wait_entry, {+bar_arena_savage_choosen} sr_idle@wait_entry
+
+; The countdown and actor-entry event run in parallel.
+[sr_idle@wait_entry]
+on_timer = 60000|sr_idle@afraid %+bar_arena_actor_afraid%
+on_actor_inside = sr_idle@close_door %+bar_arena_pre_room_entered%
+
+; Door 1 closes first. The megaphone then plays the mutant introduction.
+; The mutant itself is spawned only after the introduction, when bar_arena_monstr_ready is raised.
+[sr_idle@close_door]
+on_timer = 1000|sr_idle@wait_announcement %+bar_arena_start_introduce%
+
+; Wait until the megaphone finishes the introduction and opens the arena.
+[sr_idle@wait_announcement]
+on_info = {+bar_arena_door_1_open +bar_arena_spawn_monstr} sr_idle@fight
+
+[sr_idle@fight]
+on_info = {+bar_arena_monstr_dead} sr_idle@wait_selection %-bar_arena_pre_room_entered -bar_arena_pre_room_spawn%
+
+; Return to the selection state after the coward announcement finishes.
+[sr_idle@afraid]
+on_info = {-bar_arena_actor_afraid} sr_idle@wait_selection

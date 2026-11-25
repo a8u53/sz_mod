@@ -17,6 +17,211 @@ local blood_pool = {}
 local active_drops = {}
 local statics_initialized = false
 
+-- Загрязнение конкретных предметов. Ключ — runtime ID предмета, не слот.
+-- Пока хранится в памяти Lua; сериализацию в savegame добавим отдельным этапом.
+local ITEM_BLOOD_DECAY_PER_SEC = 0.012
+local item_blood_state = {}
+
+local function get_item_id(item)
+    if not item then return nil end
+    local ok, id = pcall(function() return item:id() end)
+    if ok then return id end
+    return nil
+end
+
+-- Множитель загрязнения по секции выбранного боеприпаса.
+-- Индекс get_ammo_type() соответствует порядку ammo_class в секции оружия.
+local ammo_blood_multipliers = {
+    -- 9x18 — базовый калибр
+    ammo_9x18_fmj = 1.0,
+    ammo_9x18_pbp = 1.0,
+    ammo_9x18_pmm = 1.0,
+
+    -- Пистолетные промежуточные калибры
+    ammo_9x19_fmj = 1.5,
+    ammo_9x19_pbp = 1.5,
+    ["ammo_7.62x25"] = 1.5,
+    ["ammo_11.43x23_fmj"] = 2.0,
+    ["ammo_11.43x23_hydro"] = 2.0,
+
+    -- Малокалиберные винтовочные
+    ["ammo_5.7x28_fmj"] = 2.5,
+    ["ammo_5.7x28_ap"] = 2.5,
+    ["ammo_5.45x39_fmj"] = 3.0,
+    ["ammo_5.45x39_ap"] = 3.0,
+    ["ammo_5.45x39_exp"] = 3.0,
+    ["ammo_5.56x45_ss190"] = 3.0,
+    ["ammo_5.56x45_ap"] = 3.0,
+
+    -- Крупные винтовочные / специальные
+    ammo_9x39_pab9 = 4.0,
+    ammo_9x39_ap = 4.0,
+    ammo_9x39_sp5 = 4.0,
+    ["ammo_7.62x54r"] = 5.0,
+    ["ammo_7.62x54_7h1"] = 5.0,
+    ["ammo_7.62x54_ap"] = 5.0,
+    ["ammo_7.62x54_7h14"] = 5.0,
+    ammo_gauss = 6.0,
+
+    -- Дробовые патроны и крупные снаряды
+    ammo_12x70_buck = 5.5,
+    ammo_12x70_kar = 5.5,
+    ammo_12x76_dart = 5.5,
+    ammo_12x76_zhekan = 5.5,
+    ammo_12x76_zhekan_heli = 5.5,
+
+    -- Гранатомётные боеприпасы
+    ["ammo_og-7b"] = 6.0,
+    ["ammo_vog-25p"] = 5.0,
+    ["ammo_vog-25"] = 5.0,
+    ammo_m209 = 5.0,
+    ["ammo_vog-25_termo"] = 5.0,
+    ["ammo_vog-25_svet"] = 5.0
+}
+
+local ammo_class_cache = {}
+
+local function get_ammo_blood_multiplier(weapon)
+    if not weapon then return 1.0 end
+
+    local ok, weapon_section = pcall(function() return weapon:section() end)
+    if not ok or not weapon_section then return 1.0 end
+
+    local ammo_classes = ammo_class_cache[weapon_section]
+    if not ammo_classes then
+        local ok_ini, ini = pcall(system_ini)
+        if not ok_ini or not ini then return 1.0 end
+
+        local ok_value, ammo_class = pcall(function()
+            return ini:r_string(weapon_section, "ammo_class")
+        end)
+        if not ok_value or type(ammo_class) ~= "string" then return 1.0 end
+
+        ammo_classes = {}
+        for section in string.gmatch(ammo_class, "[^,]+") do
+            section = string.gsub(section, "^%s*(.-)%s*$", "%1")
+            ammo_classes[#ammo_classes + 1] = section
+        end
+        ammo_class_cache[weapon_section] = ammo_classes
+    end
+
+    local ok_type, ammo_type = pcall(function() return weapon:get_ammo_type() end)
+    if not ok_type or type(ammo_type) ~= "number" then return 1.0 end
+
+    -- В OGSR m_ammoType — индекс с нуля.
+    local ammo_section = ammo_classes[ammo_type + 1]
+    if not ammo_section then return 1.0 end
+
+    return ammo_blood_multipliers[ammo_section] or 1.0
+end
+
+local function add_item_blood(item, amount, multiplier)
+    local id = get_item_id(item)
+    if not id then return end
+    local now = time_global()
+    local state = item_blood_state[id]
+    if not state then
+        state = { amount = 0, last_update = now, item_id = id }
+        item_blood_state[id] = state
+    end
+    local elapsed = math.max(0, now - (state.last_update or now)) / 1000
+    state.amount = math.max(0, (state.amount or 0) - elapsed * ITEM_BLOOD_DECAY_PER_SEC)
+    local base_gain = math.min(0.35, math.max(0.05, (amount or 0) * 0.15))
+    state.amount = math.min(1, state.amount + base_gain * (multiplier or 1.0))
+    state.last_update = now
+    state.last_hit = now
+end
+
+-- Публичный доступ для будущего HUD/shader bridge и отладки.
+function get_item_blood(item_id)
+    local state = item_blood_state[item_id]
+    if not state then return 0 end
+
+    local now = time_global()
+    local elapsed = math.max(0, now - (state.last_update or now)) / 1000
+    local amount = math.max(0, (state.amount or 0) - elapsed * ITEM_BLOOD_DECAY_PER_SEC)
+
+    if amount <= 0 then
+        item_blood_state[item_id] = nil
+        return 0
+    end
+
+    return amount
+end
+
+-- Передаём два независимых канала вектору ssfx_hud_blood_params:
+-- X — руки/костюм, Y — текущее оружие. Z и W пока не используются.
+local function set_hud_blood_channels(hands_value, weapon_value)
+    hands_value = math.max(0, math.min(1, hands_value or 0))
+    weapon_value = math.max(0, math.min(1, weapon_value or 0))
+
+    local command = string.format(
+        "ssfx_hud_blood_params %.2f,%.2f,0,0",
+        hands_value,
+        weapon_value
+    )
+
+    -- В OGSR консоль получается через get_console(), а не из глобальной
+    -- переменной console. Такой же способ используется в sz_helmet_system.
+    local ok, console = pcall(get_console)
+    if not ok or not console then
+        printf("SZ_BLOOD: get_console() unavailable")
+        return false
+    end
+
+    local executed, err = pcall(function()
+        console:execute(command)
+    end)
+
+    if not executed then
+        printf("SZ_BLOOD: console:execute failed: %s", tostring(err))
+        return false
+    end
+
+    return true
+end
+
+local function get_actor_outfit(actor)
+    -- В OGSR стандартный слот костюма — 6. Вызов защищён на случай иной сборки API.
+    local ok, item = pcall(function() return actor:item_in_slot(6) end)
+    if ok then return item end
+    return nil
+end
+
+local last_hud_hands_value = nil
+local last_hud_weapon_value = nil
+
+local function get_item_blood_value(item)
+    local id = get_item_id(item)
+    if not id then return 0 end
+    return get_item_blood(id)
+end
+
+-- Обновляем каналы по текущему экипированному снаряжению.
+-- Функция вызывается из update_blood_splatters(), который уже вызывается
+-- каждый кадр из actor_binder:update(). Команду консоли шлём только при
+-- изменении значения хотя бы на 0.01, чтобы не выполнять её каждый кадр.
+local function update_hud_blood_channels()
+    local actor = db.actor
+    local hands_value = 0
+    local weapon_value = 0
+
+    if actor then
+        hands_value = get_item_blood_value(get_actor_outfit(actor))
+        weapon_value = get_item_blood_value(actor:active_item())
+    end
+
+    hands_value = math.floor(hands_value * 100 + 0.5) / 100
+    weapon_value = math.floor(weapon_value * 100 + 0.5) / 100
+
+    if hands_value ~= last_hud_hands_value or weapon_value ~= last_hud_weapon_value then
+        if set_hud_blood_channels(hands_value, weapon_value) then
+            last_hud_hands_value = hands_value
+            last_hud_weapon_value = weapon_value
+        end
+    end
+end
+
 -- Функция проверки, есть ли еще активные капли
 local function is_any_drop_active()
     for i = 1, POOL_SIZE do
@@ -112,6 +317,9 @@ local function spawn_blood_splatter()
 end
 
 function update_blood_splatters()
+    -- Обновляем раздельные каналы даже тогда, когда экранных капель сейчас нет.
+    update_hud_blood_channels()
+
     if not statics_initialized then return end
     local now = time_global()
     
@@ -140,7 +348,7 @@ function update_blood_splatters()
     end
 end
 
-function check_blood(obj, who, amount)
+function check_blood(obj, who, amount, weapon)
     if not db.actor then return end
     if not obj then return end
     
@@ -167,16 +375,27 @@ function check_blood(obj, who, amount)
     -- Если урон не от игрока, не показываем кровь
     if not is_player_damage then return end
     
-    -- ГЛАВНАЯ ПРОВЕРКА: если хоть одна капля еще висит, ничего не делаем
-    if is_any_drop_active() then return end
-    
     local now = time_global()
-    if now - last_blood_time < BLOOD_COOLDOWN then return end
-    
     local actor = db.actor
     local dist = actor:position():distance_to(obj:position())
-    
+
     if dist <= BLOOD_DISTANCE then
+        -- Состояние предметов регистрируется на КАЖДОМ подходящем попадании,
+        -- независимо от того, висят ли ещё экранные капли.
+        local hit_weapon = weapon or actor:active_item()
+        local outfit = get_actor_outfit(actor)
+        local ammo_multiplier = get_ammo_blood_multiplier(hit_weapon)
+        add_item_blood(hit_weapon, amount, ammo_multiplier)
+        add_item_blood(outfit, amount, ammo_multiplier)
+
+        -- Обновляем каналы сразу после попадания: костюм идёт в X,
+        -- попавшее в цель оружие — в Y (если оно сейчас активно).
+        update_hud_blood_channels()
+
+        -- Экранный залп остаётся с прежним ограничением: один залп до исчезновения капель.
+        if is_any_drop_active() then return end
+        if now - last_blood_time < BLOOD_COOLDOWN then return end
+
         spawn_blood_splatter()
         last_blood_time = now
     end
@@ -195,4 +414,20 @@ function reset_blood()
     end
     active_drops = {}
     last_blood_time = 0
+
+    -- Заставляем следующий update повторно отправить текущие значения каналов.
+    last_hud_hands_value = nil
+    last_hud_weapon_value = nil
+end
+-- Вызывается будущим rain/update bridge: интенсивность дождя 0..1.
+-- Стекание/смещение не реализовано здесь: это должно выполняться шейдером.
+function update_item_blood_rain(rain_intensity, dt_ms)
+    local rain = math.max(0, math.min(1, rain_intensity or 0))
+    local dt = math.max(0, dt_ms or 0) / 1000
+    if rain <= 0 or dt <= 0 then return end
+    for id, state in pairs(item_blood_state) do
+        state.amount = math.max(0, (state.amount or 0) - dt * rain * 0.10)
+        state.last_update = time_global()
+        if state.amount <= 0 then item_blood_state[id] = nil end
+    end
 end

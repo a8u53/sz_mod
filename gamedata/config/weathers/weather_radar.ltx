@@ -1,55 +1,76 @@
 [sect_radar]
 
-00:00:00	=	radar_2
-06:00:00	=	radar_2
-08:00:00	=	radar_1
-21:00:00	=	radar_1
-23:00:00	=	radar_2
+01:00:00	   		=	radar_01
+02:00:00	   		=	radar_02
+03:00:00	   		=	radar_01
+04:00:00	   		=	radar_02
+05:00:00	   		=	radar_01
+05:00:00			=	radar_02
+06:00:00			=	radar_01
+07:00:00			=	radar_02
+08:00:00			=	radar_01
+09:00:00			=	radar_02
+10:00:00			=	radar_01
+11:00:00			=	radar_02
+12:00:00			=	radar_01
+13:00:00			=	radar_02
+14:00:00			=	radar_01
+15:00:00			=	radar_02
+16:00:00			=	radar_01
+17:00:00			=	radar_02
+18:00:00			=	radar_01
+19:00:00			=	radar_02
+20:00:00  			=	radar_01
+21:00:00	   		=	radar_02
+22:00:00	   		=	radar_01
+23:00:00	   		=	radar_02
+00:00:00	   		=	radar_01
 
-[radar_1]
+[radar_01]
 flares			=
-sky_texture		=	sky\sky_23
+sky_texture		=	sky\sky_9_cube
 sky_rotation	=	0
-sky_color		=	0.8,    0.8,  	0.83
+sky_color		=	1.0,    1.0,  	1.0
 clouds_texture	=	sky\sky_oblaka
-clouds_color	=	0.3, 0.3, 0.33, 1.0, 1.5
-far_plane		=	250
-fog_distance	=	150
-fog_color		=	0.2, 0.2, 0.2
-fog_density		=	1.5
+clouds_color	=	0.333, 0.341, 0.431, 1.0, 1.7
+far_plane		=	550
+fog_distance	=	330
+fog_color		=	0.172, 0.176, 0.196
+fog_density		=	0.9
 rain_density	=	0.0
 rain_color		=	0.62, 0.66, 0.76
 thunderbolt		=
 bolt_period		=	5.f
 bolt_duration	=	0.25f
-wind_velocity 	= 	500.0
-wind_direction 	= 	-90.0
-ambient			=	0.03, 0.03, 0.03
+wind_velocity	=	20.0
+wind_direction	=	0.0
+ambient			=	0.06, 0.0625, 0.065
 lmap_color		=	1.0,	1.0,	1.0
 hemi_color		=	0.6,   0.625,  	0.65,	1.0
-sun_color		=	0.42, 0.42, 0.43
-sun_dir			=	-90.0, 45
-env_ambient		=	ambient_env_northern_wind
+sun_color		=	0.0,    0.0,  	0.0
+sun_dir			=	-25.0, 291
+env_ambient		=	ambient_env_rain
 
-[radar_2]
+
+[radar_02]
 flares			=
-sky_texture		=	sky\sky_13_cube_night
+sky_texture		=	sky\sky_9_cube
 sky_rotation	=	0
-sky_color		=	0.4,    0.4,  	0.4
+sky_color		=	1.0,    1.0,  	1.0
 clouds_texture	=	sky\sky_oblaka
-clouds_color	=	0.3, 0.3, 0.25, 0.4, 1.7
-far_plane		=	600
-fog_distance	=	400
-fog_color		=	0.02, 0.02, 0.02
-fog_density		=	1
+clouds_color	=	0.333, 0.341, 0.431, 1.0, 1.7
+far_plane		=	550
+fog_distance	=	330
+fog_color		=	0.172, 0.176, 0.196
+fog_density		=	0.9
 rain_density	=	0.0
 rain_color		=	0.62, 0.66, 0.76
-thunderbolt		=   thunderbolt_collection_stancia
-bolt_period		=	7.f
+thunderbolt		=	thunderbolt_collection_default
+bolt_period		=	5.f
 bolt_duration	=	0.25f
 wind_velocity	=	20.0
 wind_direction	=	0.0
-ambient			=	0.03, 0.03, 0.03
+ambient			=	0.06, 0.0625, 0.065
 lmap_color		=	1.0,	1.0,	1.0
 hemi_color		=	0.6,   0.625,  	0.65,	1.0
 sun_color		=	0.0,    0.0,  	0.0

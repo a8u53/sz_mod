@@ -1,6 +1,7 @@
 #include "common.h"
 #include "sload.h"
 #include "screenspace_hud_raindrops.h"
+#include "screenspace_hud_blood_model.h"
 
 f_deffer main(p_flat I)
 {
@@ -30,10 +31,19 @@ f_deffer main(p_flat I)
         drops.w = max(drops.w * 0.1f, 3.0f);
     }
 
-    float gloss = drops.z * ssfx_hud_drops_2.w * 0.25f;
+    float blood_load = max(ssfx_hud_blood_params.x, ssfx_hud_blood_params.y);
+    float3 blood_bump_model = 0.0f;
+    float blood_gloss = 0.0f;
+    float4 blood = ssfx_hud_blood_model_space(
+        s_hud_rain, I.RDrops.xyz, I.position.xyz,
+        blood_load, ssfx_hud_blood_params.w, ssfx_hud_blood_params.z,
+        blood_bump_model, blood_gloss);
+
+    float gloss = drops.z * ssfx_hud_drops_2.w * 0.25f + blood_gloss;
 
     // diffuse
     float3 D = tbase(I.tcdh); // IN:  rgb.a
+    D.rgb = lerp(D.rgb, blood.rgb, blood.a);
 
 #ifdef USE_TDETAIL
     // D.rgb = 2*D.rgb*tex2D(s_detail, I.tcdbump).rgb;
@@ -59,7 +69,12 @@ f_deffer main(p_flat I)
 #endif
 
     // 2. Standart output
-    float4 Ne = float4(normalize((float3)I.N.xyz + float3(drops.xy * drops.w, 0.0f)), h);
+    float2 blood_gradient = float2(ddx(blood.a), ddy(blood.a));
+    float3 blood_relief = float3(-blood_gradient * 0.38f, 0.0f);
+    float3 blood_bump_eye = mul((float3x3)m_WV, blood_bump_model);
+    float4 Ne = float4(normalize((float3)I.N.xyz +
+        float3(drops.xy * drops.w, 0.0f) + blood_relief +
+        blood_bump_eye * 0.20f), h);
     O = pack_gbuffer(Ne, float4(I.position.xyz + Ne.xyz * def_virtualh / 2.h, ms), float4(D.rgb, gloss)); // OUT: rgb.gloss
 
     O.Velocity = get_motion_vector(I.hpos_curr, I.hpos_old);

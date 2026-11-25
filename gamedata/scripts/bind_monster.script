@@ -39,6 +39,12 @@ function generic_object_binder:reinit()
 
 	self.st = db.storage[self.object:id()]
 
+	-- Blood pool state (same growth sequence as stalker corpses).
+	self.blood_pool_bone = nil
+	self.blood_pool_time = nil
+	self.blood_pool_growth_step = nil
+	self.blood_pool_done = false
+
 	self.object:set_callback(callback.patrol_path_in_point, self.waypoint_callback, self)
 	self.object:set_callback(callback.hit,					self.hit_callback,		self)
 	self.object:set_callback(callback.death,				self.death_callback,	self)
@@ -47,6 +53,29 @@ end
 
 function generic_object_binder:update(delta)
   object_binder.update(self, delta)
+
+  -- Gradually grow one blood pool after the mutant has fallen.
+  if self.blood_pool_time and time_global() >= self.blood_pool_time then
+    if self.object then
+      if not self.blood_pool_growth_step then
+        self.blood_pool_growth_step = 1
+      end
+
+      local scale = self.blood_pool_growth_step / 120
+      self.object:place_blood_pool(self.blood_pool_bone or 65535, scale)
+
+      if self.blood_pool_growth_step < 120 then
+        self.blood_pool_growth_step = self.blood_pool_growth_step + 1
+        self.blood_pool_time = time_global() + 100
+      else
+        self.blood_pool_time = nil
+        self.blood_pool_growth_step = nil
+        self.blood_pool_done = true
+      end
+    else
+      self.blood_pool_time = nil
+    end
+  end
 --  printf("_bp: generic_object_binder: UPDATE [name='%s' time=%d]",
 --    self.object:name(), time_global())
   -- Апдейт торговли
@@ -134,6 +163,12 @@ function generic_object_binder:waypoint_callback(obj, action_type, index)
 end
 
 function generic_object_binder:death_callback(victim, who)
+	-- Start the blood pool even when the hit callback supplied no bone index.
+	if not self.blood_pool_done and not self.blood_pool_time then
+		self.blood_pool_bone = self.blood_pool_bone or 65535
+		self.blood_pool_time = time_global() + 1500
+	end
+
 	if who:id() == db.actor:id() then
 		xr_statistic.addKillCount(self.object)
 	end
@@ -148,6 +183,32 @@ function generic_object_binder:death_callback(victim, who)
 
 	smart_terrain.on_death( self.object:id() )
 
+	-- Rostok mutant arena: finish the current round and unlock the next opponent.
+	if db.actor then
+		local section = self.object:section()
+		if section == "pseudodog_arena" then
+			db.actor:disable_info_portion("bar_arena_spawn_monstr")
+			db.actor:disable_info_portion("bar_arena_pseudodog_choosen")
+			db.actor:give_info_portion("bar_arena_pseudodog_defeated")
+			db.actor:give_info_portion("bar_arena_monstr_dead")
+		elseif section == "snork_arena" then
+			db.actor:disable_info_portion("bar_arena_spawn_monstr")
+			db.actor:disable_info_portion("bar_arena_snork_choosen")
+			db.actor:give_info_portion("bar_arena_snork_defeated")
+			db.actor:give_info_portion("bar_arena_monstr_dead")
+		elseif section == "bloodsucker_arena" then
+			db.actor:disable_info_portion("bar_arena_spawn_monstr")
+			db.actor:disable_info_portion("bar_arena_bloodsucker_choosen")
+			db.actor:give_info_portion("bar_arena_bloodsucker_defeated")
+			db.actor:give_info_portion("bar_arena_monstr_dead")
+		elseif section == "burer_arena" then
+			db.actor:disable_info_portion("bar_arena_spawn_monstr")
+			db.actor:disable_info_portion("bar_arena_burer_choosen")
+			db.actor:give_info_portion("bar_arena_burer_defeated")
+			db.actor:give_info_portion("bar_arena_monstr_dead")
+		end
+	end
+
 	--' Наносим небольшой импульс вперед.
 	local h = hit()
 	h.draftsman = self.object
@@ -161,6 +222,9 @@ function generic_object_binder:death_callback(victim, who)
 end
 
 function generic_object_binder:hit_callback(obj, amount, local_direction, who, bone_index)
+	if amount > 0 and self.object:alive() then
+		self.blood_pool_bone = bone_index or self.blood_pool_bone or 65535
+	end
 --	printf("HIT_CALLBACK: [%s] amount[%s]", obj:name(), amount)
 	if self.st.hit then
 		xr_logic.issue_event(self.object, self.st.hit, "hit_callback", obj, amount, local_direction, who, bone_index)

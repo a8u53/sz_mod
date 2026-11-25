@@ -84,9 +84,8 @@ cam_max_angle_horz			= 30.0		;(degree) maximum shot horizontal degree
 cam_step_angle_horz			= 1.25;1.1		;(degree) size of step camera moved in horizontal position while shooting
 
 fire_dispersion_condition_factor 	= 5		;увеличение дисперсии в процентах при максимальном износе 
-misfire_probability 		= 0.003	;вероятность осечки при максимальном износе 
-misfire_condition_k			= 0.05
-condition_shot_dec 			= 0.00055	;увеличение износа при каждом выстреле
+misfire_probability 		= 0.0030; базовая составляющая вероятности осечки при износе
+misfire_condition_k			= 0.050condition_shot_dec 			= 0.00055; потеря состояния за выстрел
 ;-----------------------------------------------------------------------------------
 
 fire_point             		=  0.0, 0.262, 0.447		; position (3rd person view) for particles of fire 
@@ -100,8 +99,8 @@ shell_point		 			= 0.00, 0.262, 0.189			; position (3rd person view) for shell t
 shell_particles	 			= weapons\generic_shells_545	; name of the particles for shells
 
 PDM_disp_base 				= 1.0
-PDM_disp_vel_factor 			= 0.95
-PDM_disp_accel_factor 			= 0.95
+PDM_disp_vel_factor 			= 1.15
+PDM_disp_accel_factor 			= 1.15
 PDM_crouch	 			= 1.0
 PDM_crouch_no_acc 			= 1.0
 
@@ -120,7 +119,7 @@ time_to_aim					= 1.0
 silencer_hit_power       		= 0.45
 silencer_hit_impulse	 		= 65
 silencer_fire_distance   		= 220
-silencer_bullet_speed	 		= 750
+silencer_bullet_speed	 		= 735
 
 hud                      	= wpn_ak74u_hud				; name of the section of the hud
 
@@ -133,7 +132,7 @@ strap_orientation      		= -10,-5,10					; (3rd person view in degrees)
 strap_bone0					= bip01_spine2
 strap_bone1					= bip01_spine1
 
-visual         		        = weapons\ak-74u\ak74u.ogf	; name of the model for 3rd person view
+visual         		        = dynamics\weapons\wpn_ak74u\wpn_ak74u.ogf	; name of the model for 3rd person view
 
 light_color					= 0.6,0.5,0.3				; params for light during the fire
 light_range					= 5							; radius
@@ -276,6 +275,3 @@ lean_hud_offset_rot        = 0,0,0
 zoom_offset			= -0.0814, 0.018, -0.03
 zoom_rotate_x		= -0.018
 zoom_rotate_y		= 0.00878
-
-
-zoom_hide_crosshair	= true						;to hide crosshair in zoom 

@@ -1,0 +1,123 @@
+[_group]
+version = 3
+flags = 0
+effects_count = 13
+timelimit = 1.1
+ 
+[effect_0000]
+effect_name = anomaly2\group_items\teleport_glow_idle_vert_00
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0
+time1 = 1
+flags = 4
+ 
+[effect_0001]
+effect_name = anomaly2\group_items\teleport_idle_dist_krug
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.9
+time1 = 0
+flags = 4
+ 
+[effect_0002]
+effect_name = anomaly2\group_items\teleport_glow_00
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.4
+time1 = 1
+flags = 0
+ 
+[effect_0003]
+effect_name = anomaly2\group_items\teleport_dist_strong
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.6
+time1 = 0
+flags = 4
+ 
+[effect_0004]
+effect_name = anomaly2\group_items\teleport_spark_glow
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.4
+time1 = 1.2
+flags = 4
+ 
+[effect_0005]
+effect_name = anomaly2\group_items\teleport_idle_dist_krug_00
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0
+time1 = 0
+flags = 4
+ 
+[effect_0006]
+effect_name = anomaly2\group_items\teleport_spark
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.9
+time1 = 0
+flags = 4
+ 
+[effect_0007]
+effect_name = anomaly2\group_items\teleport_dist_30
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0
+time1 = 1
+flags = 4
+ 
+[effect_0008]
+effect_name = anomaly2\group_items\teleport_okno_5
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.85
+time1 = 0
+flags = 4
+ 
+[effect_0009]
+effect_name = anomaly2\group_items\teleport_okno_10
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.9
+time1 = 1
+flags = 4
+ 
+[effect_0010]
+effect_name = anomaly2\group_items\teleport_okno_20
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0.95
+time1 = 1
+flags = 4
+ 
+[effect_0011]
+effect_name = anomaly2\group_items\teleport_okno_30
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 1
+time1 = 0
+flags = 4
+ 
+[effect_0012]
+effect_name = anomaly2\group_items\teleport_dist_strong_big_00
+on_play_child =
+on_birth_child =
+on_death_child =
+time0 = 0
+time1 = 0.9
+flags = 4
+ 
