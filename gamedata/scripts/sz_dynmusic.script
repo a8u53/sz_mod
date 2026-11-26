@@ -1,6 +1,6 @@
 -- sz_dynmusic.script
--- Динамическая боевая музыка.
--- Если для локации нет трека — играет случайный из запасного списка.
+-- Г„ГЁГ­Г Г¬ГЁГ·ГҐГ±ГЄГ Гї ГЎГ®ГҐГўГ Гї Г¬ГіГ§Г»ГЄГ .
+-- Г…Г±Г«ГЁ Г¤Г«Гї Г«Г®ГЄГ Г¶ГЁГЁ Г­ГҐГІ ГІГ°ГҐГЄГ  вЂ” ГЁГЈГ°Г ГҐГІ Г±Г«ГіГ·Г Г©Г­Г»Г© ГЁГ§ Г§Г ГЇГ Г±Г­Г®ГЈГ® Г±ГЇГЁГ±ГЄГ .
 
 local music_table = {
     ["l01_escape"] = {
@@ -14,7 +14,7 @@ local music_table = {
     },
 }
 
--- Запасные треки: играют на локациях, для которых нет записи в music_table
+-- Г‡Г ГЇГ Г±Г­Г»ГҐ ГІГ°ГҐГЄГЁ: ГЁГЈГ°Г ГѕГІ Г­Г  Г«Г®ГЄГ Г¶ГЁГїГµ, Г¤Г«Гї ГЄГ®ГІГ®Г°Г»Гµ Г­ГҐГІ Г§Г ГЇГЁГ±ГЁ Гў music_table
 local fallback_tracks = {
     "music\\cordon_combat",
     "music\\radar_combat",
@@ -30,34 +30,53 @@ local combat_timer = 0
 local combat_timeout = 10000
 local combat_radius = 100
 
--- Плавное затухание
+-- ГЏГ«Г ГўГ­Г®ГҐ Г§Г ГІГіГµГ Г­ГЁГҐ
 local target_volume = 0
 local current_volume = 0
 local fade_speed = 0.1
 
+-- Online stalkers and mutants eligible for combat checks.
+local tracked_objects = {}
+
+function register_combatant(obj)
+    if not obj then return end
+
+    if IsStalker(obj) or IsMonster(obj) then
+        tracked_objects[obj:id()] = true
+    end
+end
+
+function unregister_combatant(obj)
+    if not obj then return end
+
+    tracked_objects[obj:id()] = nil
+end
+
 local function has_visible_enemy()
     local actor = db.actor
     if not actor then return false end
+
     local actor_pos = actor:position()
     local actor_id = actor:id()
 
-    for id = 1, 65534 do
-        local obj = level.object_by_id(id)
-        if obj and obj:id() ~= actor_id and obj:alive() then
-            if IsStalker(obj) or IsMonster(obj) then
-                local rel = obj:relation(actor)
-                if rel == game_object.enemy then
-                    local dist = actor_pos:distance_to(obj:position())
-                    if dist <= combat_radius then
-                        -- враг видит игрока
-                        if obj:see(actor) then
-                            return true
-                        end
-                    end
+    for id in pairs(tracked_objects) do
+        if id ~= actor_id then
+            local obj = level.object_by_id(id)
+
+            if not obj then
+                -- The object is no longer online.
+                tracked_objects[id] = nil
+
+            elseif obj:alive() and obj:relation(actor) == game_object.enemy then
+                local distance = actor_pos:distance_to(obj:position())
+
+                if distance <= combat_radius and obj:see(actor) then
+                    return true
                 end
             end
         end
     end
+
     return false
 end
 
@@ -76,7 +95,7 @@ local function is_in_combat()
     return false
 end
 
--- Выбор трека: сначала по локации, иначе — случайный из запасных
+-- Г‚Г»ГЎГ®Г° ГІГ°ГҐГЄГ : Г±Г­Г Г·Г Г«Г  ГЇГ® Г«Г®ГЄГ Г¶ГЁГЁ, ГЁГ­Г Г·ГҐ вЂ” Г±Г«ГіГ·Г Г©Г­Г»Г© ГЁГ§ Г§Г ГЇГ Г±Г­Г»Гµ
 local function pick_combat_track()
     local map = level.name()
     local entry = music_table[map]
@@ -130,7 +149,7 @@ function update()
         in_combat_state = false
     end
 
-    -- Плавное затухание
+    -- ГЏГ«Г ГўГ­Г®ГҐ Г§Г ГІГіГµГ Г­ГЁГҐ
     if current_combat then
         if current_volume < target_volume then
             current_volume = math.min(current_volume + fade_speed, target_volume)
